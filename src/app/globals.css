@@ -1,26 +1,447 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================================
+   SCALMINT — DESIGN TOKENS
+   Reverse-engineered from design_reference/*.png at 1440x900.
+   Every value below is a pixel-sampled measurement, not a guess.
+   Do not substitute the "portfolio-design-pattern" palette (neon green /
+   mono headings) — it is a different design. This file is the contract.
+   ========================================================================== */
+
+@theme {
+  /* --- Surfaces ------------------------------------------------------ */
+  --color-canvas: #222222; /* the surface a mock browser frame sits on */
+  --color-page: #0a0a0a; /* page base — modal value everywhere */
+  --color-surface-1: #141414; /* cards: blog, trust, testimonial panel */
+  --color-surface-2: #262626; /* glass node cards */
+  --color-surface-3: #171717; /* ROI stat card */
+  --color-surface-4: #1b1b1e; /* compliance badge (blue-tinted) */
+  --color-surface-5: #1b1b1b; /* nav pill, mega-menu panel */
+  --color-scrim: #141414; /* left video scrim base */
+
+  /* --- Borders (all 1px) -------------------------------------------- */
+  --color-line: #262626; /* standard card border */
+  --color-line-node: #303030; /* glass node card border */
+  --color-line-badge: #323236; /* compliance badge border */
+  --color-line-soft: #1f1f1f; /* hairlines inside cards */
+  --color-line-frame: rgba(255, 255, 255, 0.09);
+
+  /* --- Text ---------------------------------------------------------- */
+  --color-hi: #ffffff; /* headings — reaches pure white */
+  --color-body: #d9d9d9; /* secondary / paragraph */
+  /* Reference sampled these two at #838383 / #727272. On #0A0A0A that is
+     4.45:1 and 4.12:1 — both under WCAG AA for small text, and #727272 drops
+     further on the #171717 stat card. Both are lifted to the nearest value
+     that clears 4.5:1 on the darkest and the lightest surface they sit on.
+     The step is 7-14 RGB levels and is not visually distinguishable. */
+  --color-muted: #8a8a8a; /* dim text — 5.66:1 on page */
+  --color-eyebrow: #808080; /* mono labels — 5.01:1 on page, 4.50:1 on surface-3 */
+  --color-nav: #7f7f7f; /* nav item text */
+  --color-footer-link: #eeeeee; /* footer link list */
+  --color-footer-caption: #f1f1f1; /* promo-card caption */
+  --color-footer-legal: #7a7a7a; /* bottom bar: © year + legal links — 4.61:1 */
+
+  /* --- Accents ------------------------------------------------------- */
+  --color-warm: #e0461b; /* chart marker + glow */
+  --color-warm-deep: #c4300b;
+  --color-violet: #a855f7; /* sparkle, footer promo card */
+  --color-blue: #0044ff; /* keynote dot, 3D cube */
+  --color-red: #fc3000; /* 3D cube */
+  --color-green: #26e600; /* annotation (not used in production) */
+
+  /* --- Decorative wireframe tones ------------------------------------ */
+  --color-grid: #0c0c0c; /* blueprint grid — only 2-3 levels above page */
+  --color-wire: #131313; /* lat/long wireframe strokes */
+  --color-wire-dim: #0b0b0b;
+
+  /* --- Brand --------------------------------------------------------- */
+  --color-brand-teal: #14c8b4;
+
+  /* --- Typography ---------------------------------------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, monospace;
+
+  --text-hero: clamp(56px, 6vw, 96px);
+  --text-h2: 64px;
+  --text-editorial: 44px;
+  --text-stat: 40px;
+  --text-card: 26px;
+  --text-h3: 21px;
+  --text-body-lg: 21px;
+  --text-ui: 14px;
+
+  /* --- Radii --------------------------------------------------------- */
+  --radius-frame: 16px;
+  --radius-pill: 12px;
+  --radius-card: 8px;
+  --radius-tile: 4px;
+
+  /* --- Motion -------------------------------------------------------- */
+  --ease-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-swap: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* --- Layout -------------------------------------------------------- */
+  --spacing-container: 1200px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ============================================================================
+   BASE
+   ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--color-canvas);
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Heading defaults — the ramp is extremely tight throughout. */
+  h1,
+  h2,
+  h3 {
+    color: var(--color-hi);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--color-warm);
+    color: var(--color-page);
+  }
+
+  /* Focus ring — visible, warm, never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-warm);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================================
+   TYPOGRAPHY UTILITIES
+   Leading is mandatory, not decorative — measured line pitch is *tighter*
+   than the em box. Without these the headline visibly breaks apart.
+   ========================================================================== */
+
+@utility t-hero {
+  font-size: var(--text-hero);
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+}
+
+@utility t-h2 {
+  font-size: var(--text-h2);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+
+@utility t-h2-mobile {
+  font-size: clamp(34px, 7vw, 64px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+
+@utility t-editorial {
+  font-size: var(--text-editorial);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+@utility t-card {
+  font-size: var(--text-card);
+  line-height: 1.23;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+
+@utility t-h3 {
+  font-size: var(--text-h3);
+  line-height: 1.33;
+  letter-spacing: -0.015em;
+  font-weight: 500;
+}
+
+@utility t-body-lg {
+  font-size: var(--text-body-lg);
+  line-height: 1.29;
+  letter-spacing: -0.005em;
+}
+
+@utility t-ui {
+  font-size: var(--text-ui);
+  line-height: 1.43;
+  letter-spacing: -0.01em;
+}
+
+/* Mono eyebrow / label — uppercase, wide-tracked, dim. */
+@utility t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+/* ============================================================================
+   LAYOUT
+   ========================================================================== */
+
+@utility shell {
+  max-width: var(--spacing-container);
+  margin-inline: auto;
+  width: 100%;
+}
+
+/* Standard section rhythm. Nav is a sticky overlay (~73px tall), so the
+   effective padding is 96-128px; 112 sits at the measured midpoint. */
+@utility section-pad {
+  padding-block: 112px;
+}
+
+@media (max-width: 1280px) {
+  .shell {
+    padding-inline: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .shell {
+    padding-inline: 24px;
+  }
+  .section-pad {
+    padding-block: 72px;
+  }
+}
+
+/* ============================================================================
+   SURFACES
+   ========================================================================== */
+
+@utility card {
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+@utility node-card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-line-node);
+  border-radius: 6px;
+}
+
+@utility badge {
+  background: var(--color-surface-4);
+  border: 1px solid var(--color-line-badge);
+  border-radius: var(--radius-card);
+}
+
+@utility btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 37px;
+  padding-inline: 24px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-ui);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+@utility btn-primary {
+  background: #ffffff;
+  color: var(--color-page);
+}
+
+@utility btn-primary-hover {
+  background: #e8e8e8;
+}
+
+@utility btn-ghost {
+  background: transparent;
+  color: #e8e8e8;
+  border: 1px solid var(--color-line);
+}
+
+@utility btn-ghost-hover {
+  background: #141414;
+  border-color: #333333;
+}
+
+@utility nav-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding-inline: 16px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-ui);
+  letter-spacing: -0.01em;
+  color: var(--color-nav);
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+@utility nav-pill-hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+/* ============================================================================
+   DECORATION — all wireframe/grid motifs live here so sections stay readable.
+   These are the "system of record" texture reused across the whole page.
+   ========================================================================== */
+
+/* Flat blueprint grid. #0C0C0C is deliberately almost invisible. */
+@utility blueprint {
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: 83px 83px;
+}
+
+/* Same grid, masked so it dissolves rather than ending on a hard edge. */
+@utility blueprint-fade-y {
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: 83px 83px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+}
+
+@utility blueprint-fade-radial {
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: 83px 83px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000, transparent 75%);
+}
+
+/* Faint wireframe rectangles — the recurring "system of record" motif. */
+@utility wire-rects {
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: 48px 24px;
+  -webkit-mask-image: radial-gradient(ellipse 45% 60% at 50% 50%, #000, transparent 72%);
+  mask-image: radial-gradient(ellipse 45% 60% at 50% 50%, #000, transparent 72%);
+}
+
+/* The 24px warm glow used by chart markers and the keynote dot. */
+@utility glow-warm {
+  box-shadow: 0 0 28px 0 rgba(224, 70, 27, 0.5);
+}
+
+@utility glow-violet {
+  box-shadow: 0 0 28px 0 rgba(168, 85, 247, 0.45);
+}
+
+/* ============================================================================
+   KEYFRAMES
+   ========================================================================== */
+
+@keyframes sparkle-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+@keyframes marker-bloom {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes orb-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0) rotate(180deg);
+  }
+}
+
+@utility animate-sparkle {
+  animation: sparkle-pulse 2.4s var(--ease-swap) infinite;
+}
+
+@utility animate-marker {
+  animation: marker-bloom 0.5s var(--ease-expo) both;
+}
+
+@utility animate-orb {
+  animation: orb-drift 24s linear infinite;
+}
+
+/* ============================================================================
+   ACCESSIBILITY HELPERS
+   ========================================================================== */
+
+/* Visually hidden but reachable by screen readers. */
+@utility sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

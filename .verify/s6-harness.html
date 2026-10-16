@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>S6 harness — quote at 44px</title>
+    <style>
+      /* The `latin` subset binary, pulled out of the project's own dev server
+         (e4af272c…-s.p.woff2). Verified metric-identical to the live page's
+         Inter in s6-verify.js. */
+      @font-face {
+        font-family: "InterApp";
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: block;
+        src: url("./fonts/e4af272ccee01ff0-s.p.woff2") format("woff2");
+      }
+
+      :root {
+        --color-page: #0a0a0a;
+        --color-line: #262626;
+        --color-hi: #ffffff;
+        --color-grid: #0c0c0c;
+        --color-wire: #131313;
+        --color-wire-dim: #0b0b0b;
+        --color-surface-3: #171717;
+      }
+
+      * {
+        box-sizing: border-box;
+        border-color: var(--color-line);
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--color-page);
+        color: #d9d9d9;
+        font-family: "InterApp", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* .section-pad + .shell, at a 1440 viewport. */
+      .section-pad {
+        padding-block: 112px;
+      }
+      .shell {
+        max-width: 1200px;
+        margin-inline: auto;
+        width: 100%;
+      }
+
+      /* .t-eyebrow */
+      .t-eyebrow {
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        line-height: 1.33;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 400;
+        margin: 0;
+      }
+
+      figure {
+        margin: 0;
+      }
+
+      /* The figure grid, verbatim from the component. */
+      .fig {
+        display: grid;
+        grid-template-columns: 73px minmax(0, 1fr);
+        align-items: start;
+        column-gap: 27px;
+        max-width: 980px;
+      }
+      .avatar {
+        height: 73px;
+        width: 73px;
+        border-radius: 10px;
+        border: 1px solid var(--color-line);
+        object-fit: cover;
+      }
+      .col {
+        min-width: 0;
+      }
+
+      /* THE FIX — verbatim from the edited component. */
+      blockquote {
+        margin: 0;
+        max-width: 628px;
+        font-size: 44px;
+        font-weight: 400;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        color: var(--color-hi);
+      }
+
+      .byline {
+        margin-top: 32px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        column-gap: 40px;
+        row-gap: 24px;
+      }
+      figcaption {
+        display: flex;
+        align-items: stretch;
+        gap: 32px;
+      }
+      .rule {
+        width: 1px;
+        flex-shrink: 0;
+        background: var(--color-line);
+      }
+      cite {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        font-style: normal;
+      }
+      .pager {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .pager span {
+        font-variant-numeric: tabular-nums;
+        color: #4a4a4a;
+      }
+      .pager span.on {
+        color: var(--color-hi);
+      }
+      .pager i {
+        margin-left: 16px;
+        display: inline-block;
+        height: 1px;
+        width: 50px;
+        background: var(--color-hi);
+        vertical-align: middle;
+        transform: translateY(-3px);
+      }
+    </style>
+  </head>
+  <body>
+    <section class="section-pad">
+      <div id="mosaic" style="pointer-events: none; position: absolute; inset: 0; display: flex; align-items: center">
+        <div
+          id="mosaic-mask"
+          style="height: 460px; width: 100%; -webkit-mask-image: radial-gradient(ellipse 62% 66% at 44% 50%, #000 0%, #000 38%, transparent 78%); mask-image: radial-gradient(ellipse 62% 66% at 44% 50%, #000 0%, #000 38%, transparent 78%)"
+        >
+          <svg id="mosaic-svg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></svg>
+        </div>
+      </div>
+
+      <div class="shell">
+        <div id="fig"></div>
+      </div>
+    </section>
+
+    <script>
+      /* Mosaic generator, ported verbatim from S6Testimonial.tsx. */
+      const CELL = 38, COLS = 38, ROWS = 13;
+      const TONES = [
+        "var(--color-wire-dim)",
+        "var(--color-grid)",
+        "var(--color-wire)",
+        "var(--color-surface-3)",
+      ];
+      function lattice(x, y) {
+        let h = Math.imul(x, 374761393) + Math.imul(y, 668265263);
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 0x100000000;
+      }
+      function valueNoise(x, y) {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const sx = x - xi, sy = y - yi;
+        const ux = sx * sx * (3 - 2 * sx), uy = sy * sy * (3 - 2 * sy);
+        const top = lattice(xi, yi) * (1 - ux) + lattice(xi + 1, yi) * ux;
+        const bot = lattice(xi, yi + 1) * (1 - ux) + lattice(xi + 1, yi + 1) * ux;
+        return top * (1 - uy) + bot * uy;
+      }
+      (function paint() {
+        const svg = document.getElementById("mosaic-svg");
+        svg.setAttribute("viewBox", `0 0 ${COLS * CELL} ${ROWS * CELL}`);
+        let out = "";
+        for (let row = 0; row < ROWS; row++) {
+          for (let col = 0; col < COLS; col++) {
+            const dx = (col + 0.5) / COLS - 0.44;
+            const dy = (row + 0.5) / ROWS - 0.5;
+            const falloff = Math.max(0, 1 - Math.hypot(dx / 0.62, dy / 0.7));
+            const clump = valueNoise(col / 6.5, row / 5.5);
+            if (lattice(col + 91, row + 7) > 0.16 + 0.4 * falloff + 0.46 * clump) continue;
+            const t = lattice(col + 13, row + 51);
+            const tone = TONES[t > 0.78 ? 3 : t > 0.22 ? 2 : t > 0.08 ? 1 : 0];
+            out += `<rect x="${col * CELL + 0.5}" y="${row * CELL + 0.5}" width="${CELL - 1}" height="${CELL - 1}" fill="none" stroke="${tone}" stroke-width="1"/>`;
+          }
+        }
+        svg.innerHTML = out;
+      })();
+
+      const WORDMARK_TEXT =
+        "font-family:ui-monospace,monospace;font-size:12px;letter-spacing:0.18em;font-weight:400";
+
+      function wordmark(id, company) {
+        let g = "";
+        if (id === "kestrel")
+          g = `<rect x="0" y="3" width="20" height="2.6" rx="1.3"/><rect x="0" y="10.1" width="14" height="2.6" rx="1.3"/><rect x="0" y="17.2" width="8" height="2.6" rx="1.3"/>`;
+        if (id === "northbank")
+          g = `<rect x="0.6" y="2" width="2.8" height="20" rx="1.4"/><rect x="16.6" y="2" width="2.8" height="20" rx="1.4"/><rect x="0.6" y="2" width="18.8" height="2.8" rx="1.4"/>`;
+        if (id === "vireo")
+          g = `<circle cx="10.5" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="10.5" cy="12" r="2.5"/>`;
+        return `<svg width="120" height="24" viewBox="0 0 120 24" fill="currentColor" style="flex-shrink:0;color:#ededed"><g>${g}</g><text x="30" y="12" dominant-baseline="central" style="${WORDMARK_TEXT}">${company.toUpperCase()}</text></svg>`;
+      }
+
+      const SLIDES = [
+        {
+          id: "kestrel",
+          quote:
+            '"We were quoting freight off spreadsheets that were a day out of date. ScalMint rebuilt the pipeline, so dispatch and pricing read from one record."',
+          company: "Kestrel",
+          name: "Priya Raghunathan",
+          role: "Chief Operating Officer",
+          avatar: "../public/people/avatar-09.jpg",
+        },
+        {
+          id: "northbank",
+          quote:
+            '"Every branch had its own idea of what a customer was worth. Now there is one structured record, and the answers come out of it."',
+          company: "Northbank",
+          name: "Declan Moss",
+          role: "Director of Digital Operations",
+          avatar: "../public/people/avatar-11.jpg",
+        },
+        {
+          id: "vireo",
+          quote:
+            '"The grid data was already there and unusable. It is cleaned, queryable and in front of field engineers before they phone head office."',
+          company: "Vireo",
+          name: "Ryo Tanabe",
+          role: "Head of Platform Engineering",
+          avatar: "../public/people/avatar-05.jpg",
+        },
+      ];
+
+      /* One figure per slide, stacked, so all three can be measured and
+         screenshotted without the carousel's mount/unmount in the way. */
+      const fig = document.getElementById("fig");
+      fig.innerHTML = SLIDES.map(
+        (s, i) => `
+        <div class="fig" data-slide="${i}">
+          <img class="avatar" src="${s.avatar}" alt="" />
+          <div class="col">
+            <blockquote>${s.quote}</blockquote>
+            <div class="byline">
+              <figcaption>
+                ${wordmark(s.id, s.company)}
+                <span class="rule"></span>
+                <cite>
+                  <p class="t-eyebrow" style="color:#ededed">${s.name}</p>
+                  <p class="t-eyebrow" style="color:#9a9a9a">${s.role}</p>
+                </cite>
+              </figcaption>
+              <div class="pager">
+                ${SLIDES.map(
+                  (_, j) =>
+                    `<span class="${j === i ? "on" : ""}">0${j + 1}${j === i ? "<i></i>" : ""}</span>`,
+                ).join("")}
+              </div>
+            </div>
+          </div>
+        </div>`,
+      ).join("");
+      fig.style.display = "flex";
+      fig.style.flexDirection = "column";
+      fig.style.gap = "72px";
+      fig.style.maxWidth = "980px";
+    </script>
+  </body>
+</html>

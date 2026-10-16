@@ -1,0 +1,222 @@
+{
+  "390": {
+    "scrollW": 404,
+    "clientW": 390,
+    "horizontalScroll": true,
+    "offenders": [
+      {
+        "tag": "g",
+        "cls": "[object SVGAnimatedString]",
+        "left": -1313,
+        "right": 1669
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -1313,
+        "right": 131
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -1245,
+        "right": 131
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -1178,
+        "right": 131
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -1110,
+        "right": 131
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -1042,
+        "right": 131
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -974,
+        "right": 131
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -907,
+        "right": 131
+      }
+    ]
+  },
+  "768": {
+    "scrollW": 768,
+    "clientW": 768,
+    "horizontalScroll": false,
+    "offenders": [
+      {
+        "tag": "g",
+        "cls": "[object SVGAnimatedString]",
+        "left": -926,
+        "right": 1665
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -926,
+        "right": 329
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -867,
+        "right": 329
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -808,
+        "right": 329
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -749,
+        "right": 329
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -691,
+        "right": 329
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -632,
+        "right": 329
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -573,
+        "right": 329
+      }
+    ]
+  },
+  "1280": {
+    "scrollW": 1280,
+    "clientW": 1280,
+    "horizontalScroll": false,
+    "offenders": [
+      {
+        "tag": "g",
+        "cls": "[object SVGAnimatedString]",
+        "left": -670,
+        "right": 1921
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -670,
+        "right": 585
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -611,
+        "right": 585
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -552,
+        "right": 585
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -493,
+        "right": 585
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -435,
+        "right": 585
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -376,
+        "right": 585
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -317,
+        "right": 585
+      }
+    ]
+  },
+  "1440": {
+    "scrollW": 1440,
+    "clientW": 1440,
+    "horizontalScroll": false,
+    "offenders": [
+      {
+        "tag": "g",
+        "cls": "[object SVGAnimatedString]",
+        "left": -704,
+        "right": 2112
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -704,
+        "right": 660
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -640,
+        "right": 660
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -576,
+        "right": 660
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -512,
+        "right": 660
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -448,
+        "right": 660
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -384,
+        "right": 660
+      },
+      {
+        "tag": "line",
+        "cls": "[object SVGAnimatedString]",
+        "left": -320,
+        "right": 660
+      }
+    ]
+  }
+}

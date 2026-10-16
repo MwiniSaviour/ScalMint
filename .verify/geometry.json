@@ -1,0 +1,79 @@
+[
+  {
+    "tag": "section",
+    "id": null,
+    "top": 72,
+    "height": 828,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "process",
+    "top": 900,
+    "height": 1844,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "approach",
+    "top": 2744,
+    "height": 954,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "work",
+    "top": 3698,
+    "height": 1954,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "business-case",
+    "top": 5652,
+    "height": 1158,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "testimonial",
+    "top": 6809,
+    "height": 519,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "system-of-record",
+    "top": 7328,
+    "height": 658,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "trust",
+    "top": 7986,
+    "height": 1300,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "stories",
+    "top": 9286,
+    "height": 760,
+    "width": 1440
+  },
+  {
+    "tag": "section",
+    "id": "journal",
+    "top": 10046,
+    "height": 898,
+    "width": 1440
+  },
+  {
+    "tag": "footer",
+    "id": null,
+    "top": 10945,
+    "height": 1114,
+    "width": 1440
+  }
+]

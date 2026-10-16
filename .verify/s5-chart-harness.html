@@ -1,0 +1,66 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --color-page:#0A0A0A; --color-surface-1:#101010; --color-line:#262626;
+          --color-warm:#e0461b; --color-grid:#0c0c0c; --color-hi:#ffffff; --color-body:#d9d9d9;
+          --ease-expo:cubic-bezier(0.22,1,0.36,1); }
+  * { box-sizing: border-box; margin: 0; padding: 0; border-color: var(--color-line); }
+  html, body { background: var(--color-page); }
+  body { font-family: Inter, system-ui, sans-serif; padding: 24px; }
+  .chart { position: relative; aspect-ratio: 877/500; width: 877px; overflow: hidden; margin-bottom: 24px; }
+  .grid-layer { position: absolute; inset: 0;
+    background-image: linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+                      linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+    background-size: 83px 83px;
+    -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000, transparent 75%);
+    mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000, transparent 75%); }
+  svg { position: absolute; inset: 0; height: 100%; width: 100%; }
+  .mk { position: absolute; display: block; }
+  .core { position: absolute; inset: 0; display: block; border-radius: 0; background: var(--color-warm);
+          box-shadow: 0 0 28px 0 rgba(224,70,27,0.5); }
+  /* animation neutralised so measurements land on the settled 32x32 state */
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
+</style></head><body>
+
+  <figure class="chart" data-slide="roi" data-marker-x="90,410,610,720">
+    <div class="blueprint-fade-radial grid-layer"></div>
+    <svg viewBox="0 0 877 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="90,289 290,289 410,169 610,169 720,59 780,59 830,59"></polyline>
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="8,250 51,250 90,289"></polyline>
+      <rect x="3" y="245" width="10" height="10" fill="#ffffff"></rect>
+      <rect x="659" y="244" width="10" height="10" fill="#ffffff"></rect>
+    </svg>
+    <span class="mk" style="left:10.2623%;top:57.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:46.7503%;top:33.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:69.5553%;top:33.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:82.0981%;top:11.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span>
+  </figure>
+  <figure class="chart" data-slide="velocity" data-marker-x="110,430,580,700">
+    <div class="blueprint-fade-radial grid-layer"></div>
+    <svg viewBox="0 0 877 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="110,309 290,309 430,169 580,169 700,49 790,49 850,49"></polyline>
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="8,250 51,250 110,309"></polyline>
+      <rect x="3" y="245" width="10" height="10" fill="#ffffff"></rect>
+      <rect x="659" y="244" width="10" height="10" fill="#ffffff"></rect>
+    </svg>
+    <span class="mk" style="left:12.5428%;top:61.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:49.0308%;top:33.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:66.1345%;top:33.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:79.8176%;top:9.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span>
+  </figure>
+  <figure class="chart" data-slide="cost" data-marker-x="150,470,630,740">
+    <div class="blueprint-fade-radial grid-layer"></div>
+    <svg viewBox="0 0 877 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="150,349 330,349 470,209 630,209 740,99 810,99 870,99"></polyline>
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="8,250 51,250 150,349"></polyline>
+      <rect x="3" y="245" width="10" height="10" fill="#ffffff"></rect>
+      <rect x="659" y="244" width="10" height="10" fill="#ffffff"></rect>
+    </svg>
+    <span class="mk" style="left:17.1038%;top:69.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:53.5918%;top:41.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:71.8358%;top:41.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:84.3786%;top:19.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span>
+  </figure>
+  <figure class="chart" data-slide="response" data-marker-x="110,360,550,680">
+    <div class="blueprint-fade-radial grid-layer"></div>
+    <svg viewBox="0 0 877 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="110,309 230,309 360,179 550,179 680,49 810,49 870,49"></polyline>
+      <polyline fill="none" stroke="#333333" stroke-width="1.5" stroke-linejoin="miter" points="8,250 51,250 110,309"></polyline>
+      <rect x="3" y="245" width="10" height="10" fill="#ffffff"></rect>
+      <rect x="659" y="244" width="10" height="10" fill="#ffffff"></rect>
+    </svg>
+    <span class="mk" style="left:12.5428%;top:61.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:41.0490%;top:35.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:62.7138%;top:35.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span><span class="mk" style="left:77.5371%;top:9.8000%;width:32px;height:32px;margin-left:-16px;margin-top:-16px"><span class="core"></span></span>
+  </figure>
+</body></html>
