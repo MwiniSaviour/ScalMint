@@ -443,7 +443,7 @@ export default function S9VideoStory() {
       ref={sectionRef}
       id="stories"
       aria-label="Customer stories"
-      className="relative isolate flex min-h-[760px] flex-col overflow-hidden bg-page"
+      className="relative isolate flex min-h-[814px] flex-col overflow-hidden bg-page"
     >
       {/* The clip is decoration. Every word of meaning is in the text column, so
           it is removed from the accessibility tree entirely. */}
@@ -548,7 +548,7 @@ export default function S9VideoStory() {
                     ? { duration: 0, ease: EASE_EXPO }
                     : { duration: 0.6, ease: EASE_EXPO }
                 }
-                className="mt-11 flex items-center gap-6 md:absolute md:right-0 md:bottom-[132px] md:mt-0"
+                className="mt-11 flex items-center gap-6 md:absolute md:right-0 md:bottom-[40px] md:mt-0"
               >
                 <MarkTile size={118} label={`${slide.client} logo`} />
 
@@ -564,7 +564,7 @@ export default function S9VideoStory() {
             ) : null}
           </AnimatePresence>
 
-          <div className="relative z-10 mt-16 md:absolute md:bottom-[64px] md:left-0 md:mt-0">
+          <div className="relative z-10 mt-16 md:absolute md:bottom-[240px] md:left-0 md:mt-0">
             <Pager
               count={SLIDE_COUNT}
               active={active}

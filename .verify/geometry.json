@@ -17,62 +17,62 @@
     "tag": "section",
     "id": "approach",
     "top": 2744,
-    "height": 954,
+    "height": 1029,
     "width": 1440
   },
   {
     "tag": "section",
     "id": "work",
-    "top": 3698,
-    "height": 1954,
+    "top": 3773,
+    "height": 2004,
     "width": 1440
   },
   {
     "tag": "section",
     "id": "business-case",
-    "top": 5652,
+    "top": 5777,
     "height": 1158,
     "width": 1440
   },
   {
     "tag": "section",
     "id": "testimonial",
-    "top": 6809,
+    "top": 6934,
     "height": 519,
     "width": 1440
   },
   {
     "tag": "section",
     "id": "system-of-record",
-    "top": 7328,
-    "height": 658,
+    "top": 7453,
+    "height": 734,
     "width": 1440
   },
   {
     "tag": "section",
     "id": "trust",
-    "top": 7986,
-    "height": 1300,
+    "top": 8187,
+    "height": 1166,
     "width": 1440
   },
   {
     "tag": "section",
     "id": "stories",
-    "top": 9286,
-    "height": 760,
+    "top": 9353,
+    "height": 814,
     "width": 1440
   },
   {
     "tag": "section",
     "id": "journal",
-    "top": 10046,
+    "top": 10167,
     "height": 898,
     "width": 1440
   },
   {
     "tag": "footer",
     "id": null,
-    "top": 10945,
+    "top": 11065,
     "height": 1114,
     "width": 1440
   }

@@ -90,6 +90,10 @@ const WIRE_RECTS: readonly (readonly [number, number, number, number])[] = [
   [1, 8, 3, 2],
   [4, 9, 5, 2],
   [8, 8, 4, 3],
+  [10, 2, 2, 3],
+  [9, 7, 3, 2],
+  [6, 10, 3, 2],
+  [2, 8, 4, 2],
 ];
 
 const CELL_W = 75;
@@ -99,7 +103,7 @@ const CELL_H = 38;
     the texture stays felt rather than seen. Two levels above the page base. */
 function Wireframe() {
   const dissolve =
-    "radial-gradient(ellipse 60% 84% at 14% 24%, #000 0%, rgba(0,0,0,0.55) 44%, transparent 76%)";
+    "radial-gradient(ellipse 85% 100% at 14% 24%, #000 0%, rgba(0,0,0,0.55) 44%, transparent 76%)";
 
   return (
     <div
@@ -157,7 +161,7 @@ export default function S3Statement() {
 
       <Container className="relative z-10">
         <div className="grid grid-cols-1 min-[1280px]:grid-cols-12 min-[1280px]:gap-x-[24px]">
-          <div className="min-[1280px]:col-start-5 min-[1280px]:col-span-7">
+          <div className="min-[1280px]:col-start-3 min-[1280px]:col-span-7 mt-[75px]">
             {/* --------------------------------------------------------- TEXT */}
             <motion.div
               ref={ref}
@@ -186,7 +190,7 @@ export default function S3Statement() {
             {/* -------------------------------------------------------- TILES */}
             <ul
               aria-label="Capabilities"
-              className="mt-[56px] flex flex-wrap gap-[16px] min-[1280px]:mt-[96px] min-[1280px]:w-[785px] min-[1280px]:gap-[47px]"
+              className="mt-[56px] flex flex-wrap gap-[16px] min-[1280px]:mt-[96px] min-[1280px]:w-[785px] min-[1280px]:gap-[21px]"
             >
               {CAPABILITIES.map(({ label, Icon }, i) => (
                 <motion.li

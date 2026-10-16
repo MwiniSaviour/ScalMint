@@ -513,7 +513,7 @@ export default function S8Trust() {
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
           variants={staggerContainer(0.08)}
-          className="card flex min-h-[450px] flex-col justify-center p-8 lg:px-[60px] lg:py-[64px]"
+          className="card flex min-h-[300px] flex-col justify-center p-8 lg:px-[60px] lg:py-[64px]"
         >
           <div className="grid gap-y-10 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-center lg:gap-x-[72px]">
             <motion.div variants={staggerItem}>
