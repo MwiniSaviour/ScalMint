@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { affiliateAuthHeaders } from "@/lib/auth/client";
 
-export function PayoutButton({ eligible, pendingGhs }: { eligible: boolean; pendingGhs: string }) {
+export function PayoutButton({
+  eligible,
+  pendingGhs,
+  token,
+}: {
+  eligible: boolean;
+  pendingGhs: string;
+  token?: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -14,7 +22,7 @@ export function PayoutButton({ eligible, pendingGhs }: { eligible: boolean; pend
       const res = await fetch("/api/affiliate/payout", {
         method: "POST",
         credentials: "include",
-        headers: affiliateAuthHeaders(),
+        headers: affiliateAuthHeaders(token),
       });
       const data = (await res.json()) as { reference?: string; error?: string };
       if (!res.ok) {

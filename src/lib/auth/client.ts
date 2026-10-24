@@ -71,5 +71,5 @@ export function affiliateAuthHeaders(token?: string | null): HeadersInit {
 }
 
 export function dashboardUrl(token: string) {
-  return `/affiliate/dashboard#${encodeURIComponent(token)}`;
+  return `/affiliate/dashboard?s=${encodeURIComponent(token)}`;
 }
