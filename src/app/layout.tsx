@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scalmint.com"),
@@ -23,6 +24,12 @@ export const metadata: Metadata = {
     description: "Scalable digital systems that turn business needs into measurable results.",
   },
   robots: { index: true, follow: true },
+  verification: {
+    google: "Wz9cgkhl9ruV4ocgFkqh7Pgxr-y-C5gPsVc_KcxXf_U",
+  },
+  alternates: {
+    canonical: "https://scalmint.com",
+  },
 };
 
 export const viewport = {
@@ -35,7 +42,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="bg-page font-sans antialiased">{children}</body>
+      <body className="bg-page font-sans antialiased">
+        <GoogleAnalytics />
+        {children}
+      </body>
     </html>
   );
 }
