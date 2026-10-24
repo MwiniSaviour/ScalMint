@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { destroySession } from "@/lib/auth/session";
+import { SESSION_COOKIE } from "@/lib/auth/token";
 
 export async function POST() {
-  await destroySession();
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
+  return res;
 }
 
-export async function GET() {
-  await destroySession();
-  return NextResponse.redirect(new URL("/affiliate/login", process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"));
+export async function GET(req: Request) {
+  const res = NextResponse.redirect(new URL("/affiliate/login", req.url));
+  res.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
+  return res;
 }

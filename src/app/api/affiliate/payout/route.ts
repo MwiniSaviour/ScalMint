@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
+import { sessionFromRequest } from "@/lib/auth/token";
 import { nanoid } from "nanoid";
 import type { AffiliateRow, PayoutRow } from "@/lib/affiliate/types";
 
-export async function POST() {
-  const session = await getSession();
+export async function POST(req: Request) {
+  const session = await sessionFromRequest(req);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const affiliate = (await db.affiliate.findUnique({ where: { id: session.affiliateId } })) as AffiliateRow | null;

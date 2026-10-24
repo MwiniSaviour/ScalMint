@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Container, Eyebrow } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/primitives";
+import { storeAffiliateToken } from "@/lib/auth/client";
 
 export default function ApplyPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -20,14 +21,16 @@ export default function ApplyPage() {
     try {
       const res = await fetch("/api/affiliate/register", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
+      const data = (await res.json()) as { error?: string; code?: string; token?: string };
+      if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Failed");
+      if (data.token) storeAffiliateToken(data.token);
       setStatus("success");
-      setMsg(`Approved instantly in dev. Your code: ${data.code}. Redirecting to dashboard...`);
-      setTimeout(() => (window.location.href = "/affiliate/dashboard"), 900);
+      setMsg(`Your code: ${data.code}. Opening dashboard…`);
+      window.location.assign("/affiliate/dashboard");
     } catch (err: unknown) {
       setStatus("error");
       setMsg(err instanceof Error ? err.message : "Something went wrong");

@@ -1,36 +1,88 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
-import { db } from "@/lib/db";
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AFFILIATE_PRODUCTS } from "@/lib/affiliate/products";
 import { Container, Eyebrow } from "@/components/ui/primitives";
 import { PayoutButton } from "@/components/affiliate/PayoutButton";
-import Link from "next/link";
+import {
+  affiliateAuthHeaders,
+  clearAffiliateToken,
+  readAffiliateToken,
+} from "@/lib/auth/client";
 import type { AffiliateDashboard } from "@/lib/affiliate/types";
-
-export const dynamic = "force-dynamic";
 
 function pesewasToGhs(n: number) {
   return (n / 100).toFixed(2);
 }
 
-export default async function DashboardPage() {
-  const session = await getSession();
-  if (!session) redirect("/affiliate/login");
+export default function DashboardPage() {
+  const [affiliate, setAffiliate] = useState<AffiliateDashboard | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const raw = await db.affiliate.findUnique({
-    where: { id: session.affiliateId },
-    include: {
-      conversions: { orderBy: { createdAt: "desc" }, take: 10, include: { product: true } },
-      payouts: { orderBy: { createdAt: "desc" }, take: 5 },
-    },
-  });
-  if (!raw) redirect("/affiliate/login");
-  const affiliate = raw as AffiliateDashboard;
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const token = readAffiliateToken();
+      const res = await fetch("/api/affiliate/me", {
+        credentials: "include",
+        headers: affiliateAuthHeaders(),
+        cache: "no-store",
+      });
+      if (res.status === 401) {
+        if (!token) {
+          window.location.replace("/affiliate/login");
+          return;
+        }
+        clearAffiliateToken();
+        window.location.replace("/affiliate/login");
+        return;
+      }
+      if (!res.ok) {
+        if (!cancelled) setError("Could not load dashboard.");
+        return;
+      }
+      const data = (await res.json()) as { affiliate: AffiliateDashboard };
+      if (!cancelled) setAffiliate(data.affiliate);
+    }
+    load().catch(() => {
+      if (!cancelled) setError("Could not load dashboard.");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const allTimeClicks = affiliate.totalClicks;
-  const approvedEarningsPesewas = affiliate.totalEarned;
-  const paidPesewas = affiliate.totalPaid;
-  const pendingPesewas = Math.max(0, approvedEarningsPesewas - paidPesewas);
+  async function signOut() {
+    clearAffiliateToken();
+    await fetch("/api/affiliate/logout", { method: "POST", credentials: "include" });
+    window.location.assign("/affiliate/login");
+  }
+
+  if (error) {
+    return (
+      <main className="bg-page">
+        <Container className="py-20">
+          <p className="text-[14px] text-[#ff8a7a]">{error}</p>
+          <Link href="/affiliate/login" className="mt-4 inline-flex text-[13px] text-hi underline underline-offset-4">
+            Back to sign in
+          </Link>
+        </Container>
+      </main>
+    );
+  }
+
+  if (!affiliate) {
+    return (
+      <main className="bg-page">
+        <Container className="py-20">
+          <p className="font-mono text-[12px] tracking-wide text-muted">Loading dashboard…</p>
+        </Container>
+      </main>
+    );
+  }
+
+  const pendingPesewas = Math.max(0, affiliate.totalEarned - affiliate.totalPaid);
 
   return (
     <main className="bg-page">
@@ -40,30 +92,39 @@ export default async function DashboardPage() {
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-brand-teal">Affiliate dashboard</p>
               <h1 className="mt-2 text-[24px] font-medium tracking-[-0.02em] text-hi">
-                Welcome, {affiliate.name} <span className="font-mono text-[12px] font-normal tracking-wide text-muted">({affiliate.code})</span>
+                Welcome, {affiliate.name}{" "}
+                <span className="font-mono text-[12px] font-normal tracking-wide text-muted">({affiliate.code})</span>
               </h1>
               <p className="mt-1 text-[13px] text-muted">
-                Payout: <span className="text-body">{affiliate.payoutMethod === "MOBILE_MONEY" ? "MTN MoMo / Telecel / AirtelTigo" : "Bank"}</span> •{" "}
-                <span className="font-mono text-brand-teal">{affiliate.payoutAccount}</span> • Balance threshold GHS 50
+                Payout:{" "}
+                <span className="text-body">
+                  {affiliate.payoutMethod === "MOBILE_MONEY" ? "MTN MoMo / Telecel / AirtelTigo" : "Bank"}
+                </span>{" "}
+                • <span className="font-mono text-brand-teal">{affiliate.payoutAccount}</span> • Balance threshold GHS 50
               </p>
             </div>
-            <form action="/api/affiliate/logout" method="post">
-              <button type="submit" className="rounded-pill border border-white/10 bg-white/[0.04] px-4 py-2 text-[12px] text-muted hover:text-hi">
-                Sign out
-              </button>
-            </form>
+            <button
+              type="button"
+              onClick={signOut}
+              className="rounded-pill border border-white/10 bg-white/[0.04] px-4 py-2 text-[12px] text-muted hover:text-hi"
+            >
+              Sign out
+            </button>
           </div>
         </Container>
       </div>
 
       <Container className="py-8">
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
-            { label: "Total clicks", value: String(allTimeClicks), hint: "All time" },
+            { label: "Total clicks", value: String(affiliate.totalClicks), hint: "All time" },
             { label: "Conversions", value: String(affiliate.totalConversions), hint: "Approved" },
-            { label: "Approved earnings", value: `GHS ${pesewasToGhs(approvedEarningsPesewas)}`, hint: "Pending + paid" },
-            { label: "Available to withdraw", value: `GHS ${pesewasToGhs(pendingPesewas)}`, hint: pendingPesewas >= 5000 ? "Eligible" : "Min GHS 50" },
+            { label: "Approved earnings", value: `GHS ${pesewasToGhs(affiliate.totalEarned)}`, hint: "Pending + paid" },
+            {
+              label: "Available to withdraw",
+              value: `GHS ${pesewasToGhs(pendingPesewas)}`,
+              hint: pendingPesewas >= 5000 ? "Eligible" : "Min GHS 50",
+            },
           ].map((s) => (
             <div key={s.label} className="rounded-[12px] border border-white/[0.06] bg-surface-1 p-4">
               <p className="t-eyebrow text-eyebrow">{s.label}</p>
@@ -73,23 +134,29 @@ export default async function DashboardPage() {
           ))}
         </div>
 
-        {/* Referral links */}
         <div className="mt-8 rounded-[16px] border border-white/[0.07] bg-surface-1 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Eyebrow>Your referral links</Eyebrow>
-            <span className="rounded-[6px] bg-brand-teal px-2 py-1 font-mono text-[11px] font-semibold tracking-wide text-black">{affiliate.code}</span>
+            <span className="rounded-[6px] bg-brand-teal px-2 py-1 font-mono text-[11px] font-semibold tracking-wide text-black">
+              {affiliate.code}
+            </span>
           </div>
           <p className="mt-2 max-w-[640px] text-[13px] leading-[1.6] text-muted">
-            Append <span className="font-mono text-body">?ref={affiliate.code}</span> to any ScalMint URL. We cookie for 30 days and attribute via server click. Links work for both Nova POS and Operasch; add <span className="font-mono text-body">&p=slug</span> to segment in reports.
+            Append <span className="font-mono text-body">?ref={affiliate.code}</span> to any ScalMint URL. 30-day cookie.
+            Add <span className="font-mono text-body">&p=slug</span> to segment in reports.
           </p>
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
             {AFFILIATE_PRODUCTS.map((p) => {
-              const url = p.href ? `${p.href}?ref=${affiliate.code}` : `https://scalmint.com/affiliate?p=${p.slug}&ref=${affiliate.code}`;
+              const url = p.href
+                ? `${p.href}?ref=${affiliate.code}`
+                : `https://scalmint.com/affiliate?p=${p.slug}&ref=${affiliate.code}`;
               return (
                 <div key={p.slug} className="rounded-[10px] border border-white/[0.06] bg-page px-4 py-4">
                   <div className="flex items-center justify-between">
                     <p className="text-[13px] font-medium text-hi">{p.name}</p>
-                    <span className={`rounded-[6px] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${p.status === "live" ? "bg-white text-black" : "bg-[#1a1a1a] text-muted"}`}>
+                    <span
+                      className={`rounded-[6px] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${p.status === "live" ? "bg-white text-black" : "bg-[#1a1a1a] text-muted"}`}
+                    >
                       {p.status === "live" ? p.commissionLabel : "Coming soon"}
                     </span>
                   </div>
@@ -99,17 +166,15 @@ export default async function DashboardPage() {
               );
             })}
           </div>
-          <div className="mt-4 rounded-[10px] border border-amber-500/15 bg-amber-500/5 px-3 py-2 text-[12px] leading-[1.5] text-amber-200">
-            DNS: This dashboard is served at <span className="font-mono text-amber-100">affiliate.scalmint.com</span> — add CNAME <span className="font-mono">affiliate → cname.vercel-dns.com</span> in Cloudflare/Registrar and assign domain in Vercel project settings (auto TLS).
-          </div>
         </div>
 
-        {/* Conversions */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_0.9fr]">
           <div className="rounded-[16px] border border-white/[0.07] bg-surface-1">
             <div className="border-b border-white/[0.06] px-5 py-4">
               <h3 className="text-[14px] font-medium tracking-[-0.01em] text-hi">Recent conversions</h3>
-              <p className="mt-1 font-mono text-[11px] tracking-wide text-muted">Pending 7d → Approved → Paid • Paystack T+1 • fraud window</p>
+              <p className="mt-1 font-mono text-[11px] tracking-wide text-muted">
+                Pending 7d → Approved → Paid • Paystack T+1
+              </p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[12px]">
@@ -126,7 +191,7 @@ export default async function DashboardPage() {
                   {affiliate.conversions.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-4 py-8 text-center text-muted">
-                        No conversions yet. Share your link — clicks appear in real time, conversions after Paystack webhook.
+                        No conversions yet. Share your link — clicks appear in real time.
                       </td>
                     </tr>
                   ) : (
@@ -137,7 +202,9 @@ export default async function DashboardPage() {
                         <td className="px-4 py-3 font-mono text-body">GHS {pesewasToGhs(c.amount)}</td>
                         <td className="px-4 py-3 font-mono text-brand-teal">GHS {pesewasToGhs(c.commissionAmount)}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${c.status === "APPROVED" ? "bg-brand-teal text-black" : c.status === "PENDING" ? "bg-amber-400 text-black" : c.status === "PAID" ? "bg-white text-black" : "bg-white/10 text-muted"}`}>
+                          <span
+                            className={`inline-flex rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${c.status === "APPROVED" ? "bg-brand-teal text-black" : c.status === "PENDING" ? "bg-amber-400 text-black" : c.status === "PAID" ? "bg-white text-black" : "bg-white/10 text-muted"}`}
+                          >
                             {c.status}
                           </span>
                         </td>
@@ -152,29 +219,41 @@ export default async function DashboardPage() {
           <div className="space-y-6">
             <div className="rounded-[16px] border border-white/[0.07] bg-surface-1 p-5">
               <h3 className="text-[14px] font-medium text-hi">Payouts</h3>
-              <p className="mt-1 text-[12px] leading-[1.5] text-muted">MoMo GHS 1 vs bank GHS 8 via Paystack Transfer. Threshold GHS 50 MoMo.</p>
+              <p className="mt-1 text-[12px] leading-[1.5] text-muted">
+                MoMo GHS 1 vs bank GHS 8 via Paystack Transfer. Threshold GHS 50 MoMo.
+              </p>
               <div className="mt-4 divide-y divide-white/[0.06]">
                 {affiliate.payouts.length === 0 ? (
-                  <p className="py-6 text-center text-[12px] text-muted">No payouts yet. Available balance: GHS {pesewasToGhs(pendingPesewas)}.</p>
+                  <p className="py-6 text-center text-[12px] text-muted">
+                    No payouts yet. Available balance: GHS {pesewasToGhs(pendingPesewas)}.
+                  </p>
                 ) : (
                   affiliate.payouts.map((p) => (
                     <div key={p.id} className="flex items-center justify-between py-3">
                       <div>
                         <p className="font-mono text-[12px] text-body">GHS {pesewasToGhs(p.amount)}</p>
-                        <p className="font-mono text-[11px] text-muted">{new Date(p.createdAt).toLocaleDateString("en-GB")} • {p.method}</p>
+                        <p className="font-mono text-[11px] text-muted">
+                          {new Date(p.createdAt).toLocaleDateString("en-GB")} • {p.method}
+                        </p>
                       </div>
-                      <span className={`rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${p.status === "SUCCESS" ? "bg-brand-teal text-black" : "bg-white/10 text-muted"}`}>{p.status}</span>
+                      <span
+                        className={`rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${p.status === "SUCCESS" ? "bg-brand-teal text-black" : "bg-white/10 text-muted"}`}
+                      >
+                        {p.status}
+                      </span>
                     </div>
                   ))
                 )}
               </div>
               <PayoutButton eligible={pendingPesewas >= 5000} pendingGhs={pesewasToGhs(pendingPesewas)} />
-              <p className="mt-2 text-center font-mono text-[11px] text-muted">Weekly batch • 15th monthly sweep for small balances</p>
+              <p className="mt-2 text-center font-mono text-[11px] text-muted">Weekly batch • 15th monthly sweep</p>
             </div>
 
             <div className="rounded-[16px] border border-white/[0.07] bg-[#111111] p-5">
               <p className="t-eyebrow text-brand-teal">Need help?</p>
-              <p className="mt-2 text-[13px] leading-[1.6] text-muted">Support: support@scalmint.com • Responses in &lt;12h (Accra). Payout issues checked against Paystack transfer status.</p>
+              <p className="mt-2 text-[13px] leading-[1.6] text-muted">
+                Support: support@scalmint.com • Responses in &lt;12h (Accra).
+              </p>
               <Link href="/affiliate" className="mt-3 inline-flex text-[12px] text-muted underline underline-offset-4 hover:text-hi">
                 Back to affiliate home
               </Link>

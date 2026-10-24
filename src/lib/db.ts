@@ -74,6 +74,8 @@ function prismaEngineReady(): boolean {
   }
 }
 
+const STORE_PATH = path.join(process.cwd(), ".data", "affiliate-store.json");
+
 function createMemory(): DbClient {
   const affiliates = new Map<string, AffiliateRow>();
   const affiliatesByEmail = new Map<string, string>();
@@ -83,6 +85,53 @@ function createMemory(): DbClient {
   const payouts: PayoutRow[] = [];
   const webhooks = new Map<string, { id: string; processed: boolean }>();
 
+  function persist() {
+    try {
+      fs.mkdirSync(path.dirname(STORE_PATH), { recursive: true });
+      fs.writeFileSync(
+        STORE_PATH,
+        JSON.stringify({
+          affiliates: [...affiliates.values()],
+          conversions,
+          payouts,
+        }),
+      );
+    } catch (err) {
+      console.warn("[db] persist failed", err);
+    }
+  }
+
+  function hydrate() {
+    try {
+      if (!fs.existsSync(STORE_PATH)) return;
+      const raw = JSON.parse(fs.readFileSync(STORE_PATH, "utf8")) as {
+        affiliates?: AffiliateRow[];
+        conversions?: ConversionRow[];
+        payouts?: PayoutRow[];
+      };
+      for (const a of raw.affiliates ?? []) {
+        const row = {
+          ...a,
+          email: a.email.toLowerCase(),
+          createdAt: new Date(a.createdAt),
+          updatedAt: new Date(a.updatedAt),
+          lastActiveAt: a.lastActiveAt ? new Date(a.lastActiveAt) : null,
+        };
+        affiliates.set(row.id, row);
+        affiliatesByEmail.set(row.email, row.id);
+        affiliatesByCode.set(row.code, row.id);
+      }
+      for (const c of raw.conversions ?? []) {
+        conversions.push({ ...c, createdAt: new Date(c.createdAt) });
+      }
+      for (const p of raw.payouts ?? []) {
+        payouts.push({ ...p, createdAt: new Date(p.createdAt) });
+      }
+    } catch (err) {
+      console.warn("[db] hydrate failed", err);
+    }
+  }
+
   const seedProducts: ProductRow[] = [
     { id: "prd_nova", slug: "nova-pos", name: "Nova POS", domain: "pos.scalmint.com", href: "https://pos.scalmint.com", status: "LIVE", commissionType: "PERCENT_RECURRING", commissionRate: 3000, commissionCap: 50000, cookieDays: 30, minPayout: 5000 },
     { id: "prd_operasch", slug: "operasch", name: "Operasch", domain: "smartsos.cloud", href: "https://smartsos.cloud", status: "LIVE", commissionType: "PERCENT_RECURRING", commissionRate: 2500, commissionCap: 40000, cookieDays: 30, minPayout: 5000 },
@@ -90,11 +139,12 @@ function createMemory(): DbClient {
     { id: "prd_jobfinder", slug: "jobfinder", name: "JobFinder", domain: null, href: null, status: "COMING_SOON", commissionType: "FLAT_CPA", commissionRate: 1000, commissionCap: null, cookieDays: 30, minPayout: 5000 },
   ];
   for (const p of seedProducts) products.set(p.slug, p);
+  hydrate();
 
   function getAffiliate(where: Record<string, unknown>): AffiliateRow | null {
     if (typeof where.id === "string") return affiliates.get(where.id) ?? null;
     if (typeof where.email === "string") {
-      const key = affiliatesByEmail.get(where.email);
+      const key = affiliatesByEmail.get(where.email.toLowerCase());
       return key ? affiliates.get(key) ?? null : null;
     }
     if (typeof where.code === "string") {
@@ -125,7 +175,7 @@ function createMemory(): DbClient {
         const row: AffiliateRow = {
           id: id("aff"),
           code: data.code!,
-          email: data.email!,
+          email: data.email!.toLowerCase(),
           name: data.name!,
           phone: data.phone ?? null,
           passwordHash: data.passwordHash!,
@@ -146,6 +196,7 @@ function createMemory(): DbClient {
         affiliates.set(row.id, row);
         affiliatesByEmail.set(row.email, row.id);
         affiliatesByCode.set(row.code, row.id);
+        persist();
         return row;
       },
       update: async (args) => {
@@ -162,6 +213,7 @@ function createMemory(): DbClient {
           updatedAt: new Date(),
         };
         affiliates.set(row.id, next);
+        persist();
         return next;
       },
       upsert: async (args) => {
@@ -203,6 +255,7 @@ function createMemory(): DbClient {
           createdAt: new Date(),
         };
         conversions.unshift(row);
+        persist();
         return row;
       },
       findMany: async (args) => {
@@ -253,6 +306,7 @@ function createMemory(): DbClient {
           createdAt: new Date(),
         };
         payouts.unshift(row);
+        persist();
         return row;
       },
       findUnique: async (args) => {

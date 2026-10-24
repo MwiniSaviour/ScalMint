@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { affiliateAuthHeaders } from "@/lib/auth/client";
 
 export function PayoutButton({ eligible, pendingGhs }: { eligible: boolean; pendingGhs: string }) {
   const [busy, setBusy] = useState(false);
@@ -10,7 +11,11 @@ export function PayoutButton({ eligible, pendingGhs }: { eligible: boolean; pend
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch("/api/affiliate/payout", { method: "POST" });
+      const res = await fetch("/api/affiliate/payout", {
+        method: "POST",
+        credentials: "include",
+        headers: affiliateAuthHeaders(),
+      });
       const data = (await res.json()) as { reference?: string; error?: string };
       if (!res.ok) {
         setMsg(data.error ?? "Payout failed");
