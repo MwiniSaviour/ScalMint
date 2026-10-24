@@ -7,19 +7,22 @@ import { cn } from "@/lib/utils";
 import { ArrowUpRight, ButtonLink } from "@/components/ui/primitives";
 
 /* ---------------------------------------------------------------------------
-   Nav — sticky, two mega-menus.
+   Nav — sticky, three mega-menus.
 
-   Product  → product catalogue (live + coming soon)
-   Services → "What we build" (the 6 service lines previously under Product)
+   Product           → product catalogue (live + coming soon)
+   Services          → "What we build" (the 6 service lines previously under Product)
+   Affiliate Program → the same products with affiliate-focused brief descriptions
 
-   Behaviour mirrors a live SaaS header:
-   - hover intent with a short close delay
+   Plain links (About, Insights, Pricing) deliberately have no popup.
+
+   Behaviour:
+   - hover intent with short close delay
    - click toggles
    - scroll / esc / outside-click closes
-   - mobile drawer with both groups stacked
+   - mobile drawer stacks all groups
    ------------------------------------------------------------------------- */
 
-type MenuId = "product" | "services" | null;
+type MenuId = "product" | "services" | "affiliate" | null;
 
 type NavMenuItem = { id: Exclude<MenuId, null>; label: string; menu: true };
 type NavLinkItem = { id: string; label: string; href: string };
@@ -28,7 +31,7 @@ type NavItem = NavMenuItem | NavLinkItem;
 const NAV_ITEMS: NavItem[] = [
   { id: "product", label: "Product", menu: true },
   { id: "services", label: "Services", menu: true },
-  { id: "industries", label: "Industries", href: "#industries" },
+  { id: "affiliate", label: "Affiliate Program", menu: true },
   { id: "about", label: "About", href: "#about" },
   { id: "insights", label: "Insights", href: "#insights" },
   { id: "pricing", label: "Pricing", href: "#pricing" },
@@ -79,13 +82,10 @@ const SERVICE_ITEMS: {
 
 type ProductItem = {
   name: string;
-  /** short descriptor under the name */
   desc: string;
-  /** live domain or null for coming-soon */
   domain?: string;
   href?: string;
   status: "live" | "coming_soon";
-  /** optional mono label under desc */
   hint?: string;
 };
 
@@ -117,6 +117,48 @@ const PRODUCT_ITEMS: ProductItem[] = [
   },
 ];
 
+/* -- Affiliate Program — same products, affiliate-framed brief descriptions -- */
+
+type AffiliateItem = {
+  name: string;
+  brief: string;
+  domain?: string;
+  href?: string;
+  status: "live" | "coming_soon";
+  badge: string;
+};
+
+const AFFILIATE_ITEMS: AffiliateItem[] = [
+  {
+    name: "Nova POS",
+    brief: "POS for shops, restaurants & chains. Refer merchants and earn recurring commission on every subscription.",
+    domain: "pos.scalmint.com",
+    href: "https://pos.scalmint.com",
+    status: "live",
+    badge: "Up to 30% recurring",
+  },
+  {
+    name: "Operasch",
+    brief: "SOPs, field teams & proof-of-work. Invite companies to smartsos.cloud and earn when they scale.",
+    domain: "smartsos.cloud",
+    href: "https://smartsos.cloud",
+    status: "live",
+    badge: "Up to 25% recurring",
+  },
+  {
+    name: "Jarvis",
+    brief: "AI PDF study assistant — turn any document into chat, summaries and quizzes. Early affiliates lock priority.",
+    status: "coming_soon",
+    badge: "Early access",
+  },
+  {
+    name: "JobFinder",
+    brief: "Structured job intelligence to find and track the right roles faster. Join waitlist for pre-launch rate.",
+    status: "coming_soon",
+    badge: "Waitlist",
+  },
+];
+
 export default function Nav() {
   const [openMenu, setOpenMenu] = useState<MenuId>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -124,7 +166,6 @@ export default function Nav() {
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
 
-  // scrolled state for header backdrop
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -132,7 +173,6 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // esc closes everything
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -143,19 +183,15 @@ export default function Nav() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // growing past lg reveals desktop bar and it owns the mega-menus
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
     const onChange = () => {
-      if (mq.matches) {
-        setMobileOpen(false);
-      }
+      if (mq.matches) setMobileOpen(false);
     };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // page scroll closes the mega-menu — hover surface, not modal
   useEffect(() => {
     if (!openMenu) return;
     const onScroll = () => setOpenMenu(null);
@@ -163,14 +199,11 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [openMenu]);
 
-  // click outside closes
   useEffect(() => {
     if (!openMenu) return;
     const onDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as Node;
-      if (headerRef.current && !headerRef.current.contains(target)) {
-        setOpenMenu(null);
-      }
+      if (headerRef.current && !headerRef.current.contains(target)) setOpenMenu(null);
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("touchstart", onDown);
@@ -191,7 +224,6 @@ export default function Nav() {
   const toggleMenu = (id: Exclude<MenuId, null>) => {
     setOpenMenu((v) => (v === id ? null : id));
   };
-
   const isOpen = (id: MenuId) => openMenu === id;
 
   return (
@@ -204,7 +236,6 @@ export default function Nav() {
         onMouseLeave={hoverClose}
       >
         <nav className="flex h-[72px] items-center" aria-label="Primary" onMouseEnter={() => openMenu && hoverOpen(openMenu)}>
-          {/* Wordmark */}
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="ScalMint — home">
             <Image src="/brand/mark.png" alt="" width={28} height={37} priority className="h-[37px] w-auto" />
             <span className="text-[17px] font-semibold tracking-[-0.02em]">
@@ -213,7 +244,6 @@ export default function Nav() {
             </span>
           </Link>
 
-          {/* Primary items — desktop only */}
           <ul className="ml-8 hidden items-center gap-2 lg:flex">
             {NAV_ITEMS.map((item) => {
               if ("menu" in item && item.menu) {
@@ -264,7 +294,6 @@ export default function Nav() {
             })}
           </ul>
 
-          {/* Right side — desktop */}
           <div className="ml-auto hidden items-center gap-2 lg:flex">
             <Link href="/login" className="nav-pill hover:nav-pill-hover" onMouseEnter={hoverClose}>
               Log in
@@ -274,7 +303,6 @@ export default function Nav() {
             </ButtonLink>
           </div>
 
-          {/* Mobile trigger */}
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
@@ -297,10 +325,7 @@ export default function Nav() {
 
       {/* Mobile panel */}
       {mobileOpen && (
-        <div
-          id="mobile-nav"
-          className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-line bg-[#1b1b1b] lg:hidden"
-        >
+        <div id="mobile-nav" className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-line bg-[#1b1b1b] lg:hidden">
           <div className="px-6 py-6">
             <p className="t-eyebrow mb-4 text-eyebrow">Menu</p>
             <ul className="flex flex-col">
@@ -312,13 +337,16 @@ export default function Nav() {
                     className="flex items-center justify-between py-3.5 text-[15px] text-hi"
                   >
                     {item.label}
-                    <ArrowUpRight className="text-muted" />
+                    {"menu" in item && item.menu ? (
+                      <span className="t-eyebrow rounded-[4px] bg-white/[0.06] px-1.5 py-1 text-[10px] text-muted">Menu</span>
+                    ) : (
+                      <ArrowUpRight className="text-muted" />
+                    )}
                   </Link>
                 </li>
               ))}
             </ul>
 
-            {/* Products — mobile */}
             <p className="t-eyebrow mb-4 mt-8 text-eyebrow">Products</p>
             <ul className="grid grid-cols-1 gap-y-4">
               {PRODUCT_ITEMS.map((p) => (
@@ -355,9 +383,7 @@ export default function Nav() {
                         </span>
                       </span>
                       <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.desc}</span>
-                      {p.hint && (
-                        <span className="mt-1.5 block font-mono text-[11px] tracking-wide text-muted">{p.hint}</span>
-                      )}
+                      {p.hint && <span className="mt-1.5 block font-mono text-[11px] tracking-wide text-muted">{p.hint}</span>}
                     </div>
                   )}
                 </li>
@@ -379,6 +405,43 @@ export default function Nav() {
                     </span>
                     <span className="mt-0.5 block text-[12px] leading-[1.45] text-[#8a8a8a]">{item.desc}</span>
                   </Link>
+                </li>
+              ))}
+            </ul>
+
+            <p className="t-eyebrow mb-4 mt-8 text-eyebrow">Affiliate Program</p>
+            <p className="mb-3 text-[12px] leading-[1.5] text-muted">Promote our products and earn recurring commission.</p>
+            <ul className="grid grid-cols-1 gap-y-4">
+              {AFFILIATE_ITEMS.map((p) => (
+                <li key={p.name}>
+                  {p.status === "live" && p.href ? (
+                    <Link
+                      href="/affiliate"
+                      onClick={() => setMobileOpen(false)}
+                      className="block rounded-[6px] border border-white/[0.06] bg-white/[0.02] p-2.5 transition-colors hover:bg-white/[0.04]"
+                    >
+                      <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                        {p.name}
+                        <span className="inline-flex h-[16px] items-center rounded-[4px] bg-brand-teal px-1.5 text-[9px] font-semibold leading-none text-black">
+                          {p.badge}
+                        </span>
+                      </span>
+                      <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                      <span className="mt-1.5 inline-flex items-center gap-1 font-mono text-[11px] tracking-wide text-brand-teal">
+                        {p.domain} <ArrowUpRight size={10} />
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="block rounded-[6px] border border-white/[0.04] bg-white/[0.015] p-2.5">
+                      <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                        {p.name}
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-[#242424] px-1.5 text-[9px] leading-none text-[#a0a0a0]">
+                          {p.badge}
+                        </span>
+                      </span>
+                      <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
@@ -412,8 +475,7 @@ export default function Nav() {
                 href="/products"
                 className="t-eyebrow inline-flex items-center gap-1 text-[11px] text-muted transition-colors hover:text-hi"
               >
-                View all
-                <ArrowUpRight size={10} />
+                View all <ArrowUpRight size={10} />
               </Link>
             </div>
 
@@ -440,10 +502,7 @@ export default function Nav() {
                       </span>
                       <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.desc}</span>
                       <span className="mt-3 inline-flex items-center gap-1 font-mono text-[11px] tracking-wide text-brand-teal">
-                        {p.domain}
-                        <span aria-hidden="true" className="text-brand-teal/70">
-                          ↗
-                        </span>
+                        {p.domain} <span aria-hidden="true" className="text-brand-teal/70">↗</span>
                       </span>
                     </a>
                   ) : (
@@ -455,9 +514,7 @@ export default function Nav() {
                         </span>
                       </span>
                       <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.desc}</span>
-                      {p.hint && (
-                        <span className="mt-3 font-mono text-[11px] tracking-wide text-muted">{p.hint}</span>
-                      )}
+                      {p.hint && <span className="mt-3 font-mono text-[11px] tracking-wide text-muted">{p.hint}</span>}
                     </div>
                   )}
                 </li>
@@ -472,15 +529,14 @@ export default function Nav() {
                 href="/contact"
                 className="ml-auto inline-flex h-7 items-center gap-1 rounded-[8px] bg-white px-3 text-[12px] font-medium text-black transition-colors hover:bg-[#e8e8e8]"
               >
-                Start a project
-                <ArrowUpRight size={11} />
+                Start a project <ArrowUpRight size={11} />
               </Link>
             </div>
           </div>
         </div>
       )}
 
-      {/* Mega-menu — Services ("What we build") */}
+      {/* Mega-menu — Services (What we build) */}
       {openMenu === "services" && (
         <div
           id="mega-services"
@@ -495,10 +551,7 @@ export default function Nav() {
             <ul className="mt-4 grid grid-cols-3 gap-x-6 gap-y-5">
               {SERVICE_ITEMS.map((item) => (
                 <li key={item.title}>
-                  <Link
-                    href={item.href}
-                    className="group block rounded-[6px] p-2 transition-colors hover:bg-white/[0.04]"
-                  >
+                  <Link href={item.href} className="group block rounded-[6px] p-2 transition-colors hover:bg-white/[0.04]">
                     <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
                       {item.title}
                       {item.beta && (
@@ -512,6 +565,89 @@ export default function Nav() {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Mega-menu — Affiliate Program — products with brief descriptions */}
+      {openMenu === "affiliate" && (
+        <div
+          id="mega-affiliate"
+          role="region"
+          aria-label="Affiliate Program"
+          className="absolute inset-x-0 top-full hidden lg:block"
+          onMouseEnter={() => hoverOpen("affiliate")}
+          onMouseLeave={hoverClose}
+        >
+          <div className="mx-6 mb-4 max-w-[720px] rounded-[12px] border border-[#1c1c1c] bg-[#1b1b1b] p-7 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="t-eyebrow text-eyebrow">Affiliate Program</p>
+                <p className="mt-1.5 max-w-[420px] text-[12px] leading-[1.5] text-[#8a8a8a]">
+                  Promote ScalMint products and earn recurring commission. Share your link, we handle billing and support.
+                </p>
+              </div>
+              <Link
+                href="/affiliate"
+                className="t-eyebrow shrink-0 inline-flex items-center gap-1 rounded-[8px] bg-white px-3 py-1.5 text-[11px] font-medium text-black transition-colors hover:bg-[#e8e8e8]"
+              >
+                Join program <ArrowUpRight size={10} />
+              </Link>
+            </div>
+
+            <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3">
+              {AFFILIATE_ITEMS.map((p) => (
+                <li key={p.name}>
+                  {p.status === "live" && p.href ? (
+                    <Link
+                      href="/affiliate"
+                      className="group flex h-full flex-col rounded-[8px] border border-white/[0.06] bg-white/[0.02] p-4 transition-colors hover:border-white/[0.10] hover:bg-white/[0.05]"
+                    >
+                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-[#f0f0f0]">
+                        {p.name}
+                        <span className="inline-flex h-[16px] items-center rounded-[4px] bg-brand-teal px-1.5 text-[9px] font-semibold leading-none tracking-wide text-black">
+                          {p.badge}
+                        </span>
+                      </span>
+                      <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                      <span className="mt-3 inline-flex items-center gap-1 font-mono text-[11px] tracking-wide text-brand-teal">
+                        {p.domain} <span aria-hidden="true" className="text-brand-teal/70">↗</span>
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex h-full flex-col rounded-[8px] border border-white/[0.05] bg-white/[0.015] p-4">
+                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-[#f0f0f0]">
+                        {p.name}
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] border border-white/10 bg-[#242424] px-1.5 text-[9px] leading-none text-[#a0a0a0]">
+                          {p.badge}
+                        </span>
+                      </span>
+                      <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/[0.06] pt-4">
+              <p className="text-[12px] leading-none text-muted">
+                <span className="text-[#b0b0b0]">Already an affiliate?</span> Access your dashboard →
+              </p>
+              <div className="ml-auto flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="inline-flex h-7 items-center rounded-[8px] border border-white/10 px-3 text-[12px] font-medium text-white transition-colors hover:bg-white/[0.06]"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/affiliate"
+                  className="inline-flex h-7 items-center gap-1 rounded-[8px] bg-white px-3 text-[12px] font-medium text-black transition-colors hover:bg-[#e8e8e8]"
+                >
+                  Become an affiliate <ArrowUpRight size={11} />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       )}
