@@ -1,18 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono-jb",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scalmint.com"),
@@ -33,22 +20,21 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "ScalMint — Software, Data & AI for digital transformation",
-    description:
-      "Scalable digital systems that turn business needs into measurable results.",
+    description: "Scalable digital systems that turn business needs into measurable results.",
   },
   robots: { index: true, follow: true },
 };
 
 export const viewport = {
   themeColor: "#0A0A0A",
-  colorScheme: "dark",
+  colorScheme: "dark" as const,
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+    <html lang="en">
       <body className="bg-page font-sans antialiased">{children}</body>
     </html>
   );

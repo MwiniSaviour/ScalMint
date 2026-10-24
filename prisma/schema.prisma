@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------
+// Affiliate Engine — Core
+// ---------------------------------------------------------------
+
+model Affiliate {
+  id                String              @id @default(cuid())
+  code              String              @unique // e.g. SCAL-A7F3K9
+  email             String              @unique
+  name              String
+  phone             String?
+  passwordHash      String
+  status            AffiliateStatus     @default(PENDING)
+  payoutMethod      PayoutMethod        @default(MOBILE_MONEY)
+  payoutAccount     String? // MoMo number or bank account
+  payoutAccountName String?
+  bankCode          String?
+  ghanaCardId       String?
+  totalClicks       Int                 @default(0)
+  totalConversions  Int                 @default(0)
+  totalEarned       Int                 @default(0) // in pesewas (GHS * 100)
+  totalPaid         Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  lastActiveAt      DateTime?
+
+  clicks      Click[]
+  conversions Conversion[]
+  payouts     Payout[]
+  commissions Commission[]
+
+  @@index([code])
+  @@index([email])
+  @@index([status])
+}
+
+enum AffiliateStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum PayoutMethod {
+  MOBILE_MONEY
+  BANK
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  slug            String   @unique // nova-pos, operasch, jarvis, jobfinder
+  name            String
+  domain          String?
+  href            String?
+  status          ProductStatus
+  commissionType  CommissionType
+  commissionRate  Int // basis points: 3000 = 30% | flat: amount in pesewas
+  commissionCap   Int? // max per conversion in pesewas
+  cookieDays      Int      @default(30)
+  minPayout       Int      @default(5000) // GHS 50 in pesewas
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  conversions Conversion[]
+  commissions Commission[]
+
+  @@index([slug])
+  @@index([status])
+}
+
+enum ProductStatus {
+  LIVE
+  COMING_SOON
+}
+
+enum CommissionType {
+  PERCENT_RECURRING
+  PERCENT_ONE_TIME
+  FLAT_CPA
+}
+
+model Click {
+  id          String   @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  productSlug String? // nullable: generic link
+  referer     String?
+  ipHash      String? // hashed for GDPR
+  userAgent   String?
+  country     String? // GH, NG etc. via CF header
+  createdAt   DateTime @default(now())
+
+  @@index([affiliateId, createdAt])
+  @@index([createdAt])
+  @@index([productSlug])
+}
+
+model Conversion {
+  id               String           @id @default(cuid())
+  affiliateId      String
+  affiliate        Affiliate        @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  productId        String
+  product          Product          @relation(fields: [productId], references: [id])
+  clickId          String?
+  status           ConversionStatus @default(PENDING)
+  customerEmail    String?
+  customerRef      String? // Paystack reference
+  amount           Int // transaction amount in pesewas
+  commissionAmount Int // computed commission in pesewas
+  currency         String           @default("GHS")
+  verifiedAt       DateTime?
+  paidOut          Boolean          @default(false)
+  payoutId         String?
+  payout           Payout?          @relation(fields: [payoutId], references: [id])
+  fraudFlags       String? // JSON string array
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([affiliateId, status])
+  @@index([productId, status])
+  @@index([status, createdAt])
+  @@index([payoutId])
+}
+
+enum ConversionStatus {
+  PENDING // within verification window (7 days)
+  APPROVED // eligible for payout
+  REJECTED // fraud / duplicate / refund
+  PAID
+}
+
+model Commission {
+  id          String   @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  rate        Int // snapshot of rate at time of conversion (bps)
+  amount      Int // pesewas
+  period      String? // e.g. 2026-10 for recurring
+  createdAt   DateTime @default(now())
+
+  @@index([affiliateId, createdAt])
+  @@index([productId])
+}
+
+model Payout {
+  id              String       @id @default(cuid())
+  affiliateId     String
+  affiliate       Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  amount          Int // pesewas
+  method          PayoutMethod
+  recipientCode   String? // Paystack recipient code (RCP_...)
+  transferCode    String? // Paystack transfer code (TRF_...)
+  status          PayoutStatus @default(QUEUED)
+  reference       String       @unique // aff_payout_<ulid>
+  failureReason   String?
+  processedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  conversions Conversion[]
+
+  @@index([affiliateId, status])
+  @@index([status, createdAt])
+  @@index([reference])
+}
+
+enum PayoutStatus {
+  QUEUED
+  PROCESSING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+// Used for idempotency of Paystack webhooks
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  provider    String // paystack
+  event       String // charge.success, transfer.success etc.
+  reference   String   @unique // Paystack reference / transfer code
+  payload     String // JSON
+  processed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([provider, event])
+  @@index([processed])
+}
