@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Container, Eyebrow } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/primitives";
-import { storeAffiliateToken } from "@/lib/auth/client";
+import { dashboardUrl, storeAffiliateToken } from "@/lib/auth/client";
 
 export default function ApplyPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -27,10 +27,11 @@ export default function ApplyPage() {
       });
       const data = (await res.json()) as { error?: string; code?: string; token?: string };
       if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Failed");
-      if (data.token) storeAffiliateToken(data.token);
+      if (!data.token) throw new Error("Account created but no session was issued.");
+      storeAffiliateToken(data.token);
       setStatus("success");
       setMsg(`Your code: ${data.code}. Opening dashboard…`);
-      window.location.assign("/affiliate/dashboard");
+      window.location.assign(dashboardUrl(data.token));
     } catch (err: unknown) {
       setStatus("error");
       setMsg(err instanceof Error ? err.message : "Something went wrong");

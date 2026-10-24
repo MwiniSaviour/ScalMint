@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Container, Eyebrow } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/primitives";
-import { storeAffiliateToken } from "@/lib/auth/client";
+import { dashboardUrl, storeAffiliateToken } from "@/lib/auth/client";
 
 export default function LoginPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -28,8 +28,9 @@ export default function LoginPage() {
         const err = typeof data.error === "string" ? data.error : "Could not sign in with those credentials.";
         throw new Error(err);
       }
-      if (data.token) storeAffiliateToken(data.token);
-      window.location.assign("/affiliate/dashboard");
+      if (!data.token) throw new Error("Sign-in succeeded but no session was issued. Try Apply again.");
+      storeAffiliateToken(data.token);
+      window.location.assign(dashboardUrl(data.token));
     } catch (err: unknown) {
       setStatus("error");
       setMsg(err instanceof Error ? err.message : "Login failed");

@@ -24,18 +24,23 @@ export default function DashboardPage() {
     let cancelled = false;
     async function load() {
       const token = readAffiliateToken();
+      if (token && window.location.hash) {
+        window.history.replaceState(null, "", "/affiliate/dashboard");
+      }
       const res = await fetch("/api/affiliate/me", {
         credentials: "include",
-        headers: affiliateAuthHeaders(),
+        headers: affiliateAuthHeaders(token),
         cache: "no-store",
       });
       if (res.status === 401) {
-        if (!token) {
-          window.location.replace("/affiliate/login");
-          return;
+        const body = (await res.json().catch(() => ({}))) as { reason?: string };
+        if (!cancelled) {
+          setError(
+            body.reason === "no_account"
+              ? "Signed in, but this account is not in storage. Submit Apply once, then sign in with the same email."
+              : "Sign-in did not attach a session. Use Sign in again — do not open Dashboard from the footer until you have signed in.",
+          );
         }
-        clearAffiliateToken();
-        window.location.replace("/affiliate/login");
         return;
       }
       if (!res.ok) {
