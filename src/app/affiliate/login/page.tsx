@@ -43,7 +43,8 @@ export default function LoginPage() {
           <Eyebrow>Affiliate access</Eyebrow>
           <h1 className="mt-3 text-[22px] font-medium tracking-[-0.02em] text-hi">Sign in to your affiliate dashboard</h1>
           <p className="mt-2 text-[13px] leading-[1.6] text-muted">
-            Use the email you applied with. Accounts persist after apply — you do not need the demo login.
+            Sign in with the email and password from <Link href="/affiliate/apply" className="text-hi underline underline-offset-4">Apply</Link>.
+            There is no account until that form succeeds.
           </p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -77,9 +78,14 @@ export default function LoginPage() {
               {status === "loading" ? "Signing in…" : "Sign in"}
             </Button>
             {msg && (
-              <p className="rounded-[10px] border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] text-[#ff8a7a]">
-                {msg}
-              </p>
+              <div className="rounded-[10px] border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] leading-[1.5] text-[#ff8a7a]">
+                <p>{msg}</p>
+                {msg.toLowerCase().includes("apply") && (
+                  <Link href="/affiliate/apply" className="mt-2 inline-flex text-hi underline underline-offset-4">
+                    Go to Apply
+                  </Link>
+                )}
+              </div>
             )}
           </form>
 

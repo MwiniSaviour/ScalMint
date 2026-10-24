@@ -72,7 +72,7 @@ export default function ApplyPage() {
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Phone (Ghana) *</span>
-                <input name="phone" required placeholder="0244123456" pattern="0[0-9]{9}" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
+                <input name="phone" required placeholder="0244123456 or +233244123456" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Password *</span>

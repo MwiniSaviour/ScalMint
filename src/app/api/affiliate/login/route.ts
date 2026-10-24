@@ -22,9 +22,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 400 });
     }
 
-    const email = parsed.data.email.toLowerCase().trim();
+    const email = String(parsed.data.email).toLowerCase().trim();
     const aff = (await db.affiliate.findUnique({ where: { email } })) as AffiliateRow | null;
-    if (!aff) return NextResponse.json({ error: "No account with that email. Apply first." }, { status: 401 });
+    if (!aff) {
+      return NextResponse.json(
+        {
+          error:
+            "No affiliate account for this email. Sign-in is only for people who already applied. Open Apply, submit once, then come back — same email and password.",
+        },
+        { status: 401 },
+      );
+    }
 
     const ok = await compare(parsed.data.password, aff.passwordHash);
     if (!ok) return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
