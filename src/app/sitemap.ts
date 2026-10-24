@@ -1,26 +1,25 @@
 import type { MetadataRoute } from "next";
 
-const SITE = "https://scalmint.com";
-
 export default function sitemap(): MetadataRoute.Sitemap {
+  const now = new Date();
   return [
     {
-      url: SITE,
-      lastModified: new Date(),
+      url: "https://scalmint.com",
+      lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${SITE}/affiliate`,
-      lastModified: new Date(),
+      url: "https://affiliate.scalmint.com",
+      lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.7,
     },
     {
-      url: `${SITE}/affiliate/apply`,
-      lastModified: new Date(),
+      url: "https://affiliate.scalmint.com/apply",
+      lastModified: now,
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.5,
     },
   ];
 }
