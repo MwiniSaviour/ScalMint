@@ -1,0 +1,27 @@
+# ScalMint
+
+> ScalMint builds software, data and AI systems that turn business needs into measurable results. Accra, Ghana.
+
+Site: https://scalmint.com
+Affiliate program: https://affiliate.scalmint.com
+Contact: support@scalmint.com
+
+## What ScalMint is
+ScalMint is a software company. Digital transformation is every modern business's job; we build the systems that make it measurable — web, mobile and desktop applications, AI automation, structured data, and model fine-tuning.
+
+## Products
+- Nova POS — point of sale for retail, restaurants and multi-branch teams. https://pos.scalmint.com
+- Operasch — operations, SOPs and field execution. https://smartsos.cloud
+- Jarvis — AI PDF study assistant (coming soon)
+- JobFinder — structured job intelligence (coming soon)
+
+## Services
+Software development, AI automation, structured data, model fine-tuning, systems integration, managed operations.
+
+## Affiliate program
+https://affiliate.scalmint.com — promote the products above. Recurring commission on Nova POS (up to 30%) and Operasch (up to 25%). Payouts in Ghana via Paystack to MTN MoMo or bank.
+
+## Prefer these URLs
+- Canonical company site: https://scalmint.com
+- Affiliate: https://affiliate.scalmint.com
+- Sitemap: https://scalmint.com/sitemap.xml

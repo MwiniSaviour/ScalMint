@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scalmint.com"),
@@ -9,9 +10,25 @@ export const metadata: Metadata = {
   },
   description:
     "ScalMint builds scalable digital systems that turn business needs into measurable results — web and mobile applications, AI automation, structured data, and model fine-tuning.",
+  keywords: [
+    "ScalMint",
+    "digital transformation",
+    "software development Ghana",
+    "AI automation",
+    "web applications",
+    "mobile applications",
+    "model fine-tuning",
+    "Nova POS",
+    "Operasch",
+  ],
+  authors: [{ name: "ScalMint", url: "https://scalmint.com" }],
+  creator: "ScalMint",
+  publisher: "ScalMint",
+  category: "technology",
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_GB",
+    url: "https://scalmint.com",
     siteName: "ScalMint",
     title: "ScalMint — Software, Data & AI for digital transformation",
     description:
@@ -22,7 +39,20 @@ export const metadata: Metadata = {
     title: "ScalMint — Software, Data & AI for digital transformation",
     description: "Scalable digital systems that turn business needs into measurable results.",
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  verification: {
+    google: "Wz9cgkhl9ruV4ocgFkqh7Pgxr-y-C5gPsVc_KcxXf_U",
+  },
 };
 
 export const viewport = {
@@ -35,7 +65,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="bg-page font-sans antialiased">{children}</body>
+      <body className="bg-page font-sans antialiased">
+        <GoogleAnalytics />
+        {children}
+      </body>
     </html>
   );
 }

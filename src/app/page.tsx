@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Nav from "@/components/layout/Nav";
+import { JsonLd } from "@/components/seo/JsonLd";
 import S1Hero from "@/components/sections/S1Hero";
 import S2FromNoise from "@/components/sections/S2FromNoise";
 import S3Statement from "@/components/sections/S3Statement";
@@ -11,9 +13,14 @@ import S9VideoStory from "@/components/sections/S9VideoStory";
 import S10Journal from "@/components/sections/S10Journal";
 import S11Footer from "@/components/sections/S11Footer";
 
+export const metadata: Metadata = {
+  alternates: { canonical: "https://scalmint.com" },
+};
+
 export default function Home() {
   return (
     <>
+      <JsonLd />
       <Nav />
       <main>
         <S1Hero />

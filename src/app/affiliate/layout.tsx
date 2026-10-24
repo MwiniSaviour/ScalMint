@@ -7,7 +7,9 @@ export const metadata: Metadata = {
   title: "Affiliate Program — Earn recurring commission with ScalMint",
   description:
     "Promote Nova POS, Operasch, Jarvis and JobFinder. Earn up to 30% recurring commission. Payouts via Paystack to MTN MoMo or bank in Ghana. T+1 settlement, GHS 50 threshold.",
+  alternates: { canonical: "https://affiliate.scalmint.com" },
   openGraph: {
+    url: "https://affiliate.scalmint.com",
     title: "ScalMint Affiliate Program — affiliate.scalmint.com",
     description:
       "Turn your audience into recurring revenue. Up to 30% commission, 30-day tracking, Paystack MoMo payouts in Ghana.",
