@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { hubReference, resolveHubSubscribers, routeTargets } from "@/lib/hub/subscribers";
+import { hubSignature } from "@/lib/hub/signature";
+import { isUniqueViolation } from "@/lib/db-errors";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -18,18 +20,19 @@ type PaystackBody = {
 };
 
 function paystackSignatureValid(raw: string, signature: string | null): boolean {
-  const secret = process.env.PAYSTACK_SECRET_KEY;
-  if (!secret || !signature) return false;
-  const expected = Buffer.from(crypto.createHmac("sha512", secret).update(raw).digest("hex"), "hex");
+  if (!signature) return false;
+  const secrets = [process.env.PAYSTACK_SECRET_KEY, process.env.PAYSTACK_TEST_SECRET_KEY].filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  );
+  if (secrets.length === 0) return false;
   const received = Buffer.from(signature, "hex");
-  if (expected.length !== received.length) return false;
-  return crypto.timingSafeEqual(expected, received);
-}
-
-function hubSignature(subSecret: string, raw: string): string {
-  const t = Date.now();
-  const v1 = crypto.createHmac("sha256", subSecret).update(`${t}.${raw}`).digest("hex");
-  return `t=${t},v1=${v1}`;
+  return secrets.some((secret) => {
+    const expected = Buffer.from(
+      crypto.createHmac("sha512", secret).update(raw).digest("hex"),
+      "hex",
+    );
+    return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+  });
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -91,15 +94,20 @@ export async function POST(req: Request) {
   const reference = body.data?.reference ?? null;
   if (!event || !reference) {
     const fallback = `${event || "unknown"}_${Date.now()}`;
-    await db.webhookEvent.create({
-      data: {
-        provider: "paystack",
-        event: event || "unknown",
-        reference: hubReference(fallback),
-        payload: raw,
-        processed: true,
-      },
-    });
+    try {
+      await db.webhookEvent.create({
+        data: {
+          provider: "paystack",
+          event: event || "unknown",
+          reference: hubReference(fallback),
+          payload: raw,
+          processed: true,
+        },
+      });
+    } catch (err) {
+      console.error("[hub] failed to record webhook event", err);
+      return NextResponse.json({ error: "dedupe store unavailable" }, { status: 500 });
+    }
     console.warn(`[hub] event ${event || "unknown"} has no reference; stored, not forwarded`);
     return NextResponse.json({ ok: true, forwarded: false });
   }
@@ -109,20 +117,28 @@ export async function POST(req: Request) {
     await db.webhookEvent.create({
       data: { provider: "paystack", event, reference: key, payload: raw, processed: false },
     });
-  } catch {
-    return NextResponse.json({ ok: true, duplicate: true });
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return NextResponse.json({ ok: true, duplicate: true });
+    }
+    console.error("[hub] failed to record webhook event", err);
+    return NextResponse.json({ error: "dedupe store unavailable" }, { status: 500 });
   }
 
   const all = resolveHubSubscribers();
   const targets = routeTargets(all, reference).map(({ name, url, secret }) => ({ name, url, secret }));
 
   after(async () => {
-    if (targets.length === 0) {
+    try {
+      if (targets.length === 0) {
+        await db.webhookEvent.update({ where: { reference: key }, data: { processed: true } });
+        return;
+      }
+      await deliver(raw, targets);
       await db.webhookEvent.update({ where: { reference: key }, data: { processed: true } });
-      return;
+    } catch (err) {
+      console.error("[hub] post-response processing failed", err);
     }
-    await deliver(raw, targets);
-    await db.webhookEvent.update({ where: { reference: key }, data: { processed: true } });
   });
 
   return NextResponse.json({ ok: true, modules: targets.map((t) => t.name) });

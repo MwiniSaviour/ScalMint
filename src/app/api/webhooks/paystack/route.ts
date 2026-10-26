@@ -2,13 +2,26 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { calcCommission } from "@/lib/affiliate/referral";
+import { verifyHubSignature } from "@/lib/hub/signature";
+import { isUniqueViolation } from "@/lib/db-errors";
 import type { AffiliateRow, ConversionRow, PayoutRow, ProductRow } from "@/lib/affiliate/types";
 
+export const runtime = "nodejs";
+
 function verifySignature(payload: string, signature: string | null): boolean {
-  const secret = process.env.PAYSTACK_SECRET_KEY;
-  if (!secret || !signature) return false;
-  const hash = crypto.createHmac("sha512", secret).update(payload).digest("hex");
-  return hash === signature;
+  if (!signature) return false;
+  const secrets = [process.env.PAYSTACK_SECRET_KEY, process.env.PAYSTACK_TEST_SECRET_KEY].filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  );
+  if (secrets.length === 0) return false;
+  const received = Buffer.from(signature, "hex");
+  return secrets.some((secret) => {
+    const expected = Buffer.from(
+      crypto.createHmac("sha512", secret).update(payload).digest("hex"),
+      "hex",
+    );
+    return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+  });
 }
 
 type PaystackBody = {
@@ -26,8 +39,13 @@ type PaystackBody = {
 export async function POST(req: Request) {
   const raw = await req.text();
   const sig = req.headers.get("x-paystack-signature");
+  const hubSig = req.headers.get("x-hub-signature");
 
-  if (process.env.NODE_ENV === "production" && !verifySignature(raw, sig)) {
+  if (hubSig) {
+    if (!verifyHubSignature(process.env.AFFILIATE_HUB_SECRET, raw, hubSig)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+  } else if (process.env.NODE_ENV === "production" && !verifySignature(raw, sig)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
@@ -42,12 +60,20 @@ export async function POST(req: Request) {
   const data = body.data;
   const reference = data.reference ?? `${event}_${Date.now()}`;
 
+  if (String(reference).startsWith("NOVA-")) {
+    return NextResponse.json({ ok: true, ignored: "nova" });
+  }
+
   try {
     await db.webhookEvent.create({
       data: { provider: "paystack", event, reference: String(reference), payload: raw, processed: false },
     });
-  } catch {
-    return NextResponse.json({ ok: true, duplicate: true });
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return NextResponse.json({ ok: true, duplicate: true });
+    }
+    console.error("[affiliate] failed to record webhook event", err);
+    return NextResponse.json({ error: "dedupe store unavailable" }, { status: 500 });
   }
 
   if (event === "charge.success") {
