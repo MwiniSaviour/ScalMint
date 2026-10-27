@@ -35,7 +35,15 @@ export function middleware(req: NextRequest) {
       path.startsWith("/_next") ||
       path.startsWith("/affiliate") ||
       path.startsWith("/r/") ||
-      path === "/favicon.ico";
+      path === "/favicon.ico" ||
+      path === "/icon.png" ||
+      path === "/apple-icon.png" ||
+      path === "/sitemap.xml" ||
+      path === "/robots.txt" ||
+      path === "/llms.txt" ||
+      path.startsWith("/.well-known") ||
+      path.startsWith("/brand") ||
+      path.startsWith("/google");
 
     if (!passthrough) {
       url.pathname = path === "/" ? "/affiliate" : `/affiliate${path}`;

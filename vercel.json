@@ -1,7 +1,10 @@
 {
   "crons": [{ "path": "/api/affiliate/cron/approve", "schedule": "0 2 * * *" }],
   "rewrites": [
-    { "source": "/", "has": [{ "type": "host", "value": "affiliate.scalmint.com" }], "destination": "/affiliate" },
-    { "source": "/:path*", "has": [{ "type": "host", "value": "affiliate.scalmint.com" }], "destination": "/affiliate/:path*" }
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "affiliate.scalmint.com" }],
+      "destination": "/affiliate"
+    }
   ]
 }

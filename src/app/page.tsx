@@ -23,6 +23,18 @@ export default function Home() {
       <JsonLd />
       <Nav />
       <main>
+        <article className="sr-only">
+          <h1>ScalMint — Software, Data and AI for digital transformation</h1>
+          <p>
+            ScalMint is a software company in Accra, Ghana. We turn business needs into working
+            software: web, mobile and desktop applications, AI automation, structured data, and
+            model fine-tuning.
+          </p>
+          <p>
+            Products: Nova POS (pos.scalmint.com), Operasch (smartsos.cloud), Jarvis (coming soon),
+            JobFinder (coming soon). Affiliate program: https://affiliate.scalmint.com
+          </p>
+        </article>
         <S1Hero />
         <S2FromNoise />
         <S3Statement />

@@ -8,7 +8,17 @@ export type DiskStore = {
   payouts: PayoutRow[];
 };
 
-const STORE_PATH = path.join(process.cwd(), ".data", "affiliate-store.json");
+function storePath() {
+  // Vercel lambdas are read-only except /tmp. Local uses .data/.
+  if (process.env.VERCEL) return path.join("/tmp", "scalmint-affiliate-store.json");
+  return path.join(process.cwd(), ".data", "affiliate-store.json");
+}
+
+const g = globalThis as unknown as { __scalmintAffStore?: DiskStore };
+
+function empty(): DiskStore {
+  return { affiliates: [], conversions: [], payouts: [] };
+}
 
 function reviveAffiliate(a: AffiliateRow): AffiliateRow {
   return {
@@ -29,25 +39,38 @@ function revivePayout(p: PayoutRow): PayoutRow {
 }
 
 export function readStore(): DiskStore {
+  if (g.__scalmintAffStore) return g.__scalmintAffStore;
   try {
-    if (!fs.existsSync(STORE_PATH)) return { affiliates: [], conversions: [], payouts: [] };
-    const raw = JSON.parse(fs.readFileSync(STORE_PATH, "utf8")) as Partial<DiskStore>;
-    return {
+    const file = storePath();
+    if (!fs.existsSync(file)) {
+      g.__scalmintAffStore = empty();
+      return g.__scalmintAffStore;
+    }
+    const raw = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<DiskStore>;
+    g.__scalmintAffStore = {
       affiliates: (raw.affiliates ?? []).map(reviveAffiliate),
       conversions: (raw.conversions ?? []).map(reviveConversion),
       payouts: (raw.payouts ?? []).map(revivePayout),
     };
+    return g.__scalmintAffStore;
   } catch (err) {
     console.warn("[store] read failed", err);
-    return { affiliates: [], conversions: [], payouts: [] };
+    g.__scalmintAffStore = empty();
+    return g.__scalmintAffStore;
   }
 }
 
 export function writeStore(store: DiskStore) {
-  fs.mkdirSync(path.dirname(STORE_PATH), { recursive: true });
-  const tmp = `${STORE_PATH}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(store));
-  fs.renameSync(tmp, STORE_PATH);
+  g.__scalmintAffStore = store;
+  const file = storePath();
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const tmp = `${file}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(store));
+    fs.renameSync(tmp, file);
+  } catch (err) {
+    console.warn("[store] persist skipped (ephemeral/read-only fs)", err);
+  }
 }
 
 export function findAffiliate(where: Record<string, unknown>): AffiliateRow | null {

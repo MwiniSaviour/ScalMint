@@ -295,9 +295,6 @@ export default function Nav() {
           </ul>
 
           <div className="ml-auto hidden items-center gap-2 lg:flex">
-            <Link href="/login" className="nav-pill hover:nav-pill-hover" onMouseEnter={hoverClose}>
-              Log in
-            </Link>
             <ButtonLink href="/contact" variant="primary" className="ml-1">
               Start a project
             </ButtonLink>
@@ -449,9 +446,6 @@ export default function Nav() {
             <div className="mt-8 flex items-center gap-2">
               <ButtonLink href="/contact" variant="primary" className="flex-1">
                 Start a project
-              </ButtonLink>
-              <ButtonLink href="/login" variant="ghost" className="flex-1">
-                Log in
               </ButtonLink>
             </div>
           </div>
@@ -635,7 +629,7 @@ export default function Nav() {
               </p>
               <div className="ml-auto flex items-center gap-2">
                 <Link
-                  href="/login"
+                  href="/affiliate/login"
                   className="inline-flex h-7 items-center rounded-[8px] border border-white/10 px-3 text-[12px] font-medium text-white transition-colors hover:bg-white/[0.06]"
                 >
                   Sign in
