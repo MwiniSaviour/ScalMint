@@ -138,6 +138,11 @@ function toneFor(weight: number): string {
   return WIRE_TONES[index];
 }
 
+/** Pin trig results so Node SSR and the browser write identical SVG attrs. */
+function geom(n: number) {
+  return Math.round(n * 1e4) / 1e4;
+}
+
 function parallels({ cx, cy, radius }: Sphere, count: number): readonly Wire[] {
   const step = (2 * POLAR_RANGE) / (count - 1);
   const out: Wire[] = [];
@@ -149,10 +154,10 @@ function parallels({ cx, cy, radius }: Sphere, count: number): readonly Wire[] {
 
     out.push({
       key: `lat-${i}`,
-      cx,
-      cy: cy + radius * Math.sin(phi * D2R),
-      rx: r,
-      ry: r,
+      cx: geom(cx),
+      cy: geom(cy + radius * Math.sin(phi * D2R)),
+      rx: geom(r),
+      ry: geom(r),
       stroke: toneFor(facing),
     });
   }
@@ -169,10 +174,10 @@ function meridians({ cx, cy, radius }: Sphere, count: number): readonly Wire[] {
 
     out.push({
       key: `lon-${i}`,
-      cx,
-      cy,
-      rx: radius * facing,
-      ry: radius,
+      cx: geom(cx),
+      cy: geom(cy),
+      rx: geom(radius * facing),
+      ry: geom(radius),
       stroke: toneFor(facing),
     });
   }

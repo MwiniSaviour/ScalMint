@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { AFFILIATE_PRODUCTS } from "@/lib/affiliate/products";
 import { Container, Eyebrow } from "@/components/ui/primitives";
 import { PayoutButton } from "@/components/affiliate/PayoutButton";
+import { DashboardSessionRescue } from "@/components/affiliate/DashboardSessionRescue";
 import { db } from "@/lib/db";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth/token";
 import type { AffiliateDashboard } from "@/lib/affiliate/types";
@@ -38,6 +39,7 @@ export default async function DashboardPage({
   if (!resolved) {
     return (
       <main className="bg-page">
+        <DashboardSessionRescue />
         <Container className="py-20">
           <p className="t-eyebrow text-eyebrow">Affiliate dashboard</p>
           <h1 className="mt-3 text-[24px] font-medium tracking-[-0.02em] text-hi">Sign in required</h1>
@@ -206,7 +208,7 @@ export default async function DashboardPage({
                   ) : (
                     conversions.map((c) => (
                       <tr key={c.id}>
-                        <td className="px-4 py-3 text-muted">{new Date(c.createdAt).toLocaleDateString("en-GB")}</td>
+                        <td className="px-4 py-3 text-muted">{new Date(c.createdAt).toISOString().slice(0, 10)}</td>
                         <td className="px-4 py-3 text-body">{c.product.name}</td>
                         <td className="px-4 py-3 font-mono text-body">GHS {pesewasToGhs(c.amount)}</td>
                         <td className="px-4 py-3 font-mono text-brand-teal">GHS {pesewasToGhs(c.commissionAmount)}</td>
@@ -242,7 +244,7 @@ export default async function DashboardPage({
                       <div>
                         <p className="font-mono text-[12px] text-body">GHS {pesewasToGhs(p.amount)}</p>
                         <p className="font-mono text-[11px] text-muted">
-                          {new Date(p.createdAt).toLocaleDateString("en-GB")} • {p.method}
+                          {new Date(p.createdAt).toISOString().slice(0, 10)} • {p.method}
                         </p>
                       </div>
                       <span

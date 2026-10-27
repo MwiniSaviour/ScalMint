@@ -235,6 +235,10 @@ type Ring = {
 
 /* Built once at module scope: deterministic, so the server and the client emit
    identical path data and no geometry is recomputed on every render. */
+function geom(n: number) {
+  return Math.round(n * 1e4) / 1e4;
+}
+
 const GLYPH_RINGS: readonly Ring[] = Array.from(
   { length: RING_COUNT },
   (_, j) => {
@@ -242,11 +246,11 @@ const GLYPH_RINGS: readonly Ring[] = Array.from(
     const r = profileRadius(t);
     return {
       key: `ring-${j}`,
-      cy: profileY(t),
-      rx: r,
+      cy: geom(profileY(t)),
+      rx: geom(r),
       /* 0.3 is a ~17 degree elevation: enough for the ring to read as a circle
          in perspective, not enough to fight the verticality of the form. */
-      ry: r * 0.3,
+      ry: geom(r * 0.3),
     };
   },
 );
