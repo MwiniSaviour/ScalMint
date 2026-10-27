@@ -18,19 +18,30 @@ Add:
 
 | Type | Name | Target | TTL |
 |---|---|---|---|
-| CNAME | affiliate | cname.vercel-dns.com | Auto |
+| CNAME | affiliate | cname.vercel-dns.com | Auto (or 3600) |
+
+Value must be the full hostname **`cname.vercel-dns.com`** (copy it from Vercel → Project → Settings → Domains after adding `affiliate.scalmint.com`). Then add that domain on the same ScalMint Vercel project.
 
 If using Cloudflare, set proxy **OFF** (grey cloud) for initial verification, then you may turn ON after TLS is issued.
 
 ## 3. Middleware + Rewrites
 
 `src/middleware.ts` handles `?ref=SCAL-XXXX` capture → `_aff_ref` cookie (30d) + click beacon.
-`vercel.json` rewrites:
 
-- `affiliate.scalmint.com/` → `/affiliate`
-- `affiliate.scalmint.com/:path*` → `/affiliate/:path*`
+Host routing (do **not** catch-all rewrite in `vercel.json` — that would prefix `/api` and `/_next`):
 
-This means affiliates can share `https://affiliate.scalmint.com/r/SCAL-A7F3K9PQ` and it still resolves to product links via `p` param.
+- `vercel.json` rewrites only `affiliate.scalmint.com/` → `/affiliate`
+- Middleware maps `affiliate.scalmint.com/apply|login|dashboard` → `/affiliate/apply|login|dashboard`
+- `/api`, `/_next`, `/sitemap.xml`, `/robots.txt`, `/llms.txt` stay unprefixed
+
+Public URLs:
+
+| URL | App route |
+|---|---|
+| https://affiliate.scalmint.com | `/affiliate` |
+| https://affiliate.scalmint.com/apply | `/affiliate/apply` |
+| https://affiliate.scalmint.com/login | `/affiliate/login` |
+| https://affiliate.scalmint.com/dashboard | `/affiliate/dashboard` |
 
 ## 4. Environment
 

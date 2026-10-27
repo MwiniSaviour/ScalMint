@@ -52,7 +52,6 @@ export default function ApplyPage() {
             One code for all 4 products. Ghana Card verified, MoMo payouts via Paystack. You’ll get dashboard access immediately in dev; production verifies &lt;24h.
           </p>
           <div className="mt-4 flex flex-wrap gap-2 font-mono text-[11px] tracking-wide text-muted">
-            <span className="rounded-[6px] border border-white/10 bg-white/[0.04] px-2 py-1">DNS: affiliate.scalmint.com</span>
             <span className="rounded-[6px] border border-white/10 bg-white/[0.04] px-2 py-1">MoMo default • GHS 50 threshold</span>
             <span className="rounded-[6px] border border-white/10 bg-white/[0.04] px-2 py-1">30-day cookie</span>
           </div>
@@ -139,12 +138,6 @@ export default function ApplyPage() {
               <p className="mt-2 break-all font-mono text-[12px] text-brand-teal">https://pos.scalmint.com?ref=SCAL-A7F3K9PQ</p>
               <p className="mt-1 break-all font-mono text-[12px] text-muted">https://smartsos.cloud?ref=SCAL-A7F3K9PQ</p>
               <p className="mt-2 text-[11px] text-muted">Add `&p=nova-pos` to segment by product in dashboard.</p>
-            </div>
-            <div className="mt-6 rounded-[12px] border border-amber-500/15 bg-amber-500/5 p-4">
-              <p className="text-[12px] font-medium text-amber-200">DNS — affiliate.scalmint.com</p>
-              <p className="mt-1 font-mono text-[11px] leading-[1.5] text-muted">
-                CNAME affiliate → cname.vercel-dns.com (Vercel). Add domain in project settings, enable auto-TLS. Middleware routes affiliate.* to /affiliate.
-              </p>
             </div>
           </div>
         </div>

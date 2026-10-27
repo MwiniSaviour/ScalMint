@@ -53,6 +53,11 @@ export const metadata: Metadata = {
   verification: {
     google: "Wz9cgkhl9ruV4ocgFkqh7Pgxr-y-C5gPsVc_KcxXf_U",
   },
+  icons: {
+    icon: [{ url: "/brand/mark.png", type: "image/png" }],
+    shortcut: "/brand/mark.png",
+    apple: "/brand/mark.png",
+  },
 };
 
 export const viewport = {
