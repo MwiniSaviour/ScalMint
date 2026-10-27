@@ -12,8 +12,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
-      const first = Object.values(parsed.error.flatten().fieldErrors).flat()[0];
-      return NextResponse.json({ error: first ?? "Invalid application" }, { status: 400 });
+      const first = parsed.error.issues[0]?.message ?? "Invalid application";
+      return NextResponse.json({ error: first }, { status: 400 });
     }
     const { name, email, phone, password, ghanaCardId, payoutMethod, payoutAccount, payoutAccountName, bankCode } =
       parsed.data;
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
     return res;
   } catch (err) {
     console.error("[affiliate/register]", err);
-    return NextResponse.json({ error: "Unable to create account" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Unable to create account";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
