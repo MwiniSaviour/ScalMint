@@ -115,7 +115,7 @@ export default function S10Journal() {
         {/* H2 sits left, the outline button is flush to the container's right
             edge and dropped ~19px so its box top clears the H2's cap line. */}
         <motion.div
-          initial={reduce ? false : "hidden"}
+          initial={reduce === true ? false : "hidden"}
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer(0.08)}
@@ -136,7 +136,7 @@ export default function S10Journal() {
             the measured 480px card, and `justify-between` turns the 68px of
             slack into the measured 34px gutters. */}
         <motion.ul
-          initial={reduce ? false : "hidden"}
+          initial={reduce === true ? false : "hidden"}
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer(0.09, 0.1)}
