@@ -7,11 +7,12 @@ import type {
   PayoutRow,
   ProductRow,
 } from "@/lib/affiliate/types";
-import { findAffiliate, mutateStore, readStore, upsertAffiliate } from "@/lib/store";
+import { DEFAULT_PRODUCTS, findAffiliate, mutateStore, readStore, upsertAffiliate } from "@/lib/store";
 
 type AffiliateDelegate = {
   findUnique: (args: unknown) => Promise<AffiliateRow | AffiliateDashboard | null>;
   findFirst: (args: unknown) => Promise<AffiliateRow | null>;
+  findMany: (args?: unknown) => Promise<AffiliateRow[]>;
   create: (args: unknown) => Promise<AffiliateRow>;
   update: (args: unknown) => Promise<AffiliateRow>;
   upsert: (args: unknown) => Promise<AffiliateRow>;
@@ -19,6 +20,8 @@ type AffiliateDelegate = {
 
 type ProductDelegate = {
   findUnique: (args: unknown) => Promise<ProductRow | null>;
+  findMany: () => Promise<ProductRow[]>;
+  update: (args: unknown) => Promise<ProductRow>;
   upsert: (args: unknown) => Promise<ProductRow>;
 };
 
@@ -66,12 +69,10 @@ function bump(current: number, data: unknown): number {
   return current;
 }
 
-const PRODUCTS: ProductRow[] = [
-  { id: "prd_nova", slug: "nova-pos", name: "Nova POS", domain: "pos.scalmint.com", href: "https://pos.scalmint.com", status: "LIVE", commissionType: "PERCENT_RECURRING", commissionRate: 3000, commissionCap: 50000, cookieDays: 30, minPayout: 5000 },
-  { id: "prd_operasch", slug: "operasch", name: "Operasch", domain: "smartsos.cloud", href: "https://smartsos.cloud", status: "LIVE", commissionType: "PERCENT_RECURRING", commissionRate: 2500, commissionCap: 40000, cookieDays: 30, minPayout: 5000 },
-  { id: "prd_jarvis", slug: "jarvis", name: "Jarvis", domain: null, href: null, status: "COMING_SOON", commissionType: "FLAT_CPA", commissionRate: 500, commissionCap: null, cookieDays: 30, minPayout: 5000 },
-  { id: "prd_jobfinder", slug: "jobfinder", name: "JobFinder", domain: null, href: null, status: "COMING_SOON", commissionType: "FLAT_CPA", commissionRate: 1000, commissionCap: null, cookieDays: 30, minPayout: 5000 },
-];
+function products(): ProductRow[] {
+  const stored = readStore().products;
+  return stored.length ? stored : DEFAULT_PRODUCTS;
+}
 
 function createFileDb(): DbClient {
   return {
@@ -90,6 +91,7 @@ function createFileDb(): DbClient {
         }
         return row;
       },
+      findMany: async () => readStore().affiliates,
       findFirst: async (args) => findAffiliate((args as { where: Record<string, unknown> }).where),
       create: async (args) => {
         const data = (args as { data: Partial<AffiliateRow> }).data;
@@ -123,6 +125,12 @@ function createFileDb(): DbClient {
         if (!row) throw new Error("Affiliate not found");
         const next: AffiliateRow = {
           ...row,
+          name: typeof a.data.name === "string" ? a.data.name : row.name,
+          phone: a.data.phone === undefined ? row.phone : (a.data.phone as string | null),
+          status: (a.data.status as AffiliateRow["status"] | undefined) ?? row.status,
+          payoutMethod: (a.data.payoutMethod as AffiliateRow["payoutMethod"] | undefined) ?? row.payoutMethod,
+          payoutAccount: a.data.payoutAccount === undefined ? row.payoutAccount : (a.data.payoutAccount as string | null),
+          payoutAccountName: a.data.payoutAccountName === undefined ? row.payoutAccountName : (a.data.payoutAccountName as string | null),
           totalClicks: bump(row.totalClicks, a.data.totalClicks),
           totalConversions: bump(row.totalConversions, a.data.totalConversions),
           totalEarned: bump(row.totalEarned, a.data.totalEarned),
@@ -143,9 +151,23 @@ function createFileDb(): DbClient {
     product: {
       findUnique: async (args) => {
         const where = (args as { where: { slug?: string; id?: string } }).where;
-        if (where.slug) return PRODUCTS.find((p) => p.slug === where.slug) ?? null;
-        if (where.id) return PRODUCTS.find((p) => p.id === where.id) ?? null;
+        if (where.slug) return products().find((p) => p.slug === where.slug) ?? null;
+        if (where.id) return products().find((p) => p.id === where.id) ?? null;
         return null;
+      },
+      findMany: async () => products(),
+      update: async (args) => {
+        const a = args as { where: { id?: string; slug?: string }; data: Partial<ProductRow> };
+        let next: ProductRow | null = null;
+        mutateStore((s) => {
+          if (!s.products.length) s.products = DEFAULT_PRODUCTS.map((p) => ({ ...p }));
+          const row = s.products.find((p) => p.id === a.where.id || p.slug === a.where.slug);
+          if (!row) return;
+          Object.assign(row, a.data);
+          next = row;
+        });
+        if (!next) throw new Error("Product not found");
+        return next;
       },
       upsert: async (args) => (args as { create: ProductRow }).create,
     },
@@ -155,7 +177,7 @@ function createFileDb(): DbClient {
     conversion: {
       create: async (args) => {
         const data = (args as { data: Partial<ConversionRow> & { productId: string } }).data;
-        const product = PRODUCTS.find((p) => p.id === data.productId);
+        const product = products().find((p) => p.id === data.productId);
         const row: ConversionRow = {
           id: id("cnv"),
           affiliateId: data.affiliateId!,

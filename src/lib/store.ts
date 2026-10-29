@@ -1,11 +1,19 @@
 import fs from "fs";
 import path from "path";
-import type { AffiliateRow, ConversionRow, PayoutRow } from "@/lib/affiliate/types";
+import type { AffiliateRow, ConversionRow, PayoutRow, ProductRow } from "@/lib/affiliate/types";
+
+export const DEFAULT_PRODUCTS: ProductRow[] = [
+  { id: "prd_nova", slug: "nova-pos", name: "Nova POS", domain: "pos.scalmint.com", href: "https://pos.scalmint.com", status: "LIVE", commissionType: "PERCENT_RECURRING", commissionRate: 3000, commissionCap: 50000, cookieDays: 30, minPayout: 5000 },
+  { id: "prd_operasch", slug: "operasch", name: "Operasch", domain: "smartsos.cloud", href: "https://smartsos.cloud", status: "LIVE", commissionType: "PERCENT_RECURRING", commissionRate: 2500, commissionCap: 40000, cookieDays: 30, minPayout: 5000 },
+  { id: "prd_jarvis", slug: "jarvis", name: "Jarvis", domain: null, href: null, status: "COMING_SOON", commissionType: "FLAT_CPA", commissionRate: 500, commissionCap: null, cookieDays: 30, minPayout: 5000 },
+  { id: "prd_jobfinder", slug: "jobfinder", name: "JobFinder", domain: null, href: null, status: "COMING_SOON", commissionType: "FLAT_CPA", commissionRate: 1000, commissionCap: null, cookieDays: 30, minPayout: 5000 },
+];
 
 export type DiskStore = {
   affiliates: AffiliateRow[];
   conversions: ConversionRow[];
   payouts: PayoutRow[];
+  products: ProductRow[];
 };
 
 function storePath() {
@@ -17,7 +25,7 @@ function storePath() {
 const g = globalThis as unknown as { __scalmintAffStore?: DiskStore };
 
 function empty(): DiskStore {
-  return { affiliates: [], conversions: [], payouts: [] };
+  return { affiliates: [], conversions: [], payouts: [], products: DEFAULT_PRODUCTS.map((p) => ({ ...p })) };
 }
 
 function reviveAffiliate(a: AffiliateRow): AffiliateRow {
@@ -51,6 +59,7 @@ export function readStore(): DiskStore {
       affiliates: (raw.affiliates ?? []).map(reviveAffiliate),
       conversions: (raw.conversions ?? []).map(reviveConversion),
       payouts: (raw.payouts ?? []).map(revivePayout),
+      products: (raw.products && raw.products.length ? raw.products : DEFAULT_PRODUCTS).map((p) => ({ ...p })),
     };
     return g.__scalmintAffStore;
   } catch (err) {

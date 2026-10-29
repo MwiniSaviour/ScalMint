@@ -5,6 +5,11 @@
       "source": "/",
       "has": [{ "type": "host", "value": "affiliate.scalmint.com" }],
       "destination": "/affiliate"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "admin.scalmint.com" }],
+      "destination": "/admin"
     }
   ]
 }
