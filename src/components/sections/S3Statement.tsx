@@ -203,7 +203,7 @@ export default function S3Statement() {
                     ease: EASE_EXPO,
                     delay: reduce === true ? 0 : i * 0.06,
                   }}
-                  className="flex h-[87px] w-[87px] flex-col items-center justify-center gap-[13px] rounded-tile bg-[#1D1D1D]"
+                  className="flex h-[87px] w-[87px] flex-col items-center justify-center gap-[13px] rounded-tile bg-surface-2"
                 >
                   <Icon
                     size={40}

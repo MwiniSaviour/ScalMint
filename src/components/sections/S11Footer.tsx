@@ -143,12 +143,12 @@ const BAR =
    image px). No token covers it: `t-ui` is 14px and `t-body-lg` is 21px, and
    either would be wrong by a visible amount at the foot of the page. */
 const FOOTER_LINK =
-  "text-[17px] leading-[1.2] tracking-[-0.01em] text-[#eeeeee] transition-colors duration-150 hover:text-hi";
+  "text-[17px] leading-[1.2] tracking-[-0.01em] text-footer-link transition-colors duration-150 hover:text-hi";
 
 /* BetaChip is hardcoded to the word "Beta", so the count badge restates its
    metrics rather than forking a near-copy of it. */
 const COUNT_CHIP =
-  "t-eyebrow inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[4px] bg-[#1a1a1a] px-1.5 text-[9px] leading-none text-[#959595] tabular-nums";
+  "t-eyebrow inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[4px] bg-surface-2 px-1.5 text-[9px] leading-none text-muted tabular-nums";
 
 /* ============================================================================
    PROMO CARD — 227 x 132, 1.72:1, radius 8.
@@ -495,7 +495,7 @@ export default function S11Footer() {
                 <PromoGlyph />
               </div>
 
-              <p className="mt-9 text-[15px] leading-[1.6] text-[#f1f1f1] transition-colors duration-150 group-hover:text-hi">
+              <p className="mt-9 text-[15px] leading-[1.6] text-hi transition-colors duration-150 group-hover:text-hi">
                 {PROMO_CAPTION_BEFORE} {PROMO_CAPTION_NAME}
                 {PROMO_CAPTION_AFTER}{" "}
                 <ArrowUpRight className="relative top-[1px] ml-0.5" />
@@ -525,13 +525,13 @@ export default function S11Footer() {
                 {/* Decorative only — the links carry their own names, so the
                     separator is hidden rather than read as a bare "dot". */}
                 {i > 0 && (
-                  <span aria-hidden="true" className="text-[#4f4f4f]">
+                  <span aria-hidden="true" className="text-muted">
                     &middot;
                   </span>
                 )}
                 <Link
                   href={item.href}
-                  className={`${BAR} text-footer-legal hover:text-[#9a9a9a]`}
+                  className={`${BAR} text-footer-legal hover:text-muted`}
                 >
                   {item.label}
                 </Link>

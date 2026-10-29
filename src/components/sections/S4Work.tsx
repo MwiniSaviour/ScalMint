@@ -177,9 +177,9 @@ function ChromeBar({ path }: { path: string }) {
   return (
     <div className="flex h-10 items-center gap-4 border-b border-line bg-surface-3 px-4">
       <span aria-hidden="true" className="flex shrink-0 items-center gap-[6px]">
-        <span className="block h-[7px] w-[7px] rounded-full bg-[#3a3a3a]" />
-        <span className="block h-[7px] w-[7px] rounded-full bg-[#3a3a3a]" />
-        <span className="block h-[7px] w-[7px] rounded-full bg-[#3a3a3a]" />
+        <span className="block h-[7px] w-[7px] rounded-full bg-surface-2" />
+        <span className="block h-[7px] w-[7px] rounded-full bg-surface-2" />
+        <span className="block h-[7px] w-[7px] rounded-full bg-surface-2" />
       </span>
 
       <span className="flex min-w-0 flex-1 items-center gap-2 rounded-[6px] bg-page px-3 py-[6px]">
@@ -301,7 +301,7 @@ export default function S4Work() {
           onFocusCapture={() => setFocused(true)}
           onBlurCapture={onBlurCapture}
           onKeyDown={onKeyDown}
-          className="mt-[56px] rounded-tile border border-surface-5 bg-[linear-gradient(to_bottom,#101010,#171717)] p-4"
+          className="mt-[56px] rounded-tile border border-line bg-surface-3 p-4"
         >
           {/* The chrome frame. Light screenshots inside a dark shell keep the
               panel from reading as two unrelated pieces of imagery. */}
@@ -384,7 +384,7 @@ export default function S4Work() {
                       aria-hidden="true"
                       className={cn(
                         "block h-[6px] w-[6px] rounded-full transition-colors",
-                        i === active ? "bg-hi" : "bg-[#3a3a3a] hover:bg-muted",
+                        i === active ? "bg-hi" : "bg-surface-2 hover:bg-muted",
                       )}
                     />
                   </button>

@@ -120,7 +120,7 @@ export function BetaChip({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "t-eyebrow inline-flex h-[18px] items-center rounded-[4px] bg-[#1a1a1a] px-1.5 text-[9px] leading-none text-[#959595]",
+        "t-eyebrow inline-flex h-[18px] items-center rounded-[4px] bg-surface-2 px-1.5 text-[9px] leading-none text-muted",
         className,
       )}
     >
@@ -191,7 +191,7 @@ export function Pager({
               aria-current={isActive ? "true" : undefined}
               className={cn(
                 "t-eyebrow tabular-nums transition-colors duration-150",
-                isActive ? "text-hi" : "text-[#797979]",
+                isActive ? "text-hi" : "text-muted",
               )}
             >
               {String(i + 1).padStart(2, "0")}
@@ -212,7 +212,7 @@ export function Pager({
             aria-label={labels?.[i] ?? `Show slide ${i + 1} of ${count}`}
             className={cn(
               "t-eyebrow cursor-pointer tabular-nums transition-colors duration-150",
-              isActive ? "text-hi" : "text-[#797979] hover:text-[#8a8a8a]",
+              isActive ? "text-hi" : "text-muted hover:text-body",
             )}
           >
             {String(i + 1).padStart(2, "0")}
@@ -273,7 +273,7 @@ export function TextLink({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center gap-1.5 text-[#8a8a8a] underline decoration-[#555] underline-offset-4 transition-colors hover:text-[#e8e8e8] hover:decoration-[#e8e8e8]",
+        "inline-flex items-center gap-1.5 text-muted underline decoration-line underline-offset-4 transition-colors hover:text-hi hover:decoration-hi",
         className,
       )}
     >

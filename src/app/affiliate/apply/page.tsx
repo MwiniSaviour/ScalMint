@@ -40,7 +40,7 @@ export default function ApplyPage() {
 
   return (
     <main className="bg-page">
-      <div className="border-b border-white/[0.06] bg-[#0f0f0f]">
+      <div className="border-b border-line bg-surface-3">
         <Container className="py-10">
           <Eyebrow>Become an affiliate</Eyebrow>
           <h1 className="mt-3 text-[32px] font-medium leading-[0.95] tracking-[-0.03em] text-hi md:text-[40px]">
@@ -52,55 +52,55 @@ export default function ApplyPage() {
             One code for all 4 products. Ghana Card verified, MoMo payouts via Paystack. You’ll get dashboard access immediately in dev; production verifies &lt;24h.
           </p>
           <div className="mt-4 flex flex-wrap gap-2 font-mono text-[11px] tracking-wide text-muted">
-            <span className="rounded-[6px] border border-white/10 bg-white/[0.04] px-2 py-1">MoMo default • GHS 50 threshold</span>
-            <span className="rounded-[6px] border border-white/10 bg-white/[0.04] px-2 py-1">30-day cookie</span>
+            <span className="rounded-[6px] border border-line bg-ink-04 px-2 py-1">MoMo default • GHS 50 threshold</span>
+            <span className="rounded-[6px] border border-line bg-ink-04 px-2 py-1">30-day cookie</span>
           </div>
         </Container>
       </div>
 
       <Container className="py-10">
         <div className="mx-auto grid max-w-[1080px] grid-cols-1 gap-6 lg:grid-cols-[1.35fr_0.75fr]">
-          <form onSubmit={onSubmit} className="rounded-[16px] border border-white/[0.07] bg-surface-1 p-6 md:p-8">
+          <form onSubmit={onSubmit} className="rounded-[16px] border border-line bg-surface-1 p-6 md:p-8">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Full name *</span>
-                <input name="name" required placeholder="Ama Mensah" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi placeholder:text-muted/60 focus:border-white/20 focus:outline-none" />
+                <input name="name" required placeholder="Ama Mensah" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi placeholder:text-muted/60 focus:border-line focus:outline-none" />
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Email *</span>
-                <input name="email" type="email" required placeholder="ama@example.com" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
+                <input name="email" type="email" required placeholder="ama@example.com" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none" />
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Phone (Ghana) *</span>
-                <input name="phone" required placeholder="0244123456 or +233244123456" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
+                <input name="phone" required placeholder="0244123456 or +233244123456" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none" />
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Password *</span>
-                <input name="password" type="password" required minLength={8} placeholder="••••••••" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
+                <input name="password" type="password" required minLength={8} placeholder="••••••••" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none" />
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Payout method *</span>
-                <select name="payoutMethod" defaultValue="MOBILE_MONEY" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none">
+                <select name="payoutMethod" defaultValue="MOBILE_MONEY" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none">
                   <option value="MOBILE_MONEY">Mobile Money (MTN MoMo • Telecel • AirtelTigo)</option>
                   <option value="BANK">Bank (Ghana — GhIPSS)</option>
                 </select>
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">MoMo number / Bank account *</span>
-                <input name="payoutAccount" required placeholder="0244123456 or 1234567890" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
+                <input name="payoutAccount" required placeholder="0244123456 or 1234567890" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none" />
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Account name (as on MoMo/bank)</span>
-                <input name="payoutAccountName" placeholder="Ama Mensah" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
+                <input name="payoutAccountName" placeholder="Ama Mensah" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none" />
               </label>
               <label className="block">
                 <span className="t-eyebrow text-eyebrow">Ghana Card ID (for verification)</span>
-                <input name="ghanaCardId" placeholder="GHA-XXXXXXXXX" className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none" />
+                <input name="ghanaCardId" placeholder="GHA-XXXXXXXXX" className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none" />
               </label>
             </div>
 
             <label className="mt-6 flex items-start gap-2">
-              <input type="checkbox" name="acceptedTerms" required className="mt-1 size-4 rounded border-white/20 bg-page" />
+              <input type="checkbox" name="acceptedTerms" required className="mt-1 size-4 rounded border-line bg-page" />
               <span className="text-[12px] leading-[1.5] text-muted">
                 I agree to the <Link href="/legal/terms" className="text-hi underline underline-offset-4">Affiliate Terms</Link> — no brand bidding, no spam, self-referral banned. 7-day verification window, 30-day cookie.
               </span>
@@ -125,7 +125,7 @@ export default function ApplyPage() {
             </p>
           </form>
 
-          <div className="rounded-[16px] border border-white/[0.07] bg-[#111111] p-6">
+          <div className="rounded-[16px] border border-line bg-surface-3 p-6">
             <p className="t-eyebrow text-brand-teal">Why Ghana affiliates choose ScalMint</p>
             <ul className="mt-4 space-y-3 text-[13px] leading-[1.6] text-muted">
               <li>• One link for Nova POS + Operasch (live) + Jarvis/JobFinder waitlist — you earn wherever they convert.</li>
@@ -133,7 +133,7 @@ export default function ApplyPage() {
               <li>• MoMo first: GHS 1 fee vs GHS 8 bank. We pay to MTN MoMo by default.</li>
               <li>• Real support: Accra team, not a faceless network. `support@scalmint.com` & WhatsApp.</li>
             </ul>
-            <div className="mt-6 rounded-[12px] bg-white/[0.04] p-4">
+            <div className="mt-6 rounded-[12px] bg-ink-04 p-4">
               <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Example link after approval</p>
               <p className="mt-2 break-all font-mono text-[12px] text-brand-teal">https://pos.scalmint.com?ref=SCAL-A7F3K9PQ</p>
               <p className="mt-1 break-all font-mono text-[12px] text-muted">https://smartsos.cloud?ref=SCAL-A7F3K9PQ</p>

@@ -230,7 +230,7 @@ function Wordmark({ slide }: { slide: Slide }) {
       fill="currentColor"
       aria-hidden="true"
       focusable="false"
-      className="shrink-0 text-[#ededed]"
+      className="shrink-0 text-hi"
     >
       {slide.id === "kestrel" ? (
         <>
@@ -405,10 +405,10 @@ export default function S6Testimonial() {
 
                     <cite className="flex flex-col justify-center not-italic">
                       <span className="sr-only">{slide.company} — </span>
-                      <Eyebrow className="text-[#ededed]">
+                      <Eyebrow className="text-hi">
                         {slide.name}
                       </Eyebrow>
-                      <Eyebrow className="text-[#9a9a9a]">{slide.role}</Eyebrow>
+                      <Eyebrow className="text-muted">{slide.role}</Eyebrow>
                     </cite>
                   </figcaption>
 

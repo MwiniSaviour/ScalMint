@@ -595,7 +595,7 @@ export default function S1Hero() {
           <motion.div {...riseIn(0.04)}>
             <a
               href="#report"
-              className="t-eyebrow inline-flex h-[30px] items-center gap-2.5 rounded-pill border border-line bg-surface-3 pl-3.5 pr-2.5 text-body transition-colors duration-150 hover:border-[#333333] hover:text-hi"
+              className="t-eyebrow inline-flex h-[30px] items-center gap-2.5 rounded-pill border border-line bg-surface-3 pl-3.5 pr-2.5 text-body transition-colors duration-150 hover:border-line hover:text-hi"
             >
               <span className="size-[6px] shrink-0 rounded-full bg-blue" />
               {KEYNOTE_LABEL}
@@ -645,7 +645,7 @@ export default function S1Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.42 }}
-            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-6 text-white/55 xl:max-w-[1020px] xl:flex-nowrap xl:justify-between xl:gap-x-6 xl:mx-auto"
+            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-6 text-muted xl:max-w-[1020px] xl:flex-nowrap xl:justify-between xl:gap-x-6 xl:mx-auto"
           >
             {CLIENTS.map((client) => {
               const hasMark = client.mark !== "none";

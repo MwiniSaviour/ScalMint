@@ -39,7 +39,7 @@ export function PageView({
                 {page.blocks.map((b) => (
                   <article
                     key={b.title}
-                    className="rounded-[12px] border border-white/[0.06] bg-surface-1 p-6"
+                    className="rounded-[12px] border border-line bg-surface-1 p-6"
                   >
                     <h2 className="text-[16px] font-medium tracking-[-0.02em] text-hi">{b.title}</h2>
                     <p className="mt-2 text-[13px] leading-[1.65] text-muted">{b.body}</p>
@@ -47,7 +47,7 @@ export function PageView({
                 ))}
               </div>
               {page.aside && (
-                <aside className="h-fit rounded-[12px] border border-white/[0.06] bg-[#111111] p-6">
+                <aside className="h-fit rounded-[12px] border border-line bg-surface-3 p-6">
                   <p className="t-eyebrow text-brand-teal">{page.aside.title}</p>
                   <ul className="mt-4 space-y-2 text-[13px] leading-[1.6] text-muted">
                     {page.aside.items.map((item) => (
@@ -79,7 +79,7 @@ export function PageList({
         <li key={l.href}>
           <Link
             href={l.href}
-            className="block rounded-[12px] border border-white/[0.06] bg-surface-1 p-5 transition-colors hover:border-white/[0.12]"
+            className="block rounded-[12px] border border-line bg-surface-1 p-5 transition-colors hover:border-line"
           >
             <p className="text-[15px] font-medium tracking-[-0.02em] text-hi">{l.title}</p>
             <p className="mt-1 text-[13px] leading-[1.55] text-muted">{l.body}</p>

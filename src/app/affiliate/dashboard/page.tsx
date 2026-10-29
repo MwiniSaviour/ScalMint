@@ -48,10 +48,10 @@ export default async function DashboardPage({
             The footer Dashboard link has no session.
           </p>
           <div className="mt-6 flex gap-3">
-            <Link href="/affiliate/login" className="inline-flex h-[37px] items-center rounded-pill bg-white px-4 text-[13px] font-medium text-black">
+            <Link href="/affiliate/login" className="inline-flex h-[37px] items-center rounded-pill chip-solid px-4 text-[13px] font-medium">
               Sign in
             </Link>
-            <Link href="/affiliate/apply" className="inline-flex h-[37px] items-center rounded-pill border border-white/10 px-4 text-[13px] text-muted hover:text-hi">
+            <Link href="/affiliate/apply" className="inline-flex h-[37px] items-center rounded-pill border border-line px-4 text-[13px] text-muted hover:text-hi">
               Apply
             </Link>
           </div>
@@ -101,7 +101,7 @@ export default async function DashboardPage({
 
   return (
     <main className="bg-page">
-      <div className="border-b border-white/[0.06] bg-[#0f0f0f]">
+      <div className="border-b border-line bg-surface-3">
         <Container className="py-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -120,7 +120,7 @@ export default async function DashboardPage({
             </div>
             <Link
               href="/api/affiliate/logout"
-              className="rounded-pill border border-white/10 bg-white/[0.04] px-4 py-2 text-[12px] text-muted hover:text-hi"
+              className="rounded-pill border border-line bg-ink-04 px-4 py-2 text-[12px] text-muted hover:text-hi"
             >
               Sign out
             </Link>
@@ -140,7 +140,7 @@ export default async function DashboardPage({
               hint: pendingPesewas >= 5000 ? "Eligible" : "Min GHS 50",
             },
           ].map((row) => (
-            <div key={row.label} className="rounded-[12px] border border-white/[0.06] bg-surface-1 p-4">
+            <div key={row.label} className="rounded-[12px] border border-line bg-surface-1 p-4">
               <p className="t-eyebrow text-eyebrow">{row.label}</p>
               <p className="mt-2 text-[20px] font-semibold tracking-[-0.02em] text-hi">{row.value}</p>
               <p className="mt-1 font-mono text-[11px] text-muted">{row.hint}</p>
@@ -148,7 +148,7 @@ export default async function DashboardPage({
           ))}
         </div>
 
-        <div className="mt-8 rounded-[16px] border border-white/[0.07] bg-surface-1 p-6">
+        <div className="mt-8 rounded-[16px] border border-line bg-surface-1 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Eyebrow>Your referral links</Eyebrow>
             <span className="rounded-[6px] bg-brand-teal px-2 py-1 font-mono text-[11px] font-semibold tracking-wide text-black">
@@ -164,16 +164,16 @@ export default async function DashboardPage({
                 ? `${p.href}?ref=${affiliate.code}`
                 : `https://scalmint.com/affiliate?p=${p.slug}&ref=${affiliate.code}`;
               return (
-                <div key={p.slug} className="rounded-[10px] border border-white/[0.06] bg-page px-4 py-4">
+                <div key={p.slug} className="rounded-[10px] border border-line bg-page px-4 py-4">
                   <div className="flex items-center justify-between">
                     <p className="text-[13px] font-medium text-hi">{p.name}</p>
                     <span
-                      className={`rounded-[6px] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${p.status === "live" ? "bg-white text-black" : "bg-[#1a1a1a] text-muted"}`}
+                      className={`rounded-[6px] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${p.status === "live" ? "chip-solid" : "bg-surface-2 text-muted"}`}
                     >
                       {p.status === "live" ? p.commissionLabel : "Coming soon"}
                     </span>
                   </div>
-                  <p className="mt-2 break-all rounded-[8px] bg-white/[0.04] px-2 py-1.5 font-mono text-[11px] text-brand-teal">{url}</p>
+                  <p className="mt-2 break-all rounded-[8px] bg-ink-04 px-2 py-1.5 font-mono text-[11px] text-brand-teal">{url}</p>
                   <p className="mt-2 text-[11px] leading-[1.4] text-muted">{p.tagline}</p>
                 </div>
               );
@@ -182,15 +182,15 @@ export default async function DashboardPage({
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_0.9fr]">
-          <div className="rounded-[16px] border border-white/[0.07] bg-surface-1">
-            <div className="border-b border-white/[0.06] px-5 py-4">
+          <div className="rounded-[16px] border border-line bg-surface-1">
+            <div className="border-b border-line px-5 py-4">
               <h3 className="text-[14px] font-medium tracking-[-0.01em] text-hi">Recent conversions</h3>
               <p className="mt-1 font-mono text-[11px] tracking-wide text-muted">Pending 7d → Approved → Paid • Paystack T+1</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[12px]">
                 <thead className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted">
-                  <tr className="border-b border-white/[0.06]">
+                  <tr className="border-b border-line">
                     <th className="px-4 py-3 font-normal">Date</th>
                     <th className="px-4 py-3 font-normal">Product</th>
                     <th className="px-4 py-3 font-normal">Amount</th>
@@ -214,7 +214,7 @@ export default async function DashboardPage({
                         <td className="px-4 py-3 font-mono text-brand-teal">GHS {pesewasToGhs(c.commissionAmount)}</td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-flex rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${c.status === "APPROVED" ? "bg-brand-teal text-black" : c.status === "PENDING" ? "bg-amber-400 text-black" : c.status === "PAID" ? "bg-white text-black" : "bg-white/10 text-muted"}`}
+                            className={`inline-flex rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${c.status === "APPROVED" ? "bg-brand-teal text-black" : c.status === "PENDING" ? "bg-amber-400 text-black" : c.status === "PAID" ? "chip-solid" : "bg-ink-06 text-muted"}`}
                           >
                             {c.status}
                           </span>
@@ -228,7 +228,7 @@ export default async function DashboardPage({
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-[16px] border border-white/[0.07] bg-surface-1 p-5">
+            <div className="rounded-[16px] border border-line bg-surface-1 p-5">
               <h3 className="text-[14px] font-medium text-hi">Payouts</h3>
               <p className="mt-1 text-[12px] leading-[1.5] text-muted">
                 MoMo GHS 1 vs bank GHS 8 via Paystack Transfer. Threshold GHS 50 MoMo.
@@ -248,7 +248,7 @@ export default async function DashboardPage({
                         </p>
                       </div>
                       <span
-                        className={`rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${p.status === "SUCCESS" ? "bg-brand-teal text-black" : "bg-white/10 text-muted"}`}
+                        className={`rounded-[6px] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide ${p.status === "SUCCESS" ? "bg-brand-teal text-black" : "bg-ink-06 text-muted"}`}
                       >
                         {p.status}
                       </span>
@@ -260,7 +260,7 @@ export default async function DashboardPage({
               <p className="mt-2 text-center font-mono text-[11px] text-muted">Weekly batch • 15th monthly sweep</p>
             </div>
 
-            <div className="rounded-[16px] border border-white/[0.07] bg-[#111111] p-5">
+            <div className="rounded-[16px] border border-line bg-surface-3 p-5">
               <p className="t-eyebrow text-brand-teal">Need help?</p>
               <p className="mt-2 text-[13px] leading-[1.6] text-muted">Support: support@scalmint.com • Responses in &lt;12h (Accra).</p>
               <Link href="/affiliate" className="mt-3 inline-flex text-[12px] text-muted underline underline-offset-4 hover:text-hi">

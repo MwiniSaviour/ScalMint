@@ -218,7 +218,7 @@ function Wordmark({ slide }: { slide: Slide }) {
           viewBox="0 0 240 56"
           aria-hidden="true"
           focusable="false"
-          className="shrink-0 text-[#ededed]"
+          className="shrink-0 text-hi"
         >
           <text
             x="0"
@@ -242,7 +242,7 @@ function Wordmark({ slide }: { slide: Slide }) {
           viewBox="0 0 200 56"
           aria-hidden="true"
           focusable="false"
-          className="shrink-0 text-[#ededed]"
+          className="shrink-0 text-hi"
         >
           <path d="M2 28 L15 15 L28 28 L15 41 Z" fill="currentColor" />
           <text
@@ -268,7 +268,7 @@ function Wordmark({ slide }: { slide: Slide }) {
           viewBox="0 0 310 56"
           aria-hidden="true"
           focusable="false"
-          className="shrink-0 text-[#ededed]"
+          className="shrink-0 text-hi"
         >
           <rect width="56" height="56" rx="13" fill="var(--color-hi)" />
           <text
@@ -553,7 +553,7 @@ export default function S9VideoStory() {
                 <MarkTile size={118} label={`${slide.client} logo`} />
 
                 <span className="flex flex-col gap-1.5">
-                  <span className="text-[28px] font-normal leading-[1.1] tracking-[-0.02em] text-[#ededed] md:text-[32px]">
+                  <span className="text-[28px] font-normal leading-[1.1] tracking-[-0.02em] text-hi md:text-[32px]">
                     {slide.plate.name}
                   </span>
                   <span className="text-[18px] leading-[1.2] text-body md:text-[20px]">

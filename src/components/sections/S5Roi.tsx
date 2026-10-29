@@ -69,7 +69,7 @@ const CHART_NODE: Point = [664, 249]; // = 8 x 83, 3 x 83 — sits on the grid
 
 /** The chart line sits just above `--color-line` (#262626, the card border) and
  *  at the reference's ~1.5px weight. No token covers this value. */
-const LINE_STROKE = "#333333";
+const LINE_STROKE = "var(--color-line-node)";
 const LINE_WIDTH = 1.5;
 
 /* --- Slides ----------------------------------------------------------------
@@ -463,16 +463,16 @@ export default function S5Roi() {
                       y={CHART_MID_Y - NODE_PX / 2}
                       width={NODE_PX}
                       height={NODE_PX}
-                      fill="#ffffff"
+                      fill="var(--color-hi)"
                     />
 
-                    {/* Secondary white node pinned to a grid intersection. */}
+                    {/* Secondary node pinned to a grid intersection. */}
                     <rect
                       x={CHART_NODE[0] - NODE_PX / 2}
                       y={CHART_NODE[1] - NODE_PX / 2}
                       width={NODE_PX}
                       height={NODE_PX}
-                      fill="#ffffff"
+                      fill="var(--color-hi)"
                     />
                   </svg>
 

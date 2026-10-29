@@ -239,7 +239,7 @@ export default function Nav() {
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="ScalMint — home">
             <Image src="/brand/mark.png" alt="" width={28} height={37} priority className="h-[37px] w-auto" />
             <span className="text-[17px] font-semibold tracking-[-0.02em]">
-              <span className="text-[#e9edf2]">Sca</span>
+              <span className="text-hi">Sca</span>
               <span className="text-brand-teal">lMint</span>
             </span>
           </Link>
@@ -261,7 +261,7 @@ export default function Nav() {
                       onClick={() => toggleMenu(menuId)}
                       className={cn(
                         "nav-pill hover:nav-pill-hover cursor-pointer",
-                        open && "bg-white/[0.05] text-white",
+                        open && "bg-ink-04 text-hi",
                       )}
                     >
                       {item.label}
@@ -322,7 +322,7 @@ export default function Nav() {
 
       {/* Mobile panel */}
       {mobileOpen && (
-        <div id="mobile-nav" className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-line bg-[#1b1b1b] lg:hidden">
+        <div id="mobile-nav" className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-line bg-surface-5 lg:hidden">
           <div className="px-6 py-6">
             <p className="t-eyebrow mb-4 text-eyebrow">Menu</p>
             <ul className="flex flex-col">
@@ -335,7 +335,7 @@ export default function Nav() {
                   >
                     {item.label}
                     {"menu" in item && item.menu ? (
-                      <span className="t-eyebrow rounded-[4px] bg-white/[0.06] px-1.5 py-1 text-[10px] text-muted">Menu</span>
+                      <span className="t-eyebrow rounded-[4px] bg-ink-06 px-1.5 py-1 text-[10px] text-muted">Menu</span>
                     ) : (
                       <ArrowUpRight className="text-muted" />
                     )}
@@ -354,16 +354,16 @@ export default function Nav() {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setMobileOpen(false)}
-                      className="block rounded-[6px] border border-transparent p-2 transition-colors hover:border-white/[0.04] hover:bg-white/[0.03]"
+                      className="block rounded-[6px] border border-transparent p-2 transition-colors hover:border-line hover:bg-ink-03"
                     >
-                      <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                      <span className="flex items-center gap-2 text-[13px] font-medium text-hi">
                         {p.name}
-                        <span className="inline-flex items-center gap-1 rounded-[4px] bg-white px-1.5 py-0.5 text-[9px] font-medium leading-none tracking-wide text-black">
+                        <span className="inline-flex items-center gap-1 rounded-[4px] chip-solid px-1.5 py-0.5 text-[9px] font-medium leading-none tracking-wide">
                           Live
                         </span>
                         <ArrowUpRight size={11} className="ml-auto text-muted" />
                       </span>
-                      <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.desc}</span>
+                      <span className="mt-1 block text-[12px] leading-[1.45] text-muted">{p.desc}</span>
                       <span className="mt-1.5 flex items-center gap-1 font-mono text-[11px] tracking-wide text-brand-teal/90">
                         {p.domain}
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -372,14 +372,14 @@ export default function Nav() {
                       </span>
                     </a>
                   ) : (
-                    <div className="block rounded-[6px] border border-white/[0.03] bg-white/[0.02] p-2 opacity-90">
-                      <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                    <div className="block rounded-[6px] border border-line bg-ink-02 p-2 opacity-90">
+                      <span className="flex items-center gap-2 text-[13px] font-medium text-hi">
                         {p.name}
-                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-[#242424] px-1.5 text-[9px] leading-none text-[#9a9a9a]">
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-surface-2 px-1.5 text-[9px] leading-none text-muted">
                           Coming soon
                         </span>
                       </span>
-                      <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.desc}</span>
+                      <span className="mt-1 block text-[12px] leading-[1.45] text-muted">{p.desc}</span>
                       {p.hint && <span className="mt-1.5 block font-mono text-[11px] tracking-wide text-muted">{p.hint}</span>}
                     </div>
                   )}
@@ -391,16 +391,16 @@ export default function Nav() {
             <ul className="grid grid-cols-1 gap-y-4">
               {SERVICE_ITEMS.map((item) => (
                 <li key={item.title}>
-                  <Link href={item.href} onClick={() => setMobileOpen(false)} className="block rounded-[6px] p-2 transition-colors hover:bg-white/[0.03]">
-                    <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                  <Link href={item.href} onClick={() => setMobileOpen(false)} className="block rounded-[6px] p-2 transition-colors hover:bg-ink-03">
+                    <span className="flex items-center gap-2 text-[13px] font-medium text-hi">
                       {item.title}
                       {item.beta && (
-                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-[#1a1a1a] px-1.5 text-[9px] leading-none text-[#959595]">
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-surface-2 px-1.5 text-[9px] leading-none text-muted">
                           Beta
                         </span>
                       )}
                     </span>
-                    <span className="mt-0.5 block text-[12px] leading-[1.45] text-[#8a8a8a]">{item.desc}</span>
+                    <span className="mt-0.5 block text-[12px] leading-[1.45] text-muted">{item.desc}</span>
                   </Link>
                 </li>
               ))}
@@ -415,28 +415,28 @@ export default function Nav() {
                     <Link
                       href="/affiliate"
                       onClick={() => setMobileOpen(false)}
-                      className="block rounded-[6px] border border-white/[0.06] bg-white/[0.02] p-2.5 transition-colors hover:bg-white/[0.04]"
+                      className="block rounded-[6px] border border-line bg-ink-02 p-2.5 transition-colors hover:bg-ink-04"
                     >
-                      <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                      <span className="flex items-center gap-2 text-[13px] font-medium text-hi">
                         {p.name}
                         <span className="inline-flex h-[16px] items-center rounded-[4px] bg-brand-teal px-1.5 text-[9px] font-semibold leading-none text-black">
                           {p.badge}
                         </span>
                       </span>
-                      <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                      <span className="mt-1 block text-[12px] leading-[1.45] text-muted">{p.brief}</span>
                       <span className="mt-1.5 inline-flex items-center gap-1 font-mono text-[11px] tracking-wide text-brand-teal">
                         {p.domain} <ArrowUpRight size={10} />
                       </span>
                     </Link>
                   ) : (
-                    <div className="block rounded-[6px] border border-white/[0.04] bg-white/[0.015] p-2.5">
-                      <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                    <div className="block rounded-[6px] border border-line bg-ink-02 p-2.5">
+                      <span className="flex items-center gap-2 text-[13px] font-medium text-hi">
                         {p.name}
-                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-[#242424] px-1.5 text-[9px] leading-none text-[#a0a0a0]">
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-surface-2 px-1.5 text-[9px] leading-none text-muted">
                           {p.badge}
                         </span>
                       </span>
-                      <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                      <span className="mt-1 block text-[12px] leading-[1.45] text-muted">{p.brief}</span>
                     </div>
                   )}
                 </li>
@@ -462,7 +462,7 @@ export default function Nav() {
           onMouseEnter={() => hoverOpen("product")}
           onMouseLeave={hoverClose}
         >
-          <div className="mx-6 mb-4 max-w-[720px] rounded-[12px] border border-[#1c1c1c] bg-[#1b1b1b] p-7 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8)]">
+          <div className="mx-6 mb-4 max-w-[720px] rounded-[12px] border border-line bg-surface-5 p-7 shadow-panel">
             <div className="flex items-center justify-between">
               <p className="t-eyebrow text-eyebrow">Products</p>
               <Link
@@ -481,33 +481,33 @@ export default function Nav() {
                       href={p.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex h-full flex-col rounded-[8px] border border-white/[0.06] bg-white/[0.02] p-4 transition-colors hover:border-white/[0.10] hover:bg-white/[0.05]"
+                      className="group flex h-full flex-col rounded-[8px] border border-line bg-ink-02 p-4 transition-colors hover:border-line hover:bg-ink-04"
                     >
-                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-[#f0f0f0]">
+                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-hi">
                         {p.name}
-                        <span className="inline-flex h-[16px] items-center rounded-[4px] bg-white px-1.5 text-[9px] font-semibold leading-none tracking-wide text-black">
+                        <span className="inline-flex h-[16px] items-center rounded-[4px] chip-solid px-1.5 text-[9px] font-semibold leading-none tracking-wide">
                           Live
                         </span>
-                        <span className="ml-auto inline-flex size-5 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] opacity-70 transition-all group-hover:opacity-100 group-hover:border-white/20">
+                        <span className="ml-auto inline-flex size-5 items-center justify-center rounded-full border border-line bg-ink-04 opacity-70 transition-all group-hover:opacity-100 group-hover:border-line">
                           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true" className="text-hi">
                             <path d="M3 7L7 3M7 3H4M7 3V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="square" />
                           </svg>
                         </span>
                       </span>
-                      <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.desc}</span>
+                      <span className="mt-2 block text-[12px] leading-[1.45] text-muted">{p.desc}</span>
                       <span className="mt-3 inline-flex items-center gap-1 font-mono text-[11px] tracking-wide text-brand-teal">
                         {p.domain} <span aria-hidden="true" className="text-brand-teal/70">↗</span>
                       </span>
                     </a>
                   ) : (
-                    <div className="flex h-full flex-col rounded-[8px] border border-white/[0.05] bg-white/[0.015] p-4">
-                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-[#f0f0f0]">
+                    <div className="flex h-full flex-col rounded-[8px] border border-line bg-ink-02 p-4">
+                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-hi">
                         {p.name}
-                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] border border-white/10 bg-[#242424] px-1.5 text-[9px] leading-none text-[#a0a0a0]">
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] border border-line bg-surface-2 px-1.5 text-[9px] leading-none text-muted">
                           Coming soon
                         </span>
                       </span>
-                      <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.desc}</span>
+                      <span className="mt-2 block text-[12px] leading-[1.45] text-muted">{p.desc}</span>
                       {p.hint && <span className="mt-3 font-mono text-[11px] tracking-wide text-muted">{p.hint}</span>}
                     </div>
                   )}
@@ -515,13 +515,13 @@ export default function Nav() {
               ))}
             </ul>
 
-            <div className="mt-5 flex items-center gap-3 border-t border-white/[0.06] pt-4">
+            <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
               <p className="text-[12px] leading-none text-muted">
-                <span className="text-[#b0b0b0]">Need something custom?</span> Talk to us about your workflow.
+                <span className="text-muted">Need something custom?</span> Talk to us about your workflow.
               </p>
               <Link
                 href="/contact"
-                className="ml-auto inline-flex h-7 items-center gap-1 rounded-[8px] bg-white px-3 text-[12px] font-medium text-black transition-colors hover:bg-[#e8e8e8]"
+                className="ml-auto inline-flex h-7 items-center gap-1 rounded-[8px] chip-solid px-3 text-[12px] font-medium transition-colors hover:opacity-90"
               >
                 Start a project <ArrowUpRight size={11} />
               </Link>
@@ -540,21 +540,21 @@ export default function Nav() {
           onMouseEnter={() => hoverOpen("services")}
           onMouseLeave={hoverClose}
         >
-          <div className="mx-6 mb-4 max-w-[880px] rounded-[12px] border border-[#1c1c1c] bg-[#1b1b1b] p-7 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8)]">
+          <div className="mx-6 mb-4 max-w-[880px] rounded-[12px] border border-line bg-surface-5 p-7 shadow-panel">
             <p className="t-eyebrow text-eyebrow">What we build</p>
             <ul className="mt-4 grid grid-cols-3 gap-x-6 gap-y-5">
               {SERVICE_ITEMS.map((item) => (
                 <li key={item.title}>
-                  <Link href={item.href} className="group block rounded-[6px] p-2 transition-colors hover:bg-white/[0.04]">
-                    <span className="flex items-center gap-2 text-[13px] font-medium text-[#f0f0f0]">
+                  <Link href={item.href} className="group block rounded-[6px] p-2 transition-colors hover:bg-ink-04">
+                    <span className="flex items-center gap-2 text-[13px] font-medium text-hi">
                       {item.title}
                       {item.beta && (
-                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-[#1a1a1a] px-1.5 text-[9px] leading-none text-[#959595]">
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] bg-surface-2 px-1.5 text-[9px] leading-none text-muted">
                           Beta
                         </span>
                       )}
                     </span>
-                    <span className="mt-1 block text-[12px] leading-[1.45] text-[#8a8a8a]">{item.desc}</span>
+                    <span className="mt-1 block text-[12px] leading-[1.45] text-muted">{item.desc}</span>
                   </Link>
                 </li>
               ))}
@@ -573,17 +573,17 @@ export default function Nav() {
           onMouseEnter={() => hoverOpen("affiliate")}
           onMouseLeave={hoverClose}
         >
-          <div className="mx-6 mb-4 max-w-[720px] rounded-[12px] border border-[#1c1c1c] bg-[#1b1b1b] p-7 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8)]">
+          <div className="mx-6 mb-4 max-w-[720px] rounded-[12px] border border-line bg-surface-5 p-7 shadow-panel">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="t-eyebrow text-eyebrow">Affiliate Program</p>
-                <p className="mt-1.5 max-w-[420px] text-[12px] leading-[1.5] text-[#8a8a8a]">
+                <p className="mt-1.5 max-w-[420px] text-[12px] leading-[1.5] text-muted">
                   Promote ScalMint products and earn recurring commission. Share your link, we handle billing and support.
                 </p>
               </div>
               <Link
                 href="/affiliate"
-                className="t-eyebrow shrink-0 inline-flex items-center gap-1 rounded-[8px] bg-white px-3 py-1.5 text-[11px] font-medium text-black transition-colors hover:bg-[#e8e8e8]"
+                className="t-eyebrow shrink-0 inline-flex items-center gap-1 rounded-[8px] chip-solid px-3 py-1.5 text-[11px] font-medium transition-colors hover:opacity-90"
               >
                 Join program <ArrowUpRight size={10} />
               </Link>
@@ -595,48 +595,48 @@ export default function Nav() {
                   {p.status === "live" && p.href ? (
                     <Link
                       href="/affiliate"
-                      className="group flex h-full flex-col rounded-[8px] border border-white/[0.06] bg-white/[0.02] p-4 transition-colors hover:border-white/[0.10] hover:bg-white/[0.05]"
+                      className="group flex h-full flex-col rounded-[8px] border border-line bg-ink-02 p-4 transition-colors hover:border-line hover:bg-ink-04"
                     >
-                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-[#f0f0f0]">
+                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-hi">
                         {p.name}
                         <span className="inline-flex h-[16px] items-center rounded-[4px] bg-brand-teal px-1.5 text-[9px] font-semibold leading-none tracking-wide text-black">
                           {p.badge}
                         </span>
                       </span>
-                      <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                      <span className="mt-2 block text-[12px] leading-[1.45] text-muted">{p.brief}</span>
                       <span className="mt-3 inline-flex items-center gap-1 font-mono text-[11px] tracking-wide text-brand-teal">
                         {p.domain} <span aria-hidden="true" className="text-brand-teal/70">↗</span>
                       </span>
                     </Link>
                   ) : (
-                    <div className="flex h-full flex-col rounded-[8px] border border-white/[0.05] bg-white/[0.015] p-4">
-                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-[#f0f0f0]">
+                    <div className="flex h-full flex-col rounded-[8px] border border-line bg-ink-02 p-4">
+                      <span className="flex items-center gap-2 text-[13.5px] font-medium leading-none tracking-[-0.01em] text-hi">
                         {p.name}
-                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] border border-white/10 bg-[#242424] px-1.5 text-[9px] leading-none text-[#a0a0a0]">
+                        <span className="t-eyebrow inline-flex h-[16px] items-center rounded-[4px] border border-line bg-surface-2 px-1.5 text-[9px] leading-none text-muted">
                           {p.badge}
                         </span>
                       </span>
-                      <span className="mt-2 block text-[12px] leading-[1.45] text-[#8a8a8a]">{p.brief}</span>
+                      <span className="mt-2 block text-[12px] leading-[1.45] text-muted">{p.brief}</span>
                     </div>
                   )}
                 </li>
               ))}
             </ul>
 
-            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/[0.06] pt-4">
+            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
               <p className="text-[12px] leading-none text-muted">
-                <span className="text-[#b0b0b0]">Already an affiliate?</span> Access your dashboard →
+                <span className="text-muted">Already an affiliate?</span> Access your dashboard →
               </p>
               <div className="ml-auto flex items-center gap-2">
                 <Link
                   href="/affiliate/login"
-                  className="inline-flex h-7 items-center rounded-[8px] border border-white/10 px-3 text-[12px] font-medium text-white transition-colors hover:bg-white/[0.06]"
+                  className="inline-flex h-7 items-center rounded-[8px] border border-line px-3 text-[12px] font-medium text-hi transition-colors hover:bg-ink-06"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/affiliate"
-                  className="inline-flex h-7 items-center gap-1 rounded-[8px] bg-white px-3 text-[12px] font-medium text-black transition-colors hover:bg-[#e8e8e8]"
+                  className="inline-flex h-7 items-center gap-1 rounded-[8px] chip-solid px-3 text-[12px] font-medium transition-colors hover:opacity-90"
                 >
                   Become an affiliate <ArrowUpRight size={11} />
                 </Link>
