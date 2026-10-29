@@ -61,16 +61,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#0A0A0A",
-  colorScheme: "dark" as const,
+  themeColor: "#F6F6F4",
+  colorScheme: "light" as const,
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className="bg-page font-sans antialiased">
+    <html lang="en" className="light">
+      <body className="bg-page font-sans antialiased text-body">
         <GoogleAnalytics />
         {children}
       </body>

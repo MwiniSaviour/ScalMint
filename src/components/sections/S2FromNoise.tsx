@@ -688,7 +688,7 @@ export default function S2FromNoise() {
                     {i < STEP_COUNT - 1 && (
                       <span
                         aria-hidden="true"
-                        className="absolute bottom-0 left-[9px] top-[18px] w-px bg-[#0e0e0e]"
+                        className="absolute bottom-0 left-[9px] top-[18px] w-px bg-page"
                       />
                     )}
                     <span

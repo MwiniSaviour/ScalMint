@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <main className="bg-page">
       <Container className="flex min-h-[68vh] max-w-[480px] flex-col justify-center py-12">
-        <div className="rounded-[16px] border border-white/[0.07] bg-surface-1 p-6 md:p-8">
+        <div className="rounded-[16px] border border-line bg-surface-1 p-6 md:p-8">
           <Eyebrow>Affiliate access</Eyebrow>
           <h1 className="mt-3 text-[22px] font-medium tracking-[-0.02em] text-hi">Sign in to your affiliate dashboard</h1>
           <p className="mt-2 text-[13px] leading-[1.6] text-muted">
@@ -58,7 +58,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none"
+                className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none"
                 placeholder="ama@example.com"
               />
             </label>
@@ -71,7 +71,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 w-full rounded-[10px] border border-white/[0.08] bg-page px-3 py-[10px] text-[14px] text-hi focus:border-white/20 focus:outline-none"
+                className="mt-2 w-full rounded-[10px] border border-line bg-page px-3 py-[10px] text-[14px] text-hi focus:border-line focus:outline-none"
                 placeholder="••••••••"
               />
             </label>

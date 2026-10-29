@@ -229,7 +229,7 @@ function SignalStack() {
     >
       {/* 20% white is one deliberate step above the card surface — the only
           stroke in this graphic bright enough to read through the cards. */}
-      <ellipse cx={DISC.cx} cy={DISC.cy} rx={DISC.rx} ry={DISC.ry} fill="none" stroke="rgb(255 255 255 / 0.2)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+      <ellipse cx={DISC.cx} cy={DISC.cy} rx={DISC.rx} ry={DISC.ry} fill="none" stroke="color-mix(in srgb, var(--color-hi) 16%, transparent)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
 
       {CONE_RINGS.map((ring) => (
         <ellipse key={ring.key} cx={CONE.cx} cy={ring.cy} rx={ring.rx} ry={ring.ry} fill="none" stroke={ring.stroke} strokeWidth={1} vectorEffect="non-scaling-stroke" />
@@ -365,8 +365,8 @@ function FloatingChatCards({ still }: { still: boolean }) {
                 adds no information and is correctly marked decorative. */}
             <Image src={`/people/${card.avatar}`} alt="" aria-hidden="true" width={18} height={18} loading="lazy" sizes="18px" className="size-[18px] shrink-0 rounded-full object-cover" />
             <p className="min-w-0">
-              <span className="block truncate text-[12px] leading-[1.35] font-medium text-[#ededed]">{card.title}</span>
-              <span className="block truncate text-[11px] leading-[1.35] text-[#8a8a8a]">{card.owner}</span>
+              <span className="block truncate text-[12px] leading-[1.35] font-medium text-hi">{card.title}</span>
+              <span className="block truncate text-[11px] leading-[1.35] text-muted">{card.owner}</span>
             </p>
           </div>
         </motion.div>
@@ -424,15 +424,15 @@ function RedactedTranscript({ still }: { still: boolean }) {
           <div key={turn.id} className={index === 0 ? "" : "mt-4 lg:mt-[22px]"}>
             <div className="flex items-center gap-[9px]">
               <Image src={`/people/${turn.avatar}`} alt="" aria-hidden="true" width={18} height={18} loading="lazy" sizes="18px" className="size-[18px] shrink-0 rounded-full object-cover" />
-              <p className="text-[14px] leading-none font-medium text-[#ededed]">{turn.speaker}</p>
+              <p className="text-[14px] leading-none font-medium text-hi">{turn.speaker}</p>
             </div>
 
-            <div className="mt-[10px] text-[14px] leading-[1.45] text-[#c9c9c9]">
+            <div className="mt-[10px] text-[14px] leading-[1.45] text-body">
               {turn.lines.map((line, lineIndex) => (
                 <p key={lineIndex}>
                   {line.text}
                   {line.redacted === true && (
-                    <span className="mx-[3px] inline-block rounded-[2px] border border-line-node bg-surface-2 px-[5px] py-[1px] align-baseline font-mono text-[11px] leading-[1.3] text-[#e8e8e8]">
+                    <span className="mx-[3px] inline-block rounded-[2px] border border-line-node bg-surface-2 px-[5px] py-[1px] align-baseline font-mono text-[11px] leading-[1.3] text-hi">
                       redacted
                     </span>
                   )}
@@ -444,7 +444,7 @@ function RedactedTranscript({ still }: { still: boolean }) {
       </div>
 
       <motion.div
-        className="absolute right-0 z-20 overflow-hidden rounded-[8px] border border-[#1e1e1e] bg-[#161616]"
+        className="absolute right-0 z-20 overflow-hidden rounded-[8px] border border-line bg-surface-3"
         style={{ top: cq(137), width: cq(TILE_W), height: cq(TILE_H) }}
         animate={still ? undefined : { y: [0, 5, 0] }}
         transition={still ? undefined : { duration: 7.2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
@@ -478,8 +478,8 @@ function BadgeRow() {
           const Icon = item.icon;
           return (
             <li key={item.id} className="badge inline-flex h-[42px] items-center gap-2 px-3">
-              <Icon size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0 text-[#b4b4b4]" />
-              <span className="text-[14px] leading-none tracking-[-0.01em] text-[#ededed]">{item.label}</span>
+              <Icon size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0 text-muted" />
+              <span className="text-[14px] leading-none tracking-[-0.01em] text-hi">{item.label}</span>
             </li>
           );
         })}
@@ -519,7 +519,7 @@ export default function S8Trust() {
             <motion.div variants={staggerItem}>
               <Eyebrow>{EYEBROW}</Eyebrow>
               <h2 className="t-card mt-6 text-hi">{TRUST_TITLE}</h2>
-              <p className="mt-5 max-w-[340px] text-[16px] leading-[1.47] text-[#8a8a8a]">{TRUST_BODY}</p>
+              <p className="mt-5 max-w-[340px] text-[16px] leading-[1.47] text-muted">{TRUST_BODY}</p>
             </motion.div>
 
             <motion.div variants={staggerItem}>
@@ -552,7 +552,7 @@ export default function S8Trust() {
               <motion.h3 variants={staggerItem} className="t-card mt-[30px] text-hi">
                 {SIGNAL_TITLE}
               </motion.h3>
-              <motion.p variants={staggerItem} className="mt-[14px] max-w-[340px] text-[16px] leading-[1.47] text-[#8a8a8a]">
+              <motion.p variants={staggerItem} className="mt-[14px] max-w-[340px] text-[16px] leading-[1.47] text-muted">
                 {SIGNAL_BODY}
               </motion.p>
             </div>
@@ -577,7 +577,7 @@ export default function S8Trust() {
               <motion.h3 variants={staggerItem} className="t-card mt-[30px] text-hi">
                 {PRIVACY_TITLE}
               </motion.h3>
-              <motion.p variants={staggerItem} className="mt-[14px] max-w-[340px] text-[16px] leading-[1.47] text-[#8a8a8a]">
+              <motion.p variants={staggerItem} className="mt-[14px] max-w-[340px] text-[16px] leading-[1.47] text-muted">
                 {PRIVACY_BODY}
               </motion.p>
             </div>

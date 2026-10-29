@@ -15,10 +15,10 @@ export default function AffiliateHome() {
 
         <Container className="relative py-[56px] md:py-[88px]">
           <div className="mx-auto max-w-[760px] text-center">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-pill border border-white/[0.08] bg-white/[0.03] px-3 py-1">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-pill border border-line bg-ink-03 px-3 py-1">
               <span className="size-[6px] rounded-full bg-brand-teal shadow-[0_0_12px_rgba(20,200,180,0.6)]" />
               <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">Affiliate program • Live in Ghana</span>
-              <span className="hidden h-[14px] w-px bg-white/10 sm:inline-block" />
+              <span className="hidden h-[14px] w-px bg-ink-06 sm:inline-block" />
               <span className="hidden font-mono text-[11px] tracking-wide text-body sm:inline">affiliate.scalmint.com</span>
             </div>
 
@@ -42,9 +42,9 @@ export default function AffiliateHome() {
             </div>
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 font-mono text-[11px] tracking-wide text-muted">
-              <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-white/40" />GHS 50 MoMo threshold</span>
-              <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-white/40" />30-day tracking</span>
-              <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-white/40" />T+1 Paystack settlement</span>
+              <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-ink-06" />GHS 50 MoMo threshold</span>
+              <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-ink-06" />30-day tracking</span>
+              <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-ink-06" />T+1 Paystack settlement</span>
             </div>
           </div>
 
@@ -56,7 +56,7 @@ export default function AffiliateHome() {
               { k: "T+1 • GHS 1", v: "MoMo payouts via Paystack" },
               { k: "30-day", v: "Cookie window • Ghana" },
             ].map((s) => (
-              <div key={s.k} className="rounded-[12px] border border-white/[0.06] bg-surface-1 px-4 py-4">
+              <div key={s.k} className="rounded-[12px] border border-line bg-surface-1 px-4 py-4">
                 <p className="text-[16px] font-semibold tracking-[-0.02em] text-hi">{s.k}</p>
                 <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">{s.v}</p>
               </div>
@@ -79,7 +79,7 @@ export default function AffiliateHome() {
             <AffiliateProductGrid />
           </div>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/affiliate/apply" className="inline-flex h-[36px] items-center gap-1.5 rounded-pill bg-white px-5 text-[14px] font-medium text-black hover:bg-[#e8e8e8]">
+            <Link href="/affiliate/apply" className="inline-flex h-[36px] items-center gap-1.5 rounded-pill chip-solid px-5 text-[14px] font-medium hover:opacity-90">
               Get your affiliate link <ArrowUpRight size={13} />
             </Link>
             <span className="inline-flex h-[36px] items-center rounded-pill border border-line bg-surface-1 px-4 font-mono text-[11px] tracking-wide text-muted">
@@ -90,7 +90,7 @@ export default function AffiliateHome() {
       </Section>
 
       {/* How it works */}
-      <Section id="how" className="border-t border-line bg-[#0f0f0f]">
+      <Section id="how" className="border-t border-line bg-surface-3">
         <Container>
           <Eyebrow>How it works</Eyebrow>
           <Heading2 className="mt-4 max-w-[560px]">Built for Ghana. Payouts that actually arrive.</Heading2>
@@ -115,11 +115,11 @@ export default function AffiliateHome() {
                 meta: "T+1 settlement • GHS 50 threshold • Manual payouts",
               },
             ].map((s) => (
-              <div key={s.n} className="rounded-[12px] border border-white/[0.06] bg-surface-1 p-6">
+              <div key={s.n} className="rounded-[12px] border border-line bg-surface-1 p-6">
                 <p className="font-mono text-[12px] tracking-[0.14em] text-brand-teal">{s.n}</p>
                 <h3 className="mt-3 text-[16px] font-medium tracking-[-0.01em] text-hi">{s.t}</h3>
                 <p className="mt-2 text-[13px] leading-[1.6] text-muted">{s.d}</p>
-                <p className="mt-4 border-t border-white/[0.06] pt-3 font-mono text-[11px] tracking-wide text-eyebrow">{s.meta}</p>
+                <p className="mt-4 border-t border-line pt-3 font-mono text-[11px] tracking-wide text-eyebrow">{s.meta}</p>
               </div>
             ))}
           </div>
@@ -137,8 +137,8 @@ export default function AffiliateHome() {
                 Nova POS: GHS 200/mo plan × 30% = <span className="text-hi">GHS 60/mo</span> for 12 months per store. 10 stores = GHS 600/mo passive.
                 Operasch: GHS 350/mo × 25% = GHS 87.5/mo + GHS 30 CPA per workspace.
               </p>
-              <div className="mt-6 overflow-hidden rounded-[12px] border border-white/[0.06] bg-surface-1">
-                <div className="grid grid-cols-3 gap-px bg-white/[0.06] font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+              <div className="mt-6 overflow-hidden rounded-[12px] border border-line bg-surface-1">
+                <div className="grid grid-cols-3 gap-px bg-ink-06 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
                   <div className="bg-surface-1 px-4 py-3">Product</div>
                   <div className="bg-surface-1 px-4 py-3">You earn</div>
                   <div className="bg-surface-1 px-4 py-3">For</div>
@@ -159,7 +159,7 @@ export default function AffiliateHome() {
                 </div>
               </div>
             </div>
-            <div className="rounded-[16px] border border-white/[0.06] bg-surface-1 p-6 md:p-8">
+            <div className="rounded-[16px] border border-line bg-surface-1 p-6 md:p-8">
               <p className="t-eyebrow text-eyebrow">Payouts • Paystack Ghana</p>
               <h3 className="mt-3 text-[20px] font-medium tracking-[-0.02em] text-hi">MTN MoMo first. Bank when you need it.</h3>
               <ul className="mt-4 space-y-3 text-[13px] leading-[1.6] text-muted">
@@ -181,12 +181,12 @@ export default function AffiliateHome() {
       </Section>
 
       {/* FAQ */}
-      <Section id="faq" className="border-t border-line bg-[#0f0f0f]">
+      <Section id="faq" className="border-t border-line bg-surface-3">
         <Container>
           <div className="mx-auto max-w-[760px]">
             <Eyebrow className="justify-center text-center">FAQ</Eyebrow>
             <Heading2 className="mx-auto mt-4 max-w-[520px] text-center">What Ghana affiliates ask first.</Heading2>
-            <div className="mt-10 divide-y divide-white/[0.07] rounded-[12px] border border-white/[0.07] bg-surface-1">
+            <div className="mt-10 divide-y divide-white/[0.07] rounded-[12px] border border-line bg-surface-1">
               {[
                 { q: "How do you track in Ghana's network (WhatsApp, power cuts)?", a: "We use server-side click_id plus 30-day cookie. If cookie is wiped, click_id from the initial redirect still attributes via Paystack webhook. Status goes Pending (7d) → Approved → Paid." },
                 { q: "What documents do I need?", a: "Ghana Card (or voter ID + Ghana Card later), phone-verified MoMo number matching your name, and payout account (MoMo number or bank + bank code). Approval <24h." },
@@ -196,14 +196,14 @@ export default function AffiliateHome() {
                 <details key={f.q} className="group px-6 py-5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[14px] font-medium tracking-[-0.01em] text-hi">
                     {f.q}
-                    <span className="grid size-7 shrink-0 place-items-center rounded-full border border-white/10 text-muted transition-colors group-open:rotate-45 group-open:bg-white group-open:text-black">+</span>
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line text-muted transition-colors group-open:rotate-45 group-open:bg-hi group-open:text-page">+</span>
                   </summary>
                   <p className="mt-3 max-w-[640px] text-[13px] leading-[1.6] text-muted">{f.a}</p>
                 </details>
               ))}
             </div>
           </div>
-          <div className="mx-auto mt-10 flex max-w-[760px] flex-col items-center justify-between gap-4 rounded-[12px] border border-white/[0.06] bg-page px-6 py-6 md:flex-row">
+          <div className="mx-auto mt-10 flex max-w-[760px] flex-col items-center justify-between gap-4 rounded-[12px] border border-line bg-page px-6 py-6 md:flex-row">
             <div>
               <p className="text-[16px] font-medium tracking-[-0.02em] text-hi">Ready to earn in Ghana?</p>
               <p className="mt-1 text-[13px] text-muted">One application covers all 4 products. Live + waitlist.</p>

@@ -44,7 +44,7 @@ export function PayoutButton({
         type="button"
         disabled={!eligible || busy}
         onClick={requestPayout}
-        className="mt-4 w-full rounded-[10px] bg-white px-4 py-2 text-[13px] font-medium text-black hover:bg-[#e8e8e8] disabled:opacity-40"
+        className="mt-4 w-full rounded-[10px] chip-solid px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-40"
       >
         {busy ? "Queuing…" : `Request MoMo payout · GHS ${pendingGhs}`}
       </button>

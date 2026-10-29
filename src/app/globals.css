@@ -10,53 +10,52 @@
    ========================================================================== */
 
 @theme {
+  /* Light-first. Ink, surfaces and hairlines are tokens so fills stay
+     suspended (color-mix of --color-hi) instead of hardcoded white/black.
+     Dark is available as html.dark for a later toggle — not the default. */
+
   /* --- Surfaces ------------------------------------------------------ */
-  --color-canvas: #222222; /* the surface a mock browser frame sits on */
-  --color-page: #0a0a0a; /* page base — modal value everywhere */
-  --color-surface-1: #141414; /* cards: blog, trust, testimonial panel */
-  --color-surface-2: #262626; /* glass node cards */
-  --color-surface-3: #171717; /* ROI stat card */
-  --color-surface-4: #1b1b1e; /* compliance badge (blue-tinted) */
-  --color-surface-5: #1b1b1b; /* nav pill, mega-menu panel */
-  --color-scrim: #141414; /* left video scrim base */
+  --color-canvas: #ecece8; /* outer frame around the page */
+  --color-page: #f6f6f4; /* paper — warm off-white, not stark #fff */
+  --color-surface-1: #ffffff; /* cards, mega-menu, forms */
+  --color-surface-2: #f1f1ee; /* glass node cards */
+  --color-surface-3: #f3f3f0; /* stat cards, band fills */
+  --color-surface-4: #eef0f4; /* compliance badge (cool tint) */
+  --color-surface-5: #ffffff; /* nav panel */
+  --color-scrim: #f3f3f0;
 
   /* --- Borders (all 1px) -------------------------------------------- */
-  --color-line: #262626; /* standard card border */
-  --color-line-node: #303030; /* glass node card border */
-  --color-line-badge: #323236; /* compliance badge border */
-  --color-line-soft: #1f1f1f; /* hairlines inside cards */
-  --color-line-frame: rgba(255, 255, 255, 0.09);
+  --color-line: #e4e4e0;
+  --color-line-node: #dadad6;
+  --color-line-badge: #d5d5d8;
+  --color-line-soft: #ecece8;
+  --color-line-frame: rgba(20, 20, 18, 0.08);
 
   /* --- Text ---------------------------------------------------------- */
-  --color-hi: #ffffff; /* headings — reaches pure white */
-  --color-body: #d9d9d9; /* secondary / paragraph */
-  /* Reference sampled these two at #838383 / #727272. On #0A0A0A that is
-     4.45:1 and 4.12:1 — both under WCAG AA for small text, and #727272 drops
-     further on the #171717 stat card. Both are lifted to the nearest value
-     that clears 4.5:1 on the darkest and the lightest surface they sit on.
-     The step is 7-14 RGB levels and is not visually distinguishable. */
-  --color-muted: #8a8a8a; /* dim text — 5.66:1 on page */
-  --color-eyebrow: #808080; /* mono labels — 5.01:1 on page, 4.50:1 on surface-3 */
-  --color-nav: #7f7f7f; /* nav item text */
-  --color-footer-link: #eeeeee; /* footer link list */
-  --color-footer-caption: #f1f1f1; /* promo-card caption */
-  --color-footer-legal: #7a7a7a; /* bottom bar: © year + legal links — 4.61:1 */
+  --color-hi: #141414; /* headings */
+  --color-body: #3f3f3c; /* paragraph */
+  --color-muted: #6b6b67; /* dim — 5.5:1 on page */
+  --color-eyebrow: #73736e;
+  --color-nav: #5c5c58;
+  --color-footer-link: #1a1a18;
+  --color-footer-caption: #2a2a28;
+  --color-footer-legal: #6e6e6a;
 
   /* --- Accents ------------------------------------------------------- */
-  --color-warm: #e0461b; /* chart marker + glow */
+  --color-warm: #e0461b;
   --color-warm-deep: #c4300b;
-  --color-violet: #a855f7; /* sparkle, footer promo card */
-  --color-blue: #0044ff; /* keynote dot, 3D cube */
-  --color-red: #fc3000; /* 3D cube */
-  --color-green: #26e600; /* annotation (not used in production) */
+  --color-violet: #9333ea;
+  --color-blue: #0044ff;
+  --color-red: #e11d12;
+  --color-green: #128a00;
 
-  /* --- Decorative wireframe tones ------------------------------------ */
-  --color-grid: #0c0c0c; /* blueprint grid — only 2-3 levels above page */
-  --color-wire: #131313; /* lat/long wireframe strokes */
-  --color-wire-dim: #0b0b0b;
+  /* --- Decorative wireframe tones — 2–3 levels off the page ---------- */
+  --color-grid: #dddcd6;
+  --color-wire: #d0cfc8;
+  --color-wire-dim: #e6e6e0;
 
-  /* --- Brand --------------------------------------------------------- */
-  --color-brand-teal: #14c8b4;
+  /* --- Brand. Deepened so small teal type clears AA on paper. -------- */
+  --color-brand-teal: #0c9a8c;
 
   /* --- Typography ---------------------------------------------------- */
   --font-sans: "Inter", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -96,7 +95,8 @@
 
   html {
     scroll-behavior: smooth;
-    background-color: var(--color-canvas);
+    background-color: var(--color-page);
+    color-scheme: light;
   }
 
   body {
@@ -287,23 +287,23 @@
 }
 
 @utility btn-primary {
-  background: #ffffff;
+  background: var(--color-hi);
   color: var(--color-page);
 }
 
 @utility btn-primary-hover {
-  background: #e8e8e8;
+  background: color-mix(in srgb, var(--color-hi) 82%, white);
 }
 
 @utility btn-ghost {
   background: transparent;
-  color: #e8e8e8;
+  color: var(--color-hi);
   border: 1px solid var(--color-line);
 }
 
 @utility btn-ghost-hover {
-  background: #141414;
-  border-color: #333333;
+  background: color-mix(in srgb, var(--color-hi) 4%, transparent);
+  border-color: color-mix(in srgb, var(--color-hi) 16%, transparent);
 }
 
 @utility nav-pill {
@@ -322,8 +322,32 @@
 }
 
 @utility nav-pill-hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  background: color-mix(in srgb, var(--color-hi) 5%, transparent);
+  color: var(--color-hi);
+}
+
+/* Suspended ink fills — items sit on paper; fill is a wash of heading ink,
+   never a solid black/white slab. Same classes work if .dark is introduced. */
+@utility bg-ink-02 {
+  background: color-mix(in srgb, var(--color-hi) 2.5%, transparent);
+}
+@utility bg-ink-03 {
+  background: color-mix(in srgb, var(--color-hi) 3.5%, transparent);
+}
+@utility bg-ink-04 {
+  background: color-mix(in srgb, var(--color-hi) 5%, transparent);
+}
+@utility bg-ink-06 {
+  background: color-mix(in srgb, var(--color-hi) 7%, transparent);
+}
+
+@utility chip-solid {
+  background: var(--color-hi);
+  color: var(--color-page);
+}
+
+@utility shadow-panel {
+  box-shadow: 0 18px 48px -16px color-mix(in srgb, var(--color-hi) 14%, transparent);
 }
 
 /* ============================================================================

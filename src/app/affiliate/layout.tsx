@@ -18,30 +18,30 @@ export const metadata: Metadata = {
 
 function AffiliateNav() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-page/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-line bg-page/80 backdrop-blur-md">
       <div className="mx-auto flex h-[64px] max-w-[1200px] items-center gap-6 px-6">
         <Link href="/affiliate" className="flex items-center gap-2.5">
           <Image src="/brand/mark.png" alt="" width={24} height={32} className="h-[32px] w-auto" />
           <span className="text-[15px] font-semibold tracking-[-0.02em]">
-            <span className="text-[#e9edf2]">Sca</span>
+            <span className="text-hi">Sca</span>
             <span className="text-brand-teal">lMint</span>
           </span>
-          <span className="ml-1 hidden rounded-[6px] border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted sm:inline-flex">
+          <span className="ml-1 hidden rounded-[6px] border border-line bg-ink-04 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted sm:inline-flex">
             Affiliates
           </span>
         </Link>
 
         <nav className="ml-2 hidden items-center gap-1 md:flex" aria-label="Affiliate">
-          <Link href="/affiliate#products" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-white/[0.06] hover:text-hi">
+          <Link href="/affiliate#products" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-ink-06 hover:text-hi">
             Products
           </Link>
-          <Link href="/affiliate#how" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-white/[0.06] hover:text-hi">
+          <Link href="/affiliate#how" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-ink-06 hover:text-hi">
             How it works
           </Link>
-          <Link href="/affiliate#earnings" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-white/[0.06] hover:text-hi">
+          <Link href="/affiliate#earnings" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-ink-06 hover:text-hi">
             Earnings
           </Link>
-          <Link href="/affiliate#faq" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-white/[0.06] hover:text-hi">
+          <Link href="/affiliate#faq" className="rounded-pill px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-ink-06 hover:text-hi">
             FAQ
           </Link>
         </nav>
@@ -61,7 +61,7 @@ function AffiliateNav() {
 
 function AffiliateFooter() {
   return (
-    <footer className="border-t border-line bg-[#0a0a0a]">
+    <footer className="border-t border-line bg-page">
       <div className="mx-auto max-w-[1200px] px-6 py-10">
         <div className="flex flex-col gap-8 md:flex-row md:justify-between">
           <div className="max-w-[360px]">
@@ -94,7 +94,7 @@ function AffiliateFooter() {
             </div>
           </div>
         </div>
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-6">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
           <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-footer-legal">© 2026 ScalMint • affiliate.scalmint.com</p>
           <p className="text-[11px] text-muted">Paystack Ghana • Bank of Ghana PSP licensed • Mobile money: MTN MoMo • Telecel Cash • AirtelTigo</p>
         </div>
