@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -116,6 +116,7 @@ model Conversion {
   amount           Int // transaction amount in pesewas
   commissionAmount Int // computed commission in pesewas
   currency         String           @default("GHS")
+  isOneTime         Boolean         @default(false)
   verifiedAt       DateTime?
   paidOut          Boolean          @default(false)
   payoutId         String?
