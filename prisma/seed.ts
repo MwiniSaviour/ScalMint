@@ -1,93 +1,99 @@
 import { PrismaClient } from "@prisma/client";
-import { hash } from "bcryptjs";
+import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const db = new PrismaClient();
+
+const PRODUCTS = [
+  {
+    id: "prd_nova",
+    slug: "nova-pos",
+    name: "Nova POS",
+    domain: "pos.scalmint.com",
+    href: "https://pos.scalmint.com",
+    status: "LIVE",
+    commissionType: "PERCENT_RECURRING",
+    commissionRate: 3000,
+    commissionCap: 50000,
+    cookieDays: 30,
+    minPayout: 5000,
+  },
+  {
+    id: "prd_operasch",
+    slug: "operasch",
+    name: "Operasch",
+    domain: "smartsos.cloud",
+    href: "https://smartsos.cloud",
+    status: "LIVE",
+    commissionType: "PERCENT_ONE_TIME",
+    commissionRate: 3000,
+    commissionCap: 40000,
+    cookieDays: 30,
+    minPayout: 5000,
+  },
+  {
+    id: "prd_jarvis",
+    slug: "jarvis",
+    name: "Jarvis",
+    domain: null,
+    href: null,
+    status: "COMING_SOON",
+    commissionType: "FLAT_CPA",
+    commissionRate: 500,
+    commissionCap: null,
+    cookieDays: 30,
+    minPayout: 5000,
+  },
+  {
+    id: "prd_jobfinder",
+    slug: "jobfinder",
+    name: "JobFinder",
+    domain: null,
+    href: null,
+    status: "COMING_SOON",
+    commissionType: "FLAT_CPA",
+    commissionRate: 1000,
+    commissionCap: null,
+    cookieDays: 30,
+    minPayout: 5000,
+  },
+] as const;
 
 async function main() {
-  const products = [
-    {
-      slug: "nova-pos",
-      name: "Nova POS",
-      domain: "pos.scalmint.com",
-      href: "https://pos.scalmint.com",
-      status: "LIVE" as const,
-      commissionType: "PERCENT_RECURRING" as const,
-      commissionRate: 3000,
-      commissionCap: 50000,
-      cookieDays: 30,
-      minPayout: 5000,
-    },
-    {
-      slug: "operasch",
-      name: "Operasch",
-      domain: "smartsos.cloud",
-      href: "https://smartsos.cloud",
-      status: "LIVE" as const,
-      commissionType: "PERCENT_RECURRING" as const,
-      commissionRate: 2500,
-      commissionCap: 40000,
-      cookieDays: 30,
-      minPayout: 5000,
-    },
-    {
-      slug: "jarvis",
-      name: "Jarvis",
-      domain: null,
-      href: null,
-      status: "COMING_SOON" as const,
-      commissionType: "FLAT_CPA" as const,
-      commissionRate: 500,
-      commissionCap: null,
-      cookieDays: 30,
-      minPayout: 5000,
-    },
-    {
-      slug: "jobfinder",
-      name: "JobFinder",
-      domain: null,
-      href: null,
-      status: "COMING_SOON" as const,
-      commissionType: "FLAT_CPA" as const,
-      commissionRate: 1000,
-      commissionCap: null,
-      cookieDays: 30,
-      minPayout: 5000,
-    },
-  ];
-
-  for (const p of products) {
-    await prisma.product.upsert({
-      where: { slug: p.slug },
-      update: p as never,
-      create: p as never,
+  for (const product of PRODUCTS) {
+    await db.product.upsert({
+      where: { slug: product.slug },
+      create: { ...product },
+      update: {
+        name: product.name,
+        domain: product.domain,
+        href: product.href,
+        status: product.status,
+        commissionType: product.commissionType,
+        commissionRate: product.commissionRate,
+        commissionCap: product.commissionCap,
+        cookieDays: product.cookieDays,
+        minPayout: product.minPayout,
+      },
     });
   }
 
-  const demoHash = await hash("demo1234", 12);
-  await prisma.affiliate.upsert({
-    where: { email: "demo@scalmint.com" },
-    update: {},
+  await db.affiliate.upsert({
+    where: { code: "SCAL-DEMO0001" },
     create: {
-      code: "SCAL-DEMODEMO",
-      email: "demo@scalmint.com",
+      code: "SCAL-DEMO0001",
       name: "Demo Affiliate",
-      phone: "0244000000",
-      passwordHash: demoHash,
+      email: "demo@scalmint.com",
+      passwordHash: await bcrypt.hash("demo1234", 12),
       status: "APPROVED",
-      payoutMethod: "MOBILE_MONEY",
-      payoutAccount: "0244000000",
-      payoutAccountName: "Demo Affiliate",
     },
+    update: {},
   });
-
-  console.log("Seeded 4 products + demo affiliate");
 }
 
 main()
-  .catch((e) => {
+  .then(() => db.$disconnect())
+  .catch(async (e) => {
     console.error(e);
+    await db.$disconnect();
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });
