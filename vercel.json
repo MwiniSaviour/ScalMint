@@ -1,5 +1,4 @@
 {
-  "crons": [{ "path": "/api/affiliate/cron/approve", "schedule": "0 2 * * *" }],
   "rewrites": [
     {
       "source": "/",
