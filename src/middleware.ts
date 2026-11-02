@@ -24,6 +24,17 @@ function applyRefCookie(req: NextRequest, res: NextResponse) {
   return res;
 }
 
+const ADMIN_ORIGIN = "https://admin.scalmint.com";
+
+function isAdminPath(path: string) {
+  return (
+    path === "/admin" ||
+    path.startsWith("/admin/") ||
+    path === "/api/admin" ||
+    path.startsWith("/api/admin/")
+  );
+}
+
 function hostPassthrough(path: string) {
   return (
     path.startsWith("/api") ||
@@ -71,11 +82,20 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  const isolateAdmin = isAffiliateHost || process.env.NODE_ENV === "production";
+  if (isolateAdmin && isAdminPath(path)) {
+    if (path === "/api/admin" || path.startsWith("/api/admin/")) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const target = new URL(path, ADMIN_ORIGIN);
+    target.search = url.search;
+    return NextResponse.redirect(target, 308);
+  }
+
   if (isAffiliateHost) {
     const passthrough =
       hostPassthrough(path) ||
-      path.startsWith("/affiliate") ||
-      path.startsWith("/admin");
+      path.startsWith("/affiliate");
 
     if (!passthrough) {
       url.pathname = path === "/" ? "/affiliate" : `/affiliate${path}`;

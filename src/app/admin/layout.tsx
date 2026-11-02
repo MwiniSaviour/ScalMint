@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-[100dvh] overflow-hidden bg-[#f3f4f6] text-[#111827]">
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+    <div className="h-[100dvh] overflow-hidden bg-background-gray-primary text-text-primary">
+      <ThemeProvider attribute={["class", "data-theme"]} defaultTheme="light" enableSystem={false}>
         <Providers>
           <AdminFrame>{children}</AdminFrame>
         </Providers>

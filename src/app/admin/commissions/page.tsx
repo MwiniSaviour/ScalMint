@@ -86,7 +86,7 @@ export default function CommissionsPage() {
                         type="number"
                         defaultValue={p.commissionRate}
                         onChange={(e) => setDraft((d) => ({ ...d, [p.id]: Number(e.target.value) }))}
-                        className="w-28 rounded-lg border border-[#e5e7eb] px-2 py-1.5 text-sm"
+                        className="w-28 rounded-lg border border-input-border bg-input-background px-2 py-1.5 text-sm text-text-primary"
                       />
                     </TableCell>
                     <TableCell className="h-16 px-6 text-sm text-text-primary">
