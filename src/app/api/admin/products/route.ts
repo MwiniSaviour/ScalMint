@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
-import { ProductStatus } from "@prisma/client";
 import { db } from "@/lib/db";
-import { opsFromRequest } from "@/lib/auth/ops";
+import { requireOperator } from "@/lib/ops/guard";
+import { writeAudit } from "@/lib/ops/audit";
+
+type ProductStatus = "LIVE" | "COMING_SOON";
 
 const isProductStatus = (value: unknown): value is ProductStatus =>
-  typeof value === "string" && (Object.values(ProductStatus) as string[]).includes(value);
+  value === "LIVE" || value === "COMING_SOON";
 
 export async function GET(req: Request) {
-  if (!(await opsFromRequest(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const gate = await requireOperator(req);
+  if (gate.error) return gate.error;
   return NextResponse.json({ products: await db.product.findMany() });
 }
 
 export async function PATCH(req: Request) {
-  if (!(await opsFromRequest(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const gate = await requireOperator(req, { write: true });
+  if (gate.error) return gate.error;
   const body = (await req.json().catch(() => ({}))) as {
     id?: string;
     slug?: string;
@@ -30,15 +34,27 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
   try {
-    const product = await db.product.update({
-      where: { id: body.id, slug: body.slug },
-      data: {
-        ...(body.commissionRate != null ? { commissionRate: Number(body.commissionRate) } : {}),
-        ...(body.commissionCap !== undefined ? { commissionCap: body.commissionCap } : {}),
-        ...(body.cookieDays != null ? { cookieDays: Number(body.cookieDays) } : {}),
-        ...(body.minPayout != null ? { minPayout: Number(body.minPayout) } : {}),
-        ...(status ? { status } : {}),
-      },
+    const product = await db.$transaction(async (tx: any) => {
+      const updated = await tx.product.update({
+        where: body.id ? { id: body.id } : { slug: body.slug! },
+        data: {
+          ...(body.commissionRate != null ? { commissionRate: Number(body.commissionRate) } : {}),
+          ...(body.commissionCap !== undefined ? { commissionCap: body.commissionCap } : {}),
+          ...(body.cookieDays != null ? { cookieDays: Number(body.cookieDays) } : {}),
+          ...(body.minPayout != null ? { minPayout: Number(body.minPayout) } : {}),
+          ...(status ? { status } : {}),
+        },
+      });
+      await writeAudit(tx, {
+        actorType: "OPERATOR",
+        actorId: gate.session.operatorId,
+        action: "product.update",
+        targetType: "Product",
+        targetId: updated.id,
+        meta: body,
+        req,
+      });
+      return updated;
     });
     return NextResponse.json({ product });
   } catch (err) {

@@ -196,3 +196,595 @@ model WebhookEvent {
   @@index([provider, event])
   @@index([processed])
 }
+
+// ---------------------------------------------------------------
+// Ops Console — read model and command surface (not a system of record)
+// Spec: docs/superpowers/specs/2026-11-02-scalmint-ops-console-design.md
+// No foreign keys into product databases. History is archived, never cascade-deleted.
+// ---------------------------------------------------------------
+
+enum ProjectKind {
+  SAAS
+  POS
+  WEBSITE
+  WEBAPP
+  INTERNAL
+  SERVICE
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum LifecycleStage {
+  IDEA
+  BUILD
+  LAUNCH
+  GROW
+  MAINTAIN
+  SUNSET
+}
+
+enum Criticality {
+  P1
+  P2
+  P3
+}
+
+enum RevenueBasis {
+  SUBSCRIPTION
+  LICENCE
+  PROJECT
+  RETAINER
+  INTERNAL
+}
+
+enum ComponentType {
+  WEB
+  API
+  WORKER
+  DATABASE
+  PAYMENTS
+  AUTH
+  CRON
+}
+
+enum CheckType {
+  HTTP
+  HEARTBEAT
+  DNS
+  TLS
+  WEBHOOK_FRESHNESS
+  CRON_FRESHNESS
+  INGEST_FRESHNESS
+}
+
+enum CheckAuthMode {
+  NONE
+  HEADER
+  HMAC
+}
+
+enum IngestStatus {
+  ACCEPTED
+  PROCESSED
+  FAILED
+}
+
+enum AlertSeverity {
+  P1
+  P2
+  P3
+}
+
+enum AlertState {
+  OPEN
+  ACKED
+  RESOLVED
+}
+
+enum AlertChannelKind {
+  EMAIL
+  WEBHOOK
+}
+
+enum MetricGranularity {
+  MINUTE
+  HOUR
+  DAY
+  MONTH
+}
+
+enum MetricProvenance {
+  PROBE
+  PUSH
+  MANUAL
+  DERIVED
+}
+
+enum MetricQuality {
+  OK
+  STALE
+  UNKNOWN
+}
+
+enum SubscriptionFactStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum RevenueEventKind {
+  PAYMENT
+  REFUND
+  FEE
+  ADJUSTMENT
+}
+
+enum TenantStatus {
+  ACTIVE
+  TRIAL
+  PAST_DUE
+  SUSPENDED
+  CHURNED
+  ARCHIVED
+}
+
+enum PiiClass {
+  NONE
+  CONTACT
+  SENSITIVE
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+
+enum OpsTaskStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum AssetKind {
+  DOMAIN
+  TLS
+  HOSTING
+  LICENCE
+  API_KEY
+  OTHER
+}
+
+enum OpsRole {
+  OWNER
+  ADMIN
+  ANALYST
+  SUPPORT
+}
+
+enum OpsOperatorStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum AuditActorType {
+  OPERATOR
+  SYSTEM
+  PRODUCT
+}
+
+model Project {
+  id               String         @id @default(cuid())
+  key              String         @unique
+  name             String
+  kind             ProjectKind
+  status           ProjectStatus  @default(ACTIVE)
+  lifecycleStage   LifecycleStage @default(BUILD)
+  description      String?
+  ownerOperatorId  String?
+  currency         String         @default("GHS")
+  timezone         String         @default("Africa/Accra")
+  homepageUrl      String?
+  repoUrl          String?
+  docsUrl          String?
+  supportUrl       String?
+  criticality      Criticality    @default(P2)
+  revenueBasis     RevenueBasis   @default(PROJECT)
+  firstValueEvent  String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  archivedAt       DateTime?
+
+  owner            OpsOperator?   @relation("ProjectOwner", fields: [ownerOperatorId], references: [id], onDelete: SetNull)
+  components       ProjectComponent[]
+  tokens           ProjectServiceToken[]
+  checks           ProjectCheck[]
+  probeRuns        ProbeRun[]
+  ingestEvents     IngestEvent[]
+  alerts           Alert[]
+  alertChannels    AlertChannel[]
+  metrics          MetricSnapshot[]
+  subscriptions    SubscriptionFact[]
+  revenueEvents    RevenueEvent[]
+  tenants          TenantRef[]
+  leads            Lead[]
+  tasks            OpsTask[]
+  attributions     CampaignAttribution[]
+  assets           Asset[]
+  pins             OperatorProjectPin[]
+  recents          OperatorProjectRecent[]
+
+  @@index([status, lifecycleStage])
+}
+
+model ProjectComponent {
+  id           String        @id @default(cuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  key          String
+  name         String
+  type         ComponentType
+  criticality  Criticality   @default(P2)
+  createdAt    DateTime      @default(now())
+
+  checks       ProjectCheck[]
+  alerts       Alert[]
+  metrics      MetricSnapshot[]
+
+  @@unique([projectId, key])
+  @@index([projectId, type])
+}
+
+model ProjectServiceToken {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  name        String
+  tokenHash   String    @unique
+  tokenPrefix String
+  scopes      String[]
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+
+  @@index([projectId])
+}
+
+model ProjectCheck {
+  id                   String        @id @default(cuid())
+  projectId            String
+  project              Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  componentId          String
+  component            ProjectComponent @relation(fields: [componentId], references: [id], onDelete: Restrict)
+  key                  String
+  type                 CheckType
+  targetUrl            String?
+  method               String?
+  expectedStatus       Int?
+  expectedBodyContains String?
+  timeoutMs            Int           @default(5000)
+  intervalSec          Int           @default(60)
+  latencyBudgetMs      Int?
+  authMode             CheckAuthMode @default(NONE)
+  active               Boolean       @default(true)
+  consecutiveFailures  Int           @default(0)
+  lastRunAt            DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  runs                 ProbeRun[]
+  alerts               Alert[]
+
+  @@unique([projectId, key])
+  @@index([active, intervalSec])
+}
+
+model ProbeRun {
+  id                  String    @id @default(cuid())
+  checkId             String
+  check               ProjectCheck @relation(fields: [checkId], references: [id], onDelete: Restrict)
+  projectId           String
+  project             Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  startedAt           DateTime
+  finishedAt          DateTime
+  ok                  Boolean
+  statusCode          Int?
+  latencyMs           Int?
+  errorClass          String?
+  responseHash        String?
+  tlsExpiresAt        DateTime?
+  consecutiveFailures Int       @default(0)
+
+  @@index([projectId, startedAt(sort: Desc)])
+  @@index([checkId, startedAt(sort: Desc)])
+}
+
+model IngestEvent {
+  id            String       @id @default(cuid())
+  projectId     String
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  sourceEventId String
+  type          String
+  payload       Json
+  receivedAt    DateTime     @default(now())
+  processedAt   DateTime?
+  status        IngestStatus @default(ACCEPTED)
+  error         String?
+
+  @@unique([projectId, sourceEventId])
+  @@index([projectId, receivedAt(sort: Desc)])
+  @@index([status, receivedAt])
+}
+
+model Alert {
+  id           String        @id @default(cuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  componentId  String?
+  component    ProjectComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
+  checkId      String?
+  check        ProjectCheck? @relation(fields: [checkId], references: [id], onDelete: SetNull)
+  type         String
+  severity     AlertSeverity
+  state        AlertState    @default(OPEN)
+  dedupeKey    String
+  openDedupeKey String?
+  title        String
+  detail       String
+  firstSeenAt  DateTime      @default(now())
+  lastSeenAt   DateTime      @default(now())
+  ackedBy      String?
+  resolvedAt   DateTime?
+  taskId       String?
+
+  @@unique([projectId, openDedupeKey])
+  @@index([projectId, state, severity])
+}
+
+model AlertChannel {
+  id          String           @id @default(cuid())
+  projectId   String?
+  project     Project?         @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  kind        AlertChannelKind
+  targetCipher String
+  severities  String[]
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+
+  @@index([projectId, active])
+}
+
+model MetricSnapshot {
+  id            String            @id @default(cuid())
+  projectId     String
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  componentId   String?
+  component     ProjectComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
+  metricKey     String
+  value         Decimal           @db.Decimal(20, 6)
+  unit          String
+  periodStart   DateTime
+  periodEnd     DateTime
+  granularity   MetricGranularity
+  dimension     Json?
+  dimensionHash String            @default("")
+  provenance    MetricProvenance
+  sourceRef     String?
+  observedAt    DateTime
+  ingestedAt    DateTime          @default(now())
+  quality       MetricQuality     @default(OK)
+
+  @@unique([projectId, metricKey, periodStart, periodEnd, dimensionHash])
+  @@index([projectId, metricKey, periodStart(sort: Desc)])
+}
+
+model SubscriptionFact {
+  id            String                 @id @default(cuid())
+  projectId     String
+  project       Project                @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  tenantRef     String
+  planKey       String
+  status        SubscriptionFactStatus
+  mrrMinor      BigInt
+  currency      String
+  periodStart   DateTime
+  periodEnd     DateTime
+  units         Int?
+  provenance    MetricProvenance
+  sourceEventId String?
+  observedAt    DateTime
+
+  @@unique([projectId, tenantRef, periodStart])
+  @@index([projectId, periodStart, status])
+}
+
+model RevenueEvent {
+  id            String           @id @default(cuid())
+  projectId     String
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  tenantRef     String?
+  kind          RevenueEventKind
+  amountMinor   BigInt
+  currency      String
+  occurredAt    DateTime
+  reference     String
+  provenance    MetricProvenance
+  sourceEventId String?
+
+  @@unique([projectId, reference])
+  @@index([projectId, occurredAt])
+}
+
+model TenantRef {
+  id           String       @id @default(cuid())
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  externalId   String
+  displayName  String
+  status       TenantStatus @default(ACTIVE)
+  planKey      String?
+  region       String?
+  createdAt    DateTime     @default(now())
+  lastSeenAt   DateTime?
+  piiClass     PiiClass     @default(NONE)
+  sourceUrl    String?
+  cachedSummary Json?
+
+  @@unique([projectId, externalId])
+  @@index([projectId, status])
+}
+
+model Lead {
+  id               String     @id @default(cuid())
+  projectId        String
+  project          Project    @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  source           String
+  contactHash      String
+  contactKind      String
+  company          String?
+  status           LeadStatus @default(NEW)
+  valueMinor       BigInt?
+  currency         String     @default("GHS")
+  ownerOperatorId  String?
+  consentAt        DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  lastActivityAt   DateTime   @default(now())
+
+  @@index([projectId, status])
+  @@index([contactHash])
+}
+
+model OpsTask {
+  id                 String        @id @default(cuid())
+  projectId          String?
+  project            Project?      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  title              String
+  description        String?
+  status             OpsTaskStatus @default(OPEN)
+  priority           Criticality   @default(P2)
+  assigneeOperatorId String?
+  dueAt              DateTime?
+  entityType         String?
+  entityId           String?
+  alertId            String?
+  createdBy          String
+  createdAt          DateTime      @default(now())
+  closedAt           DateTime?
+  cancelReason       String?
+
+  @@index([projectId, status, dueAt])
+  @@index([assigneeOperatorId, status])
+}
+
+model CampaignAttribution {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  campaign      String
+  channel       String
+  affiliateCode String?
+  conversionRef String
+  amountMinor   BigInt
+  currency      String
+  occurredAt    DateTime
+  provenance    MetricProvenance
+  sourceEventId String?
+
+  @@unique([projectId, conversionRef, campaign])
+  @@index([projectId, occurredAt])
+}
+
+model Asset {
+  id               String    @id @default(cuid())
+  projectId        String
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  kind             AssetKind
+  name             String
+  identifier       String?
+  expiresAt        DateTime?
+  renewalCostMinor BigInt?
+  currency         String?
+  ownerOperatorId  String?
+  notes            String?
+
+  @@index([projectId, expiresAt])
+}
+
+model OpsOperator {
+  id             String            @id @default(cuid())
+  email          String            @unique
+  name           String
+  role           OpsRole
+  status         OpsOperatorStatus @default(ACTIVE)
+  passwordHash   String?
+  sessionVersion Int               @default(0)
+  lastLoginAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  ownedProjects  Project[]         @relation("ProjectOwner")
+  pins           OperatorProjectPin[]
+  recents        OperatorProjectRecent[]
+  resets         PasswordReset[]
+
+  @@index([status, role])
+}
+
+model PasswordReset {
+  id          String      @id @default(cuid())
+  operatorId  String
+  operator    OpsOperator @relation(fields: [operatorId], references: [id], onDelete: Restrict)
+  tokenHash   String      @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime    @default(now())
+}
+
+model OperatorProjectPin {
+  operatorId String
+  operator   OpsOperator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  projectId  String
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  createdAt  DateTime    @default(now())
+
+  @@id([operatorId, projectId])
+}
+
+model OperatorProjectRecent {
+  operatorId String
+  operator   OpsOperator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  projectId  String
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  visitedAt  DateTime    @default(now())
+
+  @@id([operatorId, projectId])
+  @@index([operatorId, visitedAt(sort: Desc)])
+}
+
+model AuditActivity {
+  id         String         @id @default(cuid())
+  actorType  AuditActorType
+  actorId    String
+  action     String
+  projectId  String?
+  targetType String
+  targetId   String
+  meta       Json?
+  ipHash     String?
+  createdAt  DateTime       @default(now())
+
+  @@index([projectId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+}

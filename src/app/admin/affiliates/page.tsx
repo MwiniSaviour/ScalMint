@@ -27,13 +27,11 @@ type Affiliate = {
 };
 
 async function loadAffiliates() {
-  const res = await fetch("/api/admin/affiliates", { credentials: "include" });
-  if (res.status === 401) {
-    window.location.assign("/admin/login");
-    throw new Error("Unauthorized");
-  }
-  const data = (await res.json()) as { affiliates: Affiliate[] };
-  return data.affiliates;
+  const { opsFetch } = await import("@/lib/ops/client-fetch");
+  const res = await opsFetch<{ affiliates: Affiliate[] }>("/api/admin/affiliates");
+  if (res.unauthorized) throw new Error("Unauthorized");
+  if (!res.ok || !res.data) throw new Error(res.error ?? "Failed to load affiliates");
+  return res.data.affiliates;
 }
 
 export default function AffiliatesPage() {
@@ -41,13 +39,13 @@ export default function AffiliatesPage() {
   const { data = [], isLoading } = useQuery({ queryKey: ["ops-affiliates"], queryFn: loadAffiliates });
   const patch = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Affiliate["status"] }) => {
-      const res = await fetch(`/api/admin/affiliates/${id}`, {
+      const { opsFetch } = await import("@/lib/ops/client-fetch");
+      const res = await opsFetch(`/api/admin/affiliates/${id}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) throw new Error(res.error ?? "Update failed");
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-affiliates"] }),
   });

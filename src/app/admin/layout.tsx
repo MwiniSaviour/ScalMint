@@ -8,7 +8,7 @@ import "@/nextadmin/globals.css";
 export const metadata: Metadata = {
   title: {
     template: "%s | ScalMint Ops",
-    default: "ScalMint Ops — Affiliate programme",
+    default: "ScalMint Ops",
   },
   robots: { index: false, follow: false },
 };

@@ -1,8 +1,5 @@
-import { NAV_DATA } from "./data";
+import { navForPath } from "./data";
 
-/**
- * Checks if the current pathname matches the target href, or if the pathname is a subpath of the target href.=
- */
 export function isPathActive(href: string, pathname: string): boolean {
   if (!href) return false;
 
@@ -10,15 +7,15 @@ export function isPathActive(href: string, pathname: string): boolean {
     return pathname === href;
   }
 
+  if (/^\/admin\/p\/[^/]+$/.test(href)) {
+    return pathname === href;
+  }
+
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-/**
- * Find the nav group whose child URLs include the current pathname.
- * Returns the group's `title` (used as the Disclosure `id`) or null.
- */
-export function findActiveGroupKey(pathname: string): string | null {
-  for (const section of NAV_DATA) {
+export function findActiveGroupKey(pathname: string, nav = navForPath(pathname)): string | null {
+  for (const section of nav) {
     for (const item of section.items) {
       if (item.items && item.items.length > 0) {
         const hasMatch = item.items.some((child) => child.url && isPathActive(child.url, pathname));

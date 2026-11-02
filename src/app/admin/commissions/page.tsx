@@ -26,13 +26,11 @@ type Product = {
 };
 
 async function loadProducts() {
-  const res = await fetch("/api/admin/products", { credentials: "include" });
-  if (res.status === 401) {
-    window.location.assign("/admin/login");
-    throw new Error("Unauthorized");
-  }
-  const data = (await res.json()) as { products: Product[] };
-  return data.products;
+  const { opsFetch } = await import("@/lib/ops/client-fetch");
+  const res = await opsFetch<{ products: Product[] }>("/api/admin/products");
+  if (res.unauthorized) throw new Error("Unauthorized");
+  if (!res.ok || !res.data) throw new Error(res.error ?? "Failed to load products");
+  return res.data.products;
 }
 
 export default function CommissionsPage() {
@@ -42,13 +40,13 @@ export default function CommissionsPage() {
   const save = useMutation({
     mutationFn: async (p: Product) => {
       const rate = draft[p.id] ?? p.commissionRate;
-      const res = await fetch("/api/admin/products", {
+      const { opsFetch } = await import("@/lib/ops/client-fetch");
+      const res = await opsFetch("/api/admin/products", {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: p.id, commissionRate: rate }),
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) throw new Error(res.error ?? "Save failed");
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-products"] }),
   });

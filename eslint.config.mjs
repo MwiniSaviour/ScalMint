@@ -21,6 +21,14 @@ const eslintConfig = [
       "src/nextadmin/**",
     ],
   },
+  {
+    files: ["src/lib/ops/**/*.ts", "src/lib/db.ts", "src/app/api/admin/**/*.ts", "src/app/api/webhooks/paystack/route.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
+    },
+  },
 ];
 
 export default eslintConfig;

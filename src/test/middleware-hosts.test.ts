@@ -115,3 +115,12 @@ describe("admin host routing", () => {
     expect(res.headers.get("location")).toBe("http://localhost:3002/admin/login");
   });
 });
+
+describe("ops ingest is reachable on product hosts", () => {
+  it("does not 404 ingest on the public host", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const res = middleware(makeRequest("/api/ops/ingest/v1/events", "scalmint.com"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+  });
+});

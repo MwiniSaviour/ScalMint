@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BillingIcon,
   GearIcon,
   LogoutIcon,
   UserCircleIcon,
@@ -40,19 +39,14 @@ const user: UserProfile = {
 export function UserProfileButton() {
   const menuItems: UserProfileMenuItem[] = [
     {
-      href: "/admin/profile",
+      href: "/admin/profile/account",
       icon: <UserCircleIcon />,
       label: "View profile",
     },
     {
-      href: "#",
+      href: "/admin/profile/security",
       icon: <GearIcon />,
-      label: "Account Settings",
-    },
-    {
-      href: "#",
-      icon: <BillingIcon />,
-      label: "Billing and Plan",
+      label: "Account settings",
     },
   ];
 
