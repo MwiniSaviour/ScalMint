@@ -23,13 +23,11 @@ type Conversion = {
 };
 
 async function load() {
-  const res = await fetch("/api/admin/conversions", { credentials: "include" });
-  if (res.status === 401) {
-    window.location.assign("/admin/login");
-    throw new Error("Unauthorized");
-  }
-  const data = (await res.json()) as { conversions: Conversion[] };
-  return data.conversions;
+  const { opsFetch } = await import("@/lib/ops/client-fetch");
+  const res = await opsFetch<{ conversions: Conversion[] }>("/api/admin/conversions");
+  if (res.unauthorized) throw new Error("Unauthorized");
+  if (!res.ok || !res.data) throw new Error(res.error ?? "Failed to load conversions");
+  return res.data.conversions;
 }
 
 export default function ConversionsPage() {
@@ -37,13 +35,13 @@ export default function ConversionsPage() {
   const { data = [] } = useQuery({ queryKey: ["ops-conversions"], queryFn: load });
   const patch = useMutation({
     mutationFn: async (body: { id: string; status: Conversion["status"] }) => {
-      const res = await fetch("/api/admin/conversions", {
+      const { opsFetch } = await import("@/lib/ops/client-fetch");
+      const res = await opsFetch("/api/admin/conversions", {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) throw new Error(res.error ?? "Update failed");
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-conversions"] }),
   });

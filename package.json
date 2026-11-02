@@ -10,6 +10,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
+    "ops:bootstrap": "npx tsx scripts/ops-bootstrap.ts",
+    "ops:probe": "npx tsx scripts/probe-runner.ts",
     "test": "vitest run"
   },
   "dependencies": {

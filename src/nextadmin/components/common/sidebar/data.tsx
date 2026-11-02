@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   AlphabetIcon,
   HomeIcon,
@@ -5,144 +6,87 @@ import {
   TableIcon,
   UserIcon,
   Widget4Icon,
-  WindowIcon
+  WindowIcon,
+  CalendarIcon,
 } from "./icon";
 
-export const NAV_DATA = [
+export type NavChild = { title: string; url?: string };
+export type NavItem = {
+  title: string;
+  url?: string;
+  icon: ReactNode;
+  items: NavChild[];
+};
+export type NavSection = { label: string; items: NavItem[] };
+
+export const PORTFOLIO_NAV: NavSection[] = [
+  {
+    label: "PORTFOLIO",
+    items: [
+      { title: "Overview", url: "/admin", icon: <HomeIcon />, items: [] },
+      { title: "Projects", url: "/admin/projects", icon: <WindowIcon />, items: [] },
+      { title: "Work queue", url: "/admin/work", icon: <TableIcon />, items: [] },
+    ],
+  },
   {
     label: "PROGRAMME",
     items: [
-      {
-        title: "Dashboard",
-        icon: <HomeIcon />,
-        items: [
-          {
-            title: "Overview",
-            url: "/admin",
-          },
-        ],
-      },
-      {
-        title: "Affiliates",
-        url: "/admin/affiliates",
-        icon: <UserIcon />,
-        items: [],
-      },
-      {
-        title: "Commissions",
-        url: "/admin/commissions",
-        icon: <PieChartIcon />,
-        items: [],
-      },
-      {
-        title: "Conversions",
-        url: "/admin/conversions",
-        icon: <TableIcon />,
-        items: [],
-      },
+      { title: "Affiliates", url: "/admin/affiliates", icon: <UserIcon />, items: [] },
+      { title: "Commissions", url: "/admin/commissions", icon: <PieChartIcon />, items: [] },
+      { title: "Conversions", url: "/admin/conversions", icon: <TableIcon />, items: [] },
+      { title: "Products", url: "/admin/programme/products", icon: <Widget4Icon />, items: [] },
     ],
   },
   {
-    label: "MAIN MENU",
+    label: "ORGANISATION",
     items: [
-      {
-        title: "Profile",
-        url: "/admin/profile",
-        icon: <UserIcon />,
-        items: [],
-      },
-      {
-        title: "Forms",
-        icon: <AlphabetIcon />,
-        items: [
-          {
-            title: "Form Elements",
-            url: "/admin/form-elements",
-          },
-        ],
-      },
-      {
-        title: "Tables",
-        url: "/admin/tables",
-        icon: <TableIcon />,
-        items: [
-          {
-            title: "Basic Tables",
-            url: "/admin/tables/basic-tables",
-          },
-        ],
-      },
-      {
-        title: "Pages",
-        icon: <WindowIcon />,
-        items: [
-          {
-            title: "Error Page",
-            url: "/admin/error-page",
-          },
-          {
-            title: "Terms & Conditions",
-            url: "/admin/terms-and-conditions",
-          },
-          {
-            title: "Mail Success",
-            url: "/admin/mail-success",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    label: "OTHERS",
-    items: [
-      {
-        title: "Charts",
-        icon: <PieChartIcon />,
-        items: [
-          {
-            title: "Line Charts",
-            url: "/admin/charts/line-charts",
-          },
-          {
-            title: "Bar Charts",
-            url: "/admin/charts/bar-charts",
-          },
-          {
-            title: "Pie Charts",
-            url: "/admin/charts/pie-charts",
-          },
-        ],
-      },
-      {
-        title: "UI Elements",
-        icon: <Widget4Icon />,
-        items: [
-          {
-            title: "Accordion",
-            url: "/admin/ui-elements/accordion",
-          },
-          {
-            title: "Avatars",
-            url: "/admin/ui-elements/avatars",
-          },
-          {
-            title: "Buttons",
-            url: "/admin/ui-elements/buttons",
-          },
-          {
-            title: "Breadcrumbs",
-            url: "/admin/ui-elements/breadcrumbs",
-          },
-          {
-            title: "Progress",
-            url: "/admin/ui-elements/progress",
-          },
-          {
-            title: "Tooltips",
-            url: "/admin/ui-elements/tooltips",
-          },
-        ],
-      },
+      { title: "Team and access", url: "/admin/team", icon: <UserIcon />, items: [] },
+      { title: "Audit log", url: "/admin/audit", icon: <AlphabetIcon />, items: [] },
+      { title: "Settings", url: "/admin/settings", icon: <WindowIcon />, items: [] },
     ],
   },
 ];
+
+export function projectNav(key: string): NavSection[] {
+  const p = `/admin/p/${key}`;
+  return [
+    {
+      label: "PROJECT",
+      items: [
+        { title: "Overview", url: p, icon: <HomeIcon />, items: [] },
+        { title: "Health", url: `${p}/health`, icon: <Widget4Icon />, items: [] },
+        { title: "Analytics", url: `${p}/analytics`, icon: <PieChartIcon />, items: [] },
+        { title: "Revenue", url: `${p}/revenue`, icon: <TableIcon />, items: [] },
+        { title: "Customers", url: `${p}/customers`, icon: <UserIcon />, items: [] },
+        { title: "Pipeline", url: `${p}/pipeline`, icon: <WindowIcon />, items: [] },
+        { title: "Marketing", url: `${p}/marketing`, icon: <PieChartIcon />, items: [] },
+        { title: "Calendar", url: `${p}/calendar`, icon: <CalendarIcon />, items: [] },
+        { title: "Tasks", url: `${p}/tasks`, icon: <TableIcon />, items: [] },
+        { title: "Assets", url: `${p}/assets`, icon: <WindowIcon />, items: [] },
+        { title: "Settings", url: `${p}/settings`, icon: <AlphabetIcon />, items: [] },
+      ],
+    },
+  ];
+}
+
+export const PROJECT_SECTIONS = [
+  "health",
+  "analytics",
+  "revenue",
+  "customers",
+  "pipeline",
+  "marketing",
+  "calendar",
+  "tasks",
+  "assets",
+  "settings",
+] as const;
+
+export function navForPath(pathname: string): NavSection[] {
+  const match = pathname.match(/^\/admin\/p\/([^/]+)/);
+  if (match?.[1]) return projectNav(match[1]);
+  return PORTFOLIO_NAV;
+}
+
+/** @deprecated kit search still imports NAV_DATA — portfolio only, command palette adds projects live. */
+export const NAV_DATA = PORTFOLIO_NAV;

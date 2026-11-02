@@ -1,3 +1,24 @@
+# ScalMint
+
+Marketing site, affiliate programme, and **Ops Console** (`admin.scalmint.com`). Spec: `docs/superpowers/specs/2026-11-02-scalmint-ops-console-design.md`.
+
+## Ops console
+
+Staff only. Operators are database-backed; there is **no default password**.
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+npm run db:seed          # products + project registry (no operator)
+npm run ops:bootstrap    # creates OWNER; prints a one-time reset token
+```
+
+Then visit `/admin/login?reset=<token>` and set a 12+ character password. If `ADMIN_PASSWORD` is present during bootstrap it is hashed once — remove it from the environment afterwards.
+
+Probe runner (VPS / pm2, not the Next.js request path): `npm run ops:probe`.
+
+Ingest: `POST /api/ops/ingest/v1/events` with `X-Project-Key`, `Authorization: Bearer <token>`, `X-Signature: t=...,v1=HMAC-SHA256(timestamp.body, token)`.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

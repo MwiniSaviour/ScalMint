@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { COOKIE_NAME, COOKIE_MAX_AGE, normalizeRef } from "@/lib/affiliate/referral";
-import { OPS_COOKIE } from "@/lib/auth/ops";
+import { OPS_COOKIE } from "@/lib/auth/ops-cookie";
 
 function applyRefCookie(req: NextRequest, res: NextResponse) {
   const ref = normalizeRef(req.nextUrl.searchParams.get("ref"));
@@ -33,6 +33,10 @@ function isAdminPath(path: string) {
     path === "/api/admin" ||
     path.startsWith("/api/admin/")
   );
+}
+
+function isOpsIngest(path: string) {
+  return path === "/api/ops" || path.startsWith("/api/ops/");
 }
 
 function hostPassthrough(path: string) {
@@ -83,6 +87,9 @@ export function middleware(req: NextRequest) {
   }
 
   const isolateAdmin = isAffiliateHost || process.env.NODE_ENV === "production";
+  if (isOpsIngest(path)) {
+    return NextResponse.next();
+  }
   if (isolateAdmin && isAdminPath(path)) {
     if (path === "/api/admin" || path.startsWith("/api/admin/")) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

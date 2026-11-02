@@ -1,15 +1,11 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookieOptions } from "@/lib/auth/token";
 import type { NextResponse } from "next/server";
+import { opsDb as db } from "@/lib/db";
+import type { OpsSession } from "@/lib/ops/types";
 
-export const OPS_COOKIE = "ops_session";
-export const OPS_MAX_AGE = 60 * 60 * 24 * 7;
-
-export type OpsSession = {
-  role: "ops";
-  email: string;
-  name: string;
-};
+import { OPS_COOKIE, OPS_MAX_AGE } from "@/lib/auth/ops-cookie";
+export { OPS_COOKIE, OPS_MAX_AGE };
 
 function secret() {
   const s =
@@ -19,27 +15,33 @@ function secret() {
   return new TextEncoder().encode(s);
 }
 
-export function opsCredentials() {
-  return {
-    email: (process.env.ADMIN_EMAIL ?? "ops@scalmint.com").trim().toLowerCase(),
-    password: process.env.ADMIN_PASSWORD ?? "ScalMintOps2026",
-    name: process.env.ADMIN_NAME ?? "ScalMint Ops",
-  };
-}
-
 export async function signOpsSession(payload: OpsSession): Promise<string> {
-  return new SignJWT({ role: "ops", email: payload.email, name: payload.name })
+  return new SignJWT({
+    operatorId: payload.operatorId,
+    email: payload.email,
+    name: payload.name,
+    role: payload.role,
+    sessionVersion: payload.sessionVersion,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${OPS_MAX_AGE}s`)
     .sign(secret());
 }
 
-export async function verifyOpsSession(token: string): Promise<OpsSession | null> {
+export async function verifyOpsJwt(token: string): Promise<OpsSession | null> {
   try {
     const { payload } = await jwtVerify(token, secret());
-    if (payload.role !== "ops" || typeof payload.email !== "string") return null;
-    return { role: "ops", email: payload.email, name: String(payload.name ?? "Ops") };
+    if (typeof payload.operatorId !== "string" || typeof payload.email !== "string") return null;
+    const role = payload.role;
+    if (role !== "OWNER" && role !== "ADMIN" && role !== "ANALYST" && role !== "SUPPORT") return null;
+    return {
+      operatorId: payload.operatorId,
+      email: payload.email,
+      name: String(payload.name ?? "Ops"),
+      role,
+      sessionVersion: Number(payload.sessionVersion ?? 0),
+    };
   } catch {
     return null;
   }
@@ -52,13 +54,29 @@ export function attachOpsCookie(res: NextResponse, token: string, req?: Request)
   return res;
 }
 
-export async function opsFromRequest(req: Request): Promise<OpsSession | null> {
+export function readOpsCookie(req: Request): string | null {
   const cookie = req.headers.get("cookie") ?? "";
   const match = cookie
     .split(";")
     .map((p) => p.trim())
     .find((p) => p.startsWith(`${OPS_COOKIE}=`));
   if (!match) return null;
-  const token = decodeURIComponent(match.slice(OPS_COOKIE.length + 1));
-  return verifyOpsSession(token);
+  return decodeURIComponent(match.slice(OPS_COOKIE.length + 1));
+}
+
+export async function opsFromRequest(req: Request): Promise<OpsSession | null> {
+  const token = readOpsCookie(req);
+  if (!token) return null;
+  const session = await verifyOpsJwt(token);
+  if (!session) return null;
+  const operator = await db.opsOperator.findUnique({ where: { id: session.operatorId } });
+  if (!operator || operator.status !== "ACTIVE") return null;
+  if (operator.sessionVersion !== session.sessionVersion) return null;
+  return {
+    operatorId: operator.id,
+    email: operator.email,
+    name: operator.name,
+    role: operator.role,
+    sessionVersion: operator.sessionVersion,
+  };
 }

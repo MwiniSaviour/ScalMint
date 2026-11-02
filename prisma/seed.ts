@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { seedProjects } from "../src/lib/ops/bootstrap";
 
 const db = new PrismaClient();
 
@@ -76,6 +77,8 @@ async function main() {
       },
     });
   }
+
+  await seedProjects();
 
   await db.affiliate.upsert({
     where: { code: "SCAL-DEMO0001" },

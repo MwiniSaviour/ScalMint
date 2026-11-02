@@ -8,7 +8,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import type { Key } from 'react-aria-components';
-import { NAV_DATA } from './data';
+import { navForPath } from './data';
+import ProjectSwitcher from '@/components/ops/ProjectSwitcher';
 import { CloseIcon, SidebarExpandedIcon, ThreeDots } from './icon';
 import NavItem from './nav-item';
 import { findActiveGroupKey } from './utils';
@@ -26,11 +27,12 @@ export default function Sidebar({
 }) {
     const pathname = usePathname();
     const { theme } = useTheme();
+    const nav = useMemo(() => navForPath(pathname), [pathname]);
 
     // Compute which group should be open based on the current route
     const activeGroupKey = useMemo(
-        () => findActiveGroupKey(pathname),
-        [pathname],
+        () => findActiveGroupKey(pathname, nav),
+        [pathname, nav],
     );
 
     const [expandedKeys, setExpandedKeys] = useState<Set<Key>>(
@@ -78,6 +80,16 @@ export default function Sidebar({
                 </button>
             </div>
 
+            {isSidebarOpen ? (
+                <div className="px-4 pt-5">
+                    <ProjectSwitcher />
+                </div>
+            ) : (
+                <div className="flex justify-center pt-4">
+                    <ProjectSwitcher compact />
+                </div>
+            )}
+
             {/* Navigation */}
             <nav
                 className={cn(
@@ -89,7 +101,7 @@ export default function Sidebar({
                     expandedKeys={expandedKeys}
                     onExpandedChange={setExpandedKeys}
                 >
-                    {NAV_DATA.map((section) => (
+                    {nav.map((section) => (
                         <div key={section.label}>
                             {/* Expanded: show section label | Collapsed: show divider between sections */}
                             {isSidebarOpen ? (
