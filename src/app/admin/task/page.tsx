@@ -1,0 +1,158 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { opsFetch } from "@/lib/ops/client-fetch";
+import { OpsEmpty, OpsError, OpsSkeleton } from "@/components/ops/PageStates";
+import { CommandForm, Field, Panel, fieldClass, formDataOf } from "@/components/ops/forms";
+import { Kanban } from "@/components/ops/Kanban";
+import { Button } from "@/nextadmin/components/tailgrids/core/button";
+
+type Task = {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  dueAt: string | null;
+  project: { key: string; name: string } | null;
+};
+
+type Project = { key: string; name: string };
+
+const COLUMNS = [
+  { id: "OPEN", label: "Open" },
+  { id: "IN_PROGRESS", label: "In progress" },
+  { id: "BLOCKED", label: "Blocked" },
+  { id: "DONE", label: "Done" },
+  { id: "CANCELLED", label: "Cancelled" },
+];
+
+export default function TaskPage() {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["ops-work", "all"],
+    queryFn: async () => {
+      const res = await opsFetch<{ tasks: Task[] }>("/api/admin/work?status=all");
+      if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
+      return res.data.tasks;
+    },
+  });
+  const projects = useQuery({
+    queryKey: ["ops-projects"],
+    queryFn: async () => {
+      const res = await opsFetch<{ projects: Project[] }>("/api/admin/projects");
+      if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
+      return res.data.projects;
+    },
+  });
+  const create = useMutation({
+    mutationFn: async (body: Record<string, unknown>) => {
+      const res = await opsFetch("/api/admin/work", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(res.error ?? "Create failed");
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["ops-work"] });
+    },
+  });
+  const move = useMutation({
+    mutationFn: async (body: { id: string; status: string; cancelReason?: string }) => {
+      const res = await opsFetch(`/api/admin/work/${body.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(res.error ?? "Update failed");
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-work"] }),
+  });
+
+  return (
+    <div className="mt-6 space-y-5 px-2 lg:px-6">
+      <div>
+        <h1 className="text-[28px] leading-8 font-medium text-text-primary">Tasks</h1>
+        <p className="text-sm text-text-tertiary">
+          Delivery queue across the portfolio. Alerts stay on the work queue. Tasks are cancelled with a reason, never deleted.
+        </p>
+      </div>
+      <Panel title="Create task">
+        <CommandForm
+          pending={create.isPending}
+          error={create.isError ? create.error.message : null}
+          submitLabel="Add task"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const f = formDataOf(e.currentTarget);
+            create.mutate({
+              title: f.title,
+              projectKey: f.projectKey || undefined,
+              priority: f.priority,
+              dueAt: f.dueAt || undefined,
+            });
+            e.currentTarget.reset();
+          }}
+        >
+          <Field label="Title" className="md:col-span-2">
+            <input name="title" required className={fieldClass} />
+          </Field>
+          <Field label="Project">
+            <select name="projectKey" className={fieldClass}>
+              <option value="">Unscoped</option>
+              {projects.data?.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Priority">
+            <select name="priority" defaultValue="P2" className={fieldClass}>
+              {["P1", "P2", "P3"].map((p) => (
+                <option key={p}>{p}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Due">
+            <input name="dueAt" type="date" className={fieldClass} />
+          </Field>
+        </CommandForm>
+      </Panel>
+      {q.isLoading && <OpsSkeleton />}
+      {q.isError && <OpsError message={q.error.message} onRetry={() => q.refetch()} />}
+      {q.data?.length === 0 && <OpsEmpty title="No tasks" body="Create work from an alert or the form above." />}
+      {q.data && q.data.length > 0 && (
+        <Kanban
+          columns={COLUMNS}
+          items={q.data}
+          statusOf={(t) => t.status}
+          onMove={(task, status) => {
+            if (status === "CANCELLED") {
+              const reason = window.prompt("Cancellation reason");
+              if (!reason) return;
+              move.mutate({ id: task.id, status, cancelReason: reason });
+              return;
+            }
+            move.mutate({ id: task.id, status });
+          }}
+          renderCard={(t) => (
+            <div>
+              <p className="font-medium">{t.title}</p>
+              <p className="text-xs text-text-tertiary">
+                {t.priority}
+                {t.project ? ` · ${t.project.name}` : " · unscoped"}
+                {t.dueAt ? ` · due ${t.dueAt.slice(0, 10)}` : ""}
+              </p>
+              {t.status !== "DONE" && t.status !== "CANCELLED" && (
+                <Button className="mt-2" size="xs" onPress={() => move.mutate({ id: t.id, status: "DONE" })}>
+                  Complete
+                </Button>
+              )}
+            </div>
+          )}
+        />
+      )}
+    </div>
+  );
+}

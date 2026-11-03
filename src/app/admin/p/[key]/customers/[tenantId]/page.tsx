@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { opsFetch } from "@/lib/ops/client-fetch";
 import { OpsError, OpsSkeleton } from "@/components/ops/PageStates";
 
@@ -22,6 +23,11 @@ export default function TenantDetailPage() {
   if (!q.data) return <OpsError message="Tenant not in the console cache." />;
   return (
     <div className="space-y-5 px-2 lg:px-6">
+      <p className="text-sm">
+        <Link href={`/admin/p/${key}/customers`} className="underline">
+          Customers
+        </Link>
+      </p>
       <h1 className="text-[28px] font-medium">{q.data.displayName}</h1>
       <p className="text-sm text-text-tertiary">
         Status {q.data.status} · plan {q.data.planKey ?? "—"} · external {q.data.externalId}

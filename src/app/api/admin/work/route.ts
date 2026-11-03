@@ -14,13 +14,18 @@ export async function GET(req: Request) {
   const project = projectKey ? await db.project.findUnique({ where: { key: projectKey } }) : null;
   const where = {
     ...(project ? { projectId: project.id } : {}),
-    ...(status ? { status: status as never } : { status: { in: ["OPEN", "IN_PROGRESS", "BLOCKED"] as const } }),
+    ...(status && status !== "all"
+      ? { status: status as never }
+      : status === "all"
+        ? {}
+        : { status: { in: ["OPEN", "IN_PROGRESS", "BLOCKED"] as const } }),
     ...(overdue ? { dueAt: { lt: new Date() } } : {}),
   };
   const tasks = await db.opsTask.findMany({
     where,
+    include: { project: { select: { key: true, name: true } } },
     orderBy: [{ priority: "asc" }, { dueAt: "asc" }],
-    take: 100,
+    take: 200,
   });
   const alerts = await db.alert.findMany({
     where: {

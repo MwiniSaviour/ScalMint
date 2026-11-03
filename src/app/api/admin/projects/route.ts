@@ -61,6 +61,9 @@ export async function POST(req: Request) {
           homepageUrl: body.homepageUrl ? String(body.homepageUrl) : null,
         },
       });
+      await tx.projectComponent.create({
+        data: { projectId: created.id, key: "web", name: "Web", type: "WEB", criticality: "P2" },
+      });
       await writeAudit(tx, {
         actorType: "OPERATOR",
         actorId: gate.session.operatorId,

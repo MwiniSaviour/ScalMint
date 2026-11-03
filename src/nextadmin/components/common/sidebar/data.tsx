@@ -25,7 +25,12 @@ export const PORTFOLIO_NAV: NavSection[] = [
     items: [
       { title: "Overview", url: "/admin", icon: <HomeIcon />, items: [] },
       { title: "Projects", url: "/admin/projects", icon: <WindowIcon />, items: [] },
-      { title: "Work queue", url: "/admin/work", icon: <TableIcon />, items: [] },
+      { title: "Health", url: "/admin/health", icon: <Widget4Icon />, items: [] },
+      { title: "Analytics", url: "/admin/analytics", icon: <PieChartIcon />, items: [] },
+      { title: "Revenue", url: "/admin/revenue", icon: <TableIcon />, items: [] },
+      { title: "Customers", url: "/admin/customers", icon: <UserIcon />, items: [] },
+      { title: "Tasks", url: "/admin/task", icon: <TableIcon />, items: [] },
+      { title: "Work queue", url: "/admin/work", icon: <AlphabetIcon />, items: [] },
     ],
   },
   {
