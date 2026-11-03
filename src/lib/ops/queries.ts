@@ -14,15 +14,31 @@ import { rangeWindow } from "@/lib/ops/range";
 
 const RECURRING_BASES = new Set(["SUBSCRIPTION", "LICENCE", "RETAINER"]);
 
-export async function latestLatencyByCheck(checkIds: string[]): Promise<Map<string, number | null>> {
-  if (checkIds.length === 0) return new Map();
+export async function recentLatencyByCheck(
+  checks: { id: string; intervalSec: number }[],
+  now = new Date(),
+  take = 3,
+): Promise<Map<string, (number | null)[]>> {
+  if (checks.length === 0) return new Map();
   const runs = await db.probeRun.findMany({
-    where: { checkId: { in: checkIds } },
+    where: {
+      OR: checks.map((check) => ({
+        checkId: check.id,
+        startedAt: {
+          gte: new Date(now.getTime() - Math.max(check.intervalSec, 1) * take * 3 * 1000),
+        },
+      })),
+    },
     orderBy: [{ checkId: "asc" }, { startedAt: "desc" }],
-    distinct: ["checkId"],
     select: { checkId: true, latencyMs: true },
   });
-  return new Map(runs.map((r) => [r.checkId, r.latencyMs]));
+  const out = new Map<string, (number | null)[]>();
+  for (const run of runs) {
+    const list = out.get(run.checkId) ?? [];
+    if (list.length < take) list.push(run.latencyMs);
+    out.set(run.checkId, list);
+  }
+  return out;
 }
 
 export async function projectHealthMap(projectIds: string[], now = new Date()): Promise<Map<string, HealthStatus>> {
@@ -39,7 +55,10 @@ export async function projectHealthMap(projectIds: string[], now = new Date()): 
       latencyBudgetMs: true,
     },
   });
-  const lastLatency = await latestLatencyByCheck(checks.map((c) => c.id));
+  const recentLatency = await recentLatencyByCheck(
+    checks.map((c) => ({ id: c.id, intervalSec: c.intervalSec })),
+    now,
+  );
   const byProject = new Map<string, HealthStatus[]>();
   for (const check of checks) {
     const status = checkStatus({
@@ -47,7 +66,7 @@ export async function projectHealthMap(projectIds: string[], now = new Date()): 
       lastRunAt: check.lastRunAt,
       consecutiveFailures: check.consecutiveFailures,
       intervalSec: check.intervalSec,
-      latencyMs: lastLatency.get(check.id) ?? null,
+      recentLatencies: recentLatency.get(check.id) ?? [],
       latencyBudgetMs: check.latencyBudgetMs,
       now,
     });

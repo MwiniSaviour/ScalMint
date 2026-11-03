@@ -3,7 +3,7 @@ import { opsDb as db } from "@/lib/db";
 import { requireOperator } from "@/lib/ops/guard";
 import { projectByKey, ScopeError, envelope } from "@/lib/ops/scope";
 import { writeAudit } from "@/lib/ops/audit";
-import { projectHealthMap, lastIngestAt, latestLatencyByCheck, touchRecent } from "@/lib/ops/queries";
+import { projectHealthMap, lastIngestAt, recentLatencyByCheck, touchRecent } from "@/lib/ops/queries";
 import { checkStatus, worstStatus } from "@/lib/ops/status";
 import { mrrAt, pesewasToMajor, metricView } from "@/lib/ops/metrics";
 
@@ -46,7 +46,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
       db.alert.findMany({ where: { projectId: project.id, state: { in: ["OPEN", "ACKED"] } } }),
     ]);
     const now = new Date();
-    const lastLatency = await latestLatencyByCheck(checks.map((ch) => ch.id));
+    const recentLatency = await recentLatencyByCheck(
+      checks.map((ch) => ({ id: ch.id, intervalSec: ch.intervalSec })),
+      now,
+    );
     const componentStatus = components.map((c) => {
       const mine = checks.filter((ch) => ch.componentId === c.id);
       const statuses = mine.map((ch) =>
@@ -55,7 +58,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
           lastRunAt: ch.lastRunAt,
           consecutiveFailures: ch.consecutiveFailures,
           intervalSec: ch.intervalSec,
-          latencyMs: lastLatency.get(ch.id) ?? null,
+          recentLatencies: recentLatency.get(ch.id) ?? [],
           latencyBudgetMs: ch.latencyBudgetMs,
           now,
         }),

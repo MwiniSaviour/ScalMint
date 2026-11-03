@@ -16,6 +16,7 @@ import {
 } from "@/lib/ops/metrics";
 import { parseRange, rangeWindow } from "@/lib/ops/range";
 import { jsonSafe } from "@/lib/ops/ensure";
+import { recentLatencyByCheck } from "@/lib/ops/queries";
 import { checkStatus } from "@/lib/ops/status";
 import { burnRate, DEFAULT_AVAILABILITY_SLO, errorBudgetRemaining } from "@/lib/ops/slo";
 
@@ -46,15 +47,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
         where: { projectId: project.id, state: { in: ["OPEN", "ACKED"] } },
         orderBy: { lastSeenAt: "desc" },
       });
-      const lastRuns = checks.length
-        ? await db.probeRun.findMany({
-            where: { checkId: { in: checks.map((c) => c.id) } },
-            orderBy: [{ checkId: "asc" }, { startedAt: "desc" }],
-            distinct: ["checkId"],
-            select: { checkId: true, latencyMs: true },
-          })
-        : [];
-      const lastLatency = new Map(lastRuns.map((r) => [r.checkId, r.latencyMs]));
+      const recentLatency = await recentLatencyByCheck(
+        checks.map((c) => ({ id: c.id, intervalSec: c.intervalSec })),
+        now,
+      );
       const series = bucketByDay(
         runs.map((r) => ({ at: r.startedAt, ok: r.ok, latencyMs: r.latencyMs })),
         window.start,
@@ -67,7 +63,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
           lastRunAt: c.lastRunAt,
           consecutiveFailures: c.consecutiveFailures,
           intervalSec: c.intervalSec,
-          latencyMs: lastLatency.get(c.id) ?? null,
+          recentLatencies: recentLatency.get(c.id) ?? [],
           latencyBudgetMs: c.latencyBudgetMs,
           now,
         }),

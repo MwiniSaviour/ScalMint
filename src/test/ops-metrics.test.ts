@@ -83,7 +83,7 @@ describe("health status", () => {
         lastRunAt: new Date(),
         consecutiveFailures: 0,
         intervalSec: 60,
-        latencyMs: 10,
+        recentLatencies: [10],
         latencyBudgetMs: 200,
       }),
     ).toBe("UNKNOWN");
@@ -93,9 +93,24 @@ describe("health status", () => {
         lastRunAt: new Date(),
         consecutiveFailures: 3,
         intervalSec: 60,
-        latencyMs: 10,
+        recentLatencies: [10],
         latencyBudgetMs: 200,
       }),
     ).toBe("DOWN");
+  });
+
+  it("treats latency as DEGRADED only after 3 consecutive over-budget runs", () => {
+    const base = {
+      active: true,
+      lastRunAt: new Date(),
+      consecutiveFailures: 0,
+      intervalSec: 60,
+      latencyBudgetMs: 200,
+    };
+    expect(checkStatus({ ...base, recentLatencies: [300] })).toBe("UP");
+    expect(checkStatus({ ...base, recentLatencies: [300, 300] })).toBe("UP");
+    expect(checkStatus({ ...base, recentLatencies: [300, 300, 300] })).toBe("DEGRADED");
+    expect(checkStatus({ ...base, recentLatencies: [300, 300, 100, 300] })).toBe("UP");
+    expect(checkStatus({ ...base, recentLatencies: [300, null, 300] })).toBe("UP");
   });
 });

@@ -6,13 +6,24 @@ export function worstStatus(statuses: HealthStatus[]): HealthStatus {
   return HEALTH_ORDER.find((s) => statuses.includes(s)) ?? "UNKNOWN";
 }
 
+function overBudgetRuns(recentLatencies: (number | null)[] | undefined, budgetMs: number | null): number {
+  if (budgetMs == null || !recentLatencies?.length) return 0;
+  let streak = 0;
+  for (const latency of recentLatencies) {
+    if (latency == null || latency <= budgetMs) break;
+    streak += 1;
+  }
+  return streak;
+}
+
 /** Probe success is availability, not traffic error rate. */
 export function checkStatus(input: {
   active: boolean;
   lastRunAt: Date | null;
   consecutiveFailures: number;
   intervalSec: number;
-  latencyMs: number | null;
+  /** Newest first. Spec 7.3: latency DEGRADED needs 3 consecutive over-budget runs. */
+  recentLatencies?: (number | null)[];
   latencyBudgetMs: number | null;
   now?: Date;
 }): HealthStatus {
@@ -22,14 +33,7 @@ export function checkStatus(input: {
   if (now.getTime() - input.lastRunAt.getTime() > staleMs) return "DOWN";
   if (input.consecutiveFailures >= 3) return "DOWN";
   if (input.consecutiveFailures >= 1) return "DEGRADED";
-  if (
-    input.latencyBudgetMs != null &&
-    input.latencyMs != null &&
-    input.latencyMs > input.latencyBudgetMs &&
-    input.consecutiveFailures === 0
-  ) {
-    return "DEGRADED";
-  }
+  if (overBudgetRuns(input.recentLatencies, input.latencyBudgetMs) >= 3) return "DEGRADED";
   return "UP";
 }
 

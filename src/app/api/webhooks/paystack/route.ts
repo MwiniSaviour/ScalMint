@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
@@ -15,12 +14,14 @@ const verifySignature = (payload: string, signature: string | null) => {
     process.env.PAYSTACK_TEST_SECRET_KEY,
   ].filter((v): v is string => typeof v === "string" && v.length > 0);
   if (secrets.length === 0) return false;
-  const expected = crypto
-    .createHmac("sha512", secrets[0])
-    .update(payload)
-    .digest("hex");
-  if (expected.length !== signature.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  const received = Buffer.from(signature, "hex");
+  return secrets.some((secret) => {
+    const expected = Buffer.from(
+      crypto.createHmac("sha512", secret).update(payload).digest("hex"),
+      "hex",
+    );
+    return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+  });
 };
 
 interface PaystackBody {
@@ -197,7 +198,7 @@ export async function POST(req: NextRequest) {
   const isSelfReferral = customerEmail === affiliate.email.toLowerCase();
 
   const outcome = await db
-    .$transaction(async (tx: any) => {
+    .$transaction(async (tx) => {
       if (!isSelfReferral) {
         const dupe = await tx.conversion.findFirst({
           where: { customerEmail, productId: product.id, isOneTime: true },
