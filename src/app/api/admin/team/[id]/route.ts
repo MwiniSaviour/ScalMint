@@ -9,6 +9,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (gate.error) return gate.error;
   const { id } = await params;
   const body = (await req.json().catch(() => ({}))) as { role?: string; status?: "ACTIVE" | "DISABLED"; reset?: boolean };
+  if (body.status != null && body.status !== "ACTIVE" && body.status !== "DISABLED") {
+    return NextResponse.json({ error: "status must be ACTIVE or DISABLED" }, { status: 400 });
+  }
   const target = await db.opsOperator.findUnique({ where: { id } });
   if (!target) return NextResponse.json({ error: "Operator not found" }, { status: 404 });
   if (target.role === "OWNER" && (body.status === "DISABLED" || (body.role && body.role !== "OWNER"))) {
@@ -16,7 +19,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
   if (body.reset) {
     const resetToken = randomToken(32);
-    await db.$transaction(async (tx: any) => {
+    await db.$transaction(async (tx) => {
       await tx.passwordReset.create({
         data: {
           operatorId: id,
@@ -40,11 +43,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (body.role && target.role !== "OWNER" && !allowedRoles.includes(body.role)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
-  const operator = await db.$transaction(async (tx: any) => {
+  const role = body.role && target.role !== "OWNER" ? (body.role as "ADMIN" | "ANALYST" | "SUPPORT") : undefined;
+  const operator = await db.$transaction(async (tx) => {
     const next = await tx.opsOperator.update({
       where: { id },
       data: {
-        role: body.role && target.role !== "OWNER" ? (body.role as never) : undefined,
+        role,
         status: body.status,
         sessionVersion: { increment: 1 },
       },

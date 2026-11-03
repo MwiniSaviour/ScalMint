@@ -47,6 +47,5 @@ export const db = new Proxy({} as PrismaClient, {
   },
 });
 
-/** Ops models after `prisma generate`. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const opsDb = db as typeof db & Record<string, any>;
+/** Same client. Ops models are present after `prisma generate`, fully typed. */
+export const opsDb = db;

@@ -15,9 +15,12 @@ export function TrendChart({
   unit: string;
   emptyLabel: string;
 }) {
-  const plotted = data.filter((row) => Number(row[yKey] ?? 0) > 0 || data.some((r) => Number(r[yKey] ?? 0) > 0));
-  if (!data.length || plotted.every((row) => Number(row[yKey] ?? 0) === 0)) {
+  if (!data.length) {
     return <p className="text-sm text-text-tertiary">{emptyLabel}</p>;
+  }
+  const allZero = data.every((row) => Number(row[yKey] ?? 0) === 0);
+  if (allZero) {
+    return <p className="text-sm text-text-tertiary">0 {unit} at every point in this window</p>;
   }
   return (
     <div className="h-56 w-full">

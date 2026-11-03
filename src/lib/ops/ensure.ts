@@ -1,24 +1,21 @@
+import type { Prisma } from "@prisma/client";
+
 export async function ensureWebComponent(
-  db: {
-    projectComponent: {
-      findFirst: (args: unknown) => Promise<{ id: string; projectId: string; key: string } | null>;
-      create: (args: unknown) => Promise<{ id: string; projectId: string; key: string }>;
-    };
-  },
+  db: Pick<Prisma.TransactionClient, "projectComponent">,
   projectId: string,
 ) {
-  const existing = await db.projectComponent.findFirst({
-    where: { projectId, key: "web" },
-  });
-  if (existing) return existing;
-  return db.projectComponent.create({
-    data: {
+  // Upsert on the DB-level unique key ([projectId, key]) so two concurrent
+  // commands cannot race a find-then-create into a P2002 that poisons the tx.
+  return db.projectComponent.upsert({
+    where: { projectId_key: { projectId, key: "web" } },
+    create: {
       projectId,
       key: "web",
       name: "Web",
       type: "WEB",
       criticality: "P2",
     },
+    update: {},
   });
 }
 

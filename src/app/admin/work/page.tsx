@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { opsFetch } from "@/lib/ops/client-fetch";
 import { OpsEmpty, OpsError, OpsSkeleton } from "@/components/ops/PageStates";
@@ -17,12 +19,24 @@ type Task = {
 
 type Alert = { id: string; title: string; severity: string; state: string; projectId: string; project?: { key: string; name: string } };
 
-export default function WorkPage() {
+type Trial = {
+  id: string;
+  tenantRef: string;
+  planKey: string;
+  periodEnd: string;
+  project?: { key: string; name: string };
+};
+
+function WorkPageInner() {
   const qc = useQueryClient();
+  const params = useSearchParams();
+  const query = params.toString();
   const q = useQuery({
-    queryKey: ["ops-work"],
+    queryKey: ["ops-work", query],
     queryFn: async () => {
-      const res = await opsFetch<{ tasks: Task[]; alerts: Alert[] }>("/api/admin/work");
+      const res = await opsFetch<{ tasks: Task[]; alerts: Alert[]; trials: Trial[] }>(
+        `/api/admin/work${query ? `?${query}` : ""}`,
+      );
       if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
       return res.data;
     },
@@ -74,8 +88,26 @@ export default function WorkPage() {
       </div>
       {q.isLoading && <OpsSkeleton />}
       {q.isError && <OpsError message={q.error.message} onRetry={() => q.refetch()} />}
-      {q.data && q.data.tasks.length === 0 && q.data.alerts.length === 0 && (
+      {q.data && q.data.tasks.length === 0 && q.data.alerts.length === 0 && q.data.trials.length === 0 && (
         <OpsEmpty title="Queue is clear" body="P1 alerts can create a linked task in one action from a project health page." />
+      )}
+      {q.data && q.data.trials.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-medium">Trials ending in 3 days</h2>
+          <ul className="space-y-2">
+            {q.data.trials.map((t) => (
+              <li key={t.id} className="flex items-center justify-between rounded-lg border border-card-border p-3">
+                <div>
+                  <p className="text-sm font-medium">{t.tenantRef}</p>
+                  <p className="text-xs text-text-tertiary">
+                    {t.project?.name ?? "Portfolio"} · {t.planKey}
+                  </p>
+                </div>
+                <p className="text-xs text-text-tertiary">trial ends {t.periodEnd.slice(0, 10)}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {q.data && (
         <div className="grid gap-5 lg:grid-cols-2">
@@ -140,5 +172,19 @@ export default function WorkPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function WorkPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mt-6 px-2 lg:px-6">
+          <OpsSkeleton />
+        </div>
+      }
+    >
+      <WorkPageInner />
+    </Suspense>
   );
 }

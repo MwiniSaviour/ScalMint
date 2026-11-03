@@ -1,6 +1,6 @@
 /**
  * Ops probe runner — VPS worker (pm2), never in the Next.js request path.
- * Tick every 30s; each check runs when now >= lastRun + intervalSec, ±10% jitter.
+ * Tick every 30s; each check runs when now >= lastRun + intervalSec, 10% jitter.
  */
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
@@ -75,7 +75,7 @@ async function persist(
 ) {
   const consecutiveFailures = ok ? 0 : check.consecutiveFailures + 1;
   const dedupe = `check:${check.id}`;
-  await db.$transaction(async (tx: any) => {
+  await db.$transaction(async (tx) => {
     await tx.probeRun.create({
       data: {
         checkId: check.id,
@@ -112,15 +112,29 @@ async function persist(
             dedupeKey: dedupe,
             openDedupeKey: dedupe,
             title: `${check.key ?? check.id} failing`,
-            detail: `${errorClass ?? "fail"} · HTTP ${statusCode ?? "n/a"}`,
+            detail: `${errorClass ?? "fail"} | HTTP ${statusCode ?? "n/a"}`,
           },
         });
       }
     } else if (ok) {
-      await tx.alert.updateMany({
-        where: { projectId: check.projectId, openDedupeKey: dedupe, state: { in: ["OPEN", "ACKED"] } },
-        data: { state: "RESOLVED", resolvedAt: finishedAt, openDedupeKey: null },
+      const recent = await tx.probeRun.findMany({
+        where: { checkId: check.id },
+        orderBy: { startedAt: "desc" },
+        take: 3,
+        select: { ok: true },
       });
+      const threeSuccesses = recent.length === 3 && recent.every((r) => r.ok);
+      if (threeSuccesses) {
+        await tx.alert.updateMany({
+          where: {
+            projectId: check.projectId,
+            openDedupeKey: dedupe,
+            state: { in: ["OPEN", "ACKED"] },
+            firstSeenAt: { lte: new Date(finishedAt.getTime() - 5 * 60 * 1000) },
+          },
+          data: { state: "RESOLVED", resolvedAt: finishedAt, openDedupeKey: null },
+        });
+      }
     }
   });
 }

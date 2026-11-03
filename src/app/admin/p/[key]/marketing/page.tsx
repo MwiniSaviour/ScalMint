@@ -91,7 +91,7 @@ function Inner() {
                 projectKey: key,
                 campaign: f.campaign,
                 channel: f.channel,
-                amountMajor: Number(f.amountMajor || 0),
+                amountMajor: Number(f.amountMajor),
                 affiliateCode: f.affiliateCode || undefined,
               });
               e.currentTarget.reset();
@@ -104,7 +104,7 @@ function Inner() {
               <input name="channel" defaultValue="direct" className={fieldClass} />
             </Field>
             <Field label="Amount (major)">
-              <input name="amountMajor" type="number" step="0.01" className={fieldClass} />
+              <input name="amountMajor" type="number" step="0.01" required className={fieldClass} />
             </Field>
             <Field label="Affiliate code (optional)">
               <input name="affiliateCode" className={fieldClass} />

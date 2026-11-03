@@ -18,13 +18,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (body.status === "CANCELLED" && !String(body.cancelReason ?? "").trim()) {
     return NextResponse.json({ error: "Cancellation requires a reason" }, { status: 400 });
   }
-  const task = await db.$transaction(async (tx: any) => {
+  const task = await db.$transaction(async (tx) => {
     const next = await tx.opsTask.update({
       where: { id },
       data: {
         status: body.status as (typeof STATUSES)[number] | undefined,
         cancelReason: body.status === "CANCELLED" ? String(body.cancelReason) : undefined,
-        closedAt: body.status === "DONE" || body.status === "CANCELLED" ? new Date() : undefined,
+        closedAt: !body.status
+          ? undefined
+          : body.status === "DONE" || body.status === "CANCELLED"
+            ? new Date()
+            : null,
       },
     });
     await writeAudit(tx, {

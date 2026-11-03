@@ -1,10 +1,7 @@
+import type { Prisma } from "@prisma/client";
 import { hashIp } from "@/lib/ops/crypto";
 
-type AuditDb = {
-  auditActivity: {
-    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
-  };
-};
+type AuditDb = Pick<Prisma.TransactionClient, "auditActivity">;
 
 export async function writeAudit(
   db: AuditDb,
@@ -28,7 +25,7 @@ export async function writeAudit(
       projectId: input.projectId ?? null,
       targetType: input.targetType,
       targetId: input.targetId,
-      meta: input.meta ?? undefined,
+      meta: (input.meta ?? undefined) as Prisma.InputJsonValue | undefined,
       ipHash: hashIp(ip ?? null),
     },
   });

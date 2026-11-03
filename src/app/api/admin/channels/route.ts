@@ -54,11 +54,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "invalid webhook URL" }, { status: 400 });
     }
   }
-  const severities = Array.isArray(body.severities) ? body.severities.map(String) : ["P1"];
+  const requested = Array.isArray(body.severities) ? body.severities.map(String) : ["P1"];
+  const severities = requested.filter((s) => s === "P1" || s === "P2" || s === "P3");
+  if (severities.length === 0 || severities.length !== requested.length) {
+    return NextResponse.json({ error: "severities may only contain P1, P2, P3" }, { status: 400 });
+  }
   const projectKey = typeof body.projectKey === "string" ? body.projectKey : "";
   const project = projectKey ? await db.project.findUnique({ where: { key: projectKey } }) : null;
   if (projectKey && !project) return NextResponse.json({ error: "Unknown project" }, { status: 404 });
-  const channel = await db.$transaction(async (tx: any) => {
+  const channel = await db.$transaction(async (tx) => {
     const created = await tx.alertChannel.create({
       data: {
         projectId: project?.id ?? null,

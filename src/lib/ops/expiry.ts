@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 export function daysUntil(expiresAt: Date, now = new Date()): number {
   return Math.ceil((expiresAt.getTime() - now.getTime()) / 86400000);
 }
@@ -13,13 +15,7 @@ export function expiryBucket(expiresAt: Date, now = new Date()): 30 | 14 | 7 | 1
 }
 
 export async function upsertExpiryAlert(
-  tx: {
-    alert: {
-      findFirst: (args: unknown) => Promise<{ id: string } | null>;
-      update: (args: unknown) => Promise<unknown>;
-      create: (args: unknown) => Promise<unknown>;
-    };
-  },
+  tx: Pick<Prisma.TransactionClient, "alert">,
   input: { projectId: string; assetId: string; name: string; expiresAt: Date; now?: Date },
 ) {
   const now = input.now ?? new Date();

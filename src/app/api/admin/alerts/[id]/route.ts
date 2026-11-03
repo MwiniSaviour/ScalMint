@@ -7,17 +7,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const gate = await requireOperator(req, { write: true, roles: ["OWNER", "ADMIN", "SUPPORT"] });
   if (gate.error) return gate.error;
   const { id } = await params;
-  const body = (await req.json().catch(() => ({}))) as { state?: "ACKED" | "RESOLVED"; note?: string };
+  const body = (await req.json().catch(() => ({}))) as { state?: string; note?: string };
+  const state = body.state;
+  if (state !== "ACKED" && state !== "RESOLVED") {
+    return NextResponse.json({ error: "state must be ACKED or RESOLVED" }, { status: 400 });
+  }
   const existing = await db.alert.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Alert not found" }, { status: 404 });
-  const alert = await db.$transaction(async (tx: any) => {
+  const alert = await db.$transaction(async (tx) => {
     const next = await tx.alert.update({
       where: { id },
       data: {
-        state: body.state,
-        ackedBy: body.state === "ACKED" ? gate.session.operatorId : existing.ackedBy,
-        resolvedAt: body.state === "RESOLVED" ? new Date() : existing.resolvedAt,
-        openDedupeKey: body.state === "RESOLVED" ? null : existing.openDedupeKey,
+        state,
+        ackedBy: state === "ACKED" ? gate.session.operatorId : existing.ackedBy,
+        resolvedAt: state === "RESOLVED" ? new Date() : existing.resolvedAt,
+        openDedupeKey: state === "RESOLVED" ? null : existing.openDedupeKey,
       },
     });
     await writeAudit(tx, {

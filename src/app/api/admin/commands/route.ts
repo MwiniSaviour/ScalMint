@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { opsDb as db } from "@/lib/db";
@@ -6,6 +7,38 @@ import { writeAudit } from "@/lib/ops/audit";
 import { assertPublicHttpUrl, ensureWebComponent, isCommandType, jsonSafe } from "@/lib/ops/ensure";
 import { hashToken } from "@/lib/ops/crypto";
 import { upsertExpiryAlert } from "@/lib/ops/expiry";
+
+const TENANT_STATUSES = ["ACTIVE", "TRIAL", "PAST_DUE", "SUSPENDED", "CHURNED", "ARCHIVED"] as const;
+const LEAD_STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"] as const;
+const ASSET_KINDS = ["DOMAIN", "TLS", "HOSTING", "LICENCE", "API_KEY", "OTHER"] as const;
+const REVENUE_KINDS = ["PAYMENT", "REFUND", "FEE", "ADJUSTMENT"] as const;
+const SUB_STATUSES = ["TRIALING", "ACTIVE", "PAST_DUE", "CANCELED", "EXPIRED"] as const;
+const HTTP_METHODS = ["GET", "HEAD", "POST"] as const;
+
+function pickEnum<T extends readonly string[]>(values: T, raw: unknown, fallback: T[number], field: string): T[number] {
+  if (raw == null || raw === "") return fallback;
+  const value = String(raw);
+  if (!(values as readonly string[]).includes(value)) throw new Error(`Invalid ${field} "${value}"`);
+  return value as T[number];
+}
+
+function parseDate(raw: unknown, field: string, fallback?: Date): Date {
+  if (raw == null || raw === "") {
+    if (fallback) return fallback;
+    throw new Error(`${field} is required`);
+  }
+  const date = new Date(String(raw));
+  if (Number.isNaN(date.getTime())) throw new Error(`${field} is not a valid date`);
+  return date;
+}
+
+function numberInRange(raw: unknown, fallback: number, min: number, max: number, field: string): number {
+  const value = Number(raw ?? fallback);
+  if (!Number.isFinite(value) || value < min || value > max) {
+    throw new Error(`${field} must be a number between ${min} and ${max}`);
+  }
+  return value;
+}
 
 export async function POST(req: Request) {
   const gate = await requireOperator(req, { write: true, roles: ["OWNER", "ADMIN", "SUPPORT"] });
@@ -24,7 +57,7 @@ export async function POST(req: Request) {
       const result = await runCheckTest(body, gate.session.operatorId, req);
       return NextResponse.json(jsonSafe(result));
     }
-    const result = await db.$transaction(async (tx: any) => {
+    const result = await db.$transaction(async (tx) => {
       const out = await run(tx, type, body, gate.session.operatorId);
       await writeAudit(tx, {
         actorType: "OPERATOR",
@@ -44,36 +77,46 @@ export async function POST(req: Request) {
   }
 }
 
-async function projectOrThrow(tx: any, key: string) {
+async function projectOrThrow(tx: Prisma.TransactionClient, key: string) {
   const project = await tx.project.findUnique({ where: { key } });
   if (!project) throw new Error("Project not found");
   if (project.status === "ARCHIVED") throw new Error("Project is archived");
   return project;
 }
 
-async function run(tx: any, type: string, body: Record<string, unknown>, operatorId: string) {
+async function run(
+  tx: Prisma.TransactionClient,
+  type: string,
+  body: Record<string, unknown>,
+  operatorId: string,
+) {
   const key = String(body.projectKey ?? "");
 
   if (type === "check.create") {
     const project = await projectOrThrow(tx, key);
     const component = await ensureWebComponent(tx, project.id);
-    const checkKey = String(body.key ?? "http-home")
+    const requestedKey = String(body.key ?? "http-home")
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9-]/g, "");
+    const checkKey = requestedKey || `http-${nanoid(6)}`;
     const targetUrl = assertPublicHttpUrl(String(body.targetUrl ?? ""));
+    const duplicate = await tx.projectCheck.findUnique({
+      where: { projectId_key: { projectId: project.id, key: checkKey } },
+    });
+    if (duplicate) throw new Error(`Check key "${checkKey}" already exists on this project`);
     const created = await tx.projectCheck.create({
       data: {
         projectId: project.id,
         componentId: component.id,
-        key: checkKey || `http-${nanoid(6)}`,
+        key: checkKey,
         type: "HTTP",
         targetUrl,
-        method: String(body.method ?? "GET").toUpperCase(),
-        expectedStatus: body.expectedStatus ? Number(body.expectedStatus) : 200,
-        timeoutMs: Number(body.timeoutMs ?? 5000),
-        intervalSec: Math.max(60, Number(body.intervalSec ?? 60)),
-        latencyBudgetMs: body.latencyBudgetMs ? Number(body.latencyBudgetMs) : 800,
+        method: pickEnum(HTTP_METHODS, body.method, "GET", "method"),
+        expectedStatus: numberInRange(body.expectedStatus, 200, 100, 599, "expectedStatus"),
+        timeoutMs: numberInRange(body.timeoutMs, 5000, 1000, 30000, "timeoutMs"),
+        intervalSec: numberInRange(body.intervalSec, 60, 60, 86400, "intervalSec"),
+        latencyBudgetMs: numberInRange(body.latencyBudgetMs, 800, 1, 600000, "latencyBudgetMs"),
         active: true,
       },
     });
@@ -91,7 +134,7 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
         projectId: project.id,
         externalId,
         displayName,
-        status: (body.status as string) ?? "ACTIVE",
+        status: pickEnum(TENANT_STATUSES, body.status, "ACTIVE", "status"),
         planKey: body.planKey ? String(body.planKey) : null,
         region: body.region ? String(body.region) : "GH",
         piiClass: "NONE",
@@ -102,7 +145,7 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
       },
       update: {
         displayName,
-        status: body.status ? String(body.status) : undefined,
+        status: body.status ? pickEnum(TENANT_STATUSES, body.status, "ACTIVE", "status") : undefined,
         planKey: body.planKey !== undefined ? String(body.planKey) : undefined,
         region: body.region ? String(body.region) : undefined,
         sourceUrl: body.sourceUrl !== undefined ? String(body.sourceUrl) : undefined,
@@ -117,6 +160,8 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
     const contactHash = rawContact
       ? hashToken(rawContact.toLowerCase())
       : String(body.contactHash ?? `hash_${nanoid(8)}`);
+    const valueMajor = body.valueMajor == null ? null : Number(body.valueMajor);
+    if (valueMajor != null && !Number.isFinite(valueMajor)) throw new Error("valueMajor must be a number");
     const lead = await tx.lead.create({
       data: {
         projectId: project.id,
@@ -124,8 +169,8 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
         contactHash,
         contactKind: String(body.contactKind ?? "email"),
         company: body.company ? String(body.company) : null,
-        status: (body.status as string) ?? "NEW",
-        valueMinor: body.valueMajor != null ? BigInt(Math.round(Number(body.valueMajor) * 100)) : null,
+        status: pickEnum(LEAD_STATUSES, body.status, "NEW", "status"),
+        valueMinor: valueMajor != null ? BigInt(Math.round(valueMajor * 100)) : null,
         ownerOperatorId: operatorId,
       },
     });
@@ -135,9 +180,7 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
   if (type === "lead.move") {
     const lead = await tx.lead.findUnique({ where: { id: String(body.id ?? "") } });
     if (!lead) throw new Error("Lead not found");
-    const status = String(body.status ?? "");
-    const allowed = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"];
-    if (!allowed.includes(status)) throw new Error("Invalid lead status");
+    const status = pickEnum(LEAD_STATUSES, body.status, "NEW", "status");
     const next = await tx.lead.update({
       where: { id: lead.id },
       data: { status, lastActivityAt: new Date() },
@@ -152,10 +195,10 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
     const asset = await tx.asset.create({
       data: {
         projectId: project.id,
-        kind: (body.kind as string) ?? "DOMAIN",
+        kind: pickEnum(ASSET_KINDS, body.kind, "DOMAIN", "kind"),
         name,
         identifier: body.identifier ? String(body.identifier) : null,
-        expiresAt: body.expiresAt ? new Date(String(body.expiresAt)) : null,
+        expiresAt: body.expiresAt ? parseDate(body.expiresAt, "expiresAt") : null,
         renewalCostMinor: body.renewalCostMinor != null ? BigInt(Number(body.renewalCostMinor)) : null,
         currency: String(body.currency ?? project.currency),
         ownerOperatorId: operatorId,
@@ -175,8 +218,7 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
 
   if (type === "asset.renew") {
     const project = await projectOrThrow(tx, key);
-    const expiresAt = new Date(String(body.expiresAt ?? ""));
-    if (Number.isNaN(expiresAt.getTime())) throw new Error("expiresAt required");
+    const expiresAt = parseDate(body.expiresAt, "expiresAt");
     const existing = await tx.asset.findFirst({ where: { id: String(body.id ?? ""), projectId: project.id } });
     if (!existing) throw new Error("Asset not found");
     const asset = await tx.asset.update({ where: { id: existing.id }, data: { expiresAt } });
@@ -212,10 +254,10 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
       data: {
         projectId: project.id,
         tenantRef: body.tenantRef ? String(body.tenantRef) : null,
-        kind: (body.kind as string) ?? "PAYMENT",
+        kind: pickEnum(REVENUE_KINDS, body.kind, "PAYMENT", "kind"),
         amountMinor: BigInt(Math.round(amountMajor * 100)),
         currency: String(body.currency ?? project.currency),
-        occurredAt: body.occurredAt ? new Date(String(body.occurredAt)) : new Date(),
+        occurredAt: parseDate(body.occurredAt, "occurredAt", new Date()),
         reference,
         provenance: "MANUAL",
       },
@@ -227,17 +269,22 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
     const project = await projectOrThrow(tx, key);
     const tenantRef = String(body.tenantRef ?? "").trim();
     if (!tenantRef) throw new Error("tenantRef required");
-    const periodStart = body.periodStart ? new Date(String(body.periodStart)) : new Date();
-    const periodEnd = body.periodEnd
-      ? new Date(String(body.periodEnd))
-      : new Date(periodStart.getTime() + 30 * 86400000);
+    const periodStart = parseDate(body.periodStart, "periodStart", new Date());
+    const periodEnd = parseDate(
+      body.periodEnd,
+      "periodEnd",
+      new Date(periodStart.getTime() + 30 * 86400000),
+    );
+    if (periodEnd <= periodStart) throw new Error("periodEnd must be after periodStart");
+    const mrrMajor = Number(body.mrrMajor ?? 0);
+    if (!Number.isFinite(mrrMajor) || mrrMajor < 0) throw new Error("mrrMajor must be a non-negative number");
     const fact = await tx.subscriptionFact.upsert({
       where: { projectId_tenantRef_periodStart: { projectId: project.id, tenantRef, periodStart } },
       create: {
         projectId: project.id,
         tenantRef,
         planKey: String(body.planKey ?? "standard"),
-        status: (body.status as string) ?? "ACTIVE",
+        status: pickEnum(SUB_STATUSES, body.status, "ACTIVE", "status"),
         mrrMinor: BigInt(Math.round(Number(body.mrrMajor ?? 0) * 100)),
         currency: String(body.currency ?? project.currency),
         periodStart,
@@ -246,8 +293,9 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
         observedAt: new Date(),
       },
       update: {
-        status: (body.status as string) ?? "ACTIVE",
+        status: pickEnum(SUB_STATUSES, body.status, "ACTIVE", "status"),
         mrrMinor: BigInt(Math.round(Number(body.mrrMajor ?? 0) * 100)),
+        periodEnd,
         planKey: body.planKey ? String(body.planKey) : undefined,
         observedAt: new Date(),
       },
@@ -259,6 +307,8 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
     const project = await projectOrThrow(tx, key);
     const campaign = String(body.campaign ?? "").trim();
     if (!campaign) throw new Error("campaign required");
+    const amountMajor = Number(body.amountMajor ?? NaN);
+    if (!Number.isFinite(amountMajor) || amountMajor < 0) throw new Error("amountMajor required");
     const row = await tx.campaignAttribution.create({
       data: {
         projectId: project.id,
@@ -266,7 +316,7 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
         channel: String(body.channel ?? "other"),
         affiliateCode: body.affiliateCode ? String(body.affiliateCode) : null,
         conversionRef: String(body.conversionRef ?? nanoid(10)),
-        amountMinor: BigInt(Math.round(Number(body.amountMajor ?? 0) * 100)),
+        amountMinor: BigInt(Math.round(amountMajor * 100)),
         currency: String(body.currency ?? project.currency),
         occurredAt: new Date(),
         provenance: "MANUAL",
@@ -356,7 +406,7 @@ async function runCheckTest(body: Record<string, unknown>, operatorId: string, r
   const latencyMs = finishedAt.getTime() - startedAt.getTime();
   const dedupe = `check:${check.id}`;
 
-  await db.$transaction(async (tx: any) => {
+  await db.$transaction(async (tx) => {
     await tx.probeRun.create({
       data: {
         checkId: check.id,
@@ -399,10 +449,24 @@ async function runCheckTest(body: Record<string, unknown>, operatorId: string, r
         });
       }
     } else if (ok) {
-      await tx.alert.updateMany({
-        where: { projectId: project.id, openDedupeKey: dedupe, state: { in: ["OPEN", "ACKED"] } },
-        data: { state: "RESOLVED", resolvedAt: finishedAt, openDedupeKey: null },
+      const recent = await tx.probeRun.findMany({
+        where: { checkId: check.id },
+        orderBy: { startedAt: "desc" },
+        take: 3,
+        select: { ok: true },
       });
+      const threeSuccesses = recent.length === 3 && recent.every((r) => r.ok);
+      if (threeSuccesses) {
+        await tx.alert.updateMany({
+          where: {
+            projectId: project.id,
+            openDedupeKey: dedupe,
+            state: { in: ["OPEN", "ACKED"] },
+            firstSeenAt: { lte: new Date(finishedAt.getTime() - 5 * 60 * 1000) },
+          },
+          data: { state: "RESOLVED", resolvedAt: finishedAt, openDedupeKey: null },
+        });
+      }
     }
     await writeAudit(tx, {
       actorType: "OPERATOR",

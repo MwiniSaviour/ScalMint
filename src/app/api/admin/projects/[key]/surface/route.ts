@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from "next/server";
 import { opsDb as db } from "@/lib/db";
 import { requireOperator } from "@/lib/ops/guard";
@@ -47,6 +46,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
         where: { projectId: project.id, state: { in: ["OPEN", "ACKED"] } },
         orderBy: { lastSeenAt: "desc" },
       });
+      const lastRuns = checks.length
+        ? await db.probeRun.findMany({
+            where: { checkId: { in: checks.map((c) => c.id) } },
+            orderBy: [{ checkId: "asc" }, { startedAt: "desc" }],
+            distinct: ["checkId"],
+            select: { checkId: true, latencyMs: true },
+          })
+        : [];
+      const lastLatency = new Map(lastRuns.map((r) => [r.checkId, r.latencyMs]));
       const series = bucketByDay(
         runs.map((r) => ({ at: r.startedAt, ok: r.ok, latencyMs: r.latencyMs })),
         window.start,
@@ -59,7 +67,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
           lastRunAt: c.lastRunAt,
           consecutiveFailures: c.consecutiveFailures,
           intervalSec: c.intervalSec,
-          latencyMs: null,
+          latencyMs: lastLatency.get(c.id) ?? null,
           latencyBudgetMs: c.latencyBudgetMs,
           now,
         }),
@@ -394,12 +402,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
               metricView({
                 key: "roas",
                 label: "ROAS (last-touch)",
-                value: spend.length && attributed > 0 ? attributed / spendTotal : null,
+                value: spend.length && spendTotal > 0 && attributed > 0 ? attributed / spendTotal : null,
                 unit: "×",
                 window: window.label,
                 source: "CampaignAttribution / spend",
                 asOf: now.toISOString(),
-                quality: !spend.length ? "MISSING" : attributed > 0 ? "OK" : "UNKNOWN",
+                quality: !spend.length || spendTotal <= 0 ? "MISSING" : attributed > 0 ? "OK" : "UNKNOWN",
                 deltaPercent: null,
                 target: null,
                 formula: "Attributed revenue / spend. No attributed conversions is Not connected, never 0× ROAS.",

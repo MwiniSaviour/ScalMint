@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/nextadmin/components/tailgrids/core/table";
 import { Button } from "@/nextadmin/components/tailgrids/core/button";
+import { OpsError } from "@/components/ops/PageStates";
 
 type Affiliate = {
   id: string;
@@ -36,7 +37,7 @@ async function loadAffiliates() {
 
 export default function AffiliatesPage() {
   const qc = useQueryClient();
-  const { data = [], isLoading } = useQuery({ queryKey: ["ops-affiliates"], queryFn: loadAffiliates });
+  const { data = [], isLoading, isError, error, refetch } = useQuery({ queryKey: ["ops-affiliates"], queryFn: loadAffiliates });
   const patch = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Affiliate["status"] }) => {
       const { opsFetch } = await import("@/lib/ops/client-fetch");
@@ -56,6 +57,11 @@ export default function AffiliatesPage() {
         <h1 className="mb-1 text-[28px] leading-8 font-medium text-text-primary">Affiliates</h1>
         <p className="text-sm leading-5 text-text-tertiary">Approve, suspend or reject programme members. v1.</p>
       </div>
+      {patch.isError && (
+        <div className="px-2 lg:px-5">
+          <OpsError message={patch.error.message} />
+        </div>
+      )}
       <div className="px-2 lg:px-5">
         <Card className="overflow-hidden p-0">
           <CardContent className="p-0">
@@ -70,7 +76,13 @@ export default function AffiliatesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
+                {isError ? (
+                  <TableRow>
+                    <TableCell className="px-6 py-8" colSpan={7}>
+                      <OpsError message={error.message} onRetry={() => refetch()} />
+                    </TableCell>
+                  </TableRow>
+                ) : isLoading ? (
                   <TableRow>
                     <TableCell className="px-6 py-8 text-sm text-text-tertiary" colSpan={7}>
                       Loading…

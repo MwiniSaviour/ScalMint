@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   if (!email || !name) return NextResponse.json({ error: "email and name required" }, { status: 400 });
   const resetToken = randomToken(32);
   try {
-    const operator = await db.$transaction(async (tx: any) => {
+    const operator = await db.$transaction(async (tx) => {
       const created = await tx.opsOperator.create({
         data: { email, name, role, status: "ACTIVE", passwordHash: null },
       });
@@ -64,7 +64,10 @@ export async function POST(req: Request) {
       },
       { status: 201 },
     );
-  } catch {
-    return NextResponse.json({ error: "Operator already exists" }, { status: 409 });
+  } catch (err) {
+    if (typeof err === "object" && err !== null && "code" in err && (err as { code?: string }).code === "P2002") {
+      return NextResponse.json({ error: "Operator already exists" }, { status: 409 });
+    }
+    throw err;
   }
 }

@@ -32,7 +32,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ key: s
     const project = await projectByKey(key);
     const existing = await db.projectServiceToken.findFirst({ where: { id: String(body.id ?? ""), projectId: project.id } });
     if (!existing) return NextResponse.json({ error: "Token not found" }, { status: 404 });
-    const token = await db.$transaction(async (tx: any) => {
+    const token = await db.$transaction(async (tx) => {
       const next = await tx.projectServiceToken.update({
         where: { id: existing.id },
         data: { revokedAt: new Date() },
@@ -63,10 +63,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ key: st
   try {
     const project = await projectByKey(key);
     const raw = `ops_${randomToken(24)}`;
-    const scopes = (body.scopes?.length ? body.scopes : ["INGEST_WRITE"]).filter(
-      (s) => s === "INGEST_WRITE" || s === "ENTITY_READ",
-    );
-    const token = await db.$transaction(async (tx: any) => {
+    const requested = body.scopes?.length ? body.scopes : ["INGEST_WRITE"];
+    const scopes = requested.filter((s) => s === "INGEST_WRITE" || s === "ENTITY_READ");
+    if (scopes.length === 0 || scopes.length !== requested.length) {
+      return NextResponse.json({ error: "scopes may only contain INGEST_WRITE or ENTITY_READ" }, { status: 400 });
+    }
+    const token = await db.$transaction(async (tx) => {
       const created = await tx.projectServiceToken.create({
         data: {
           projectId: project.id,

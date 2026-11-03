@@ -11,11 +11,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const name = url.searchParams.get("name") ?? "";
   if (!SURFACES.has(name)) return NextResponse.json({ error: "Unknown surface" }, { status: 400 });
-  try {
-    const data = await portfolioRollup(name, url.searchParams.get("range"));
-    const count = (data as { projectCount?: number }).projectCount ?? 0;
-    return NextResponse.json(envelope({ type: "portfolio", projectCount: count }, data));
-  } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 400 });
-  }
+  const data = await portfolioRollup(name, url.searchParams.get("range"));
+  const count = (data as { projectCount?: number }).projectCount ?? 0;
+  return NextResponse.json(envelope({ type: "portfolio", projectCount: count }, data));
 }
