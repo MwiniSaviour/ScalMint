@@ -7,8 +7,20 @@ import { opsFetch } from "@/lib/ops/client-fetch";
 import { ProjectHeader } from "@/components/ops/ProjectHeader";
 import { OpsError, OpsSkeleton } from "@/components/ops/PageStates";
 import { Button } from "@/nextadmin/components/tailgrids/core/button";
+import { CommandForm, Field, Panel, fieldClass, formDataOf } from "@/components/ops/forms";
 
-type Project = { key: string; name: string; status: string; lastIngestAt: string | null };
+type Project = {
+  key: string;
+  name: string;
+  status: string;
+  lastIngestAt: string | null;
+  description: string | null;
+  homepageUrl: string | null;
+  firstValueEvent: string | null;
+  timezone: string;
+  currency: string;
+  lifecycleStage: string;
+};
 
 export default function ProjectSettingsPage() {
   const { key } = useParams<{ key: string }>();
@@ -22,6 +34,17 @@ export default function ProjectSettingsPage() {
       if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
       return res.data.project;
     },
+  });
+  const save = useMutation({
+    mutationFn: async (body: Record<string, unknown>) => {
+      const res = await opsFetch(`/api/admin/projects/${key}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(res.error ?? "Failed");
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-project", key] }),
   });
   const token = useMutation({
     mutationFn: async () => {
@@ -50,8 +73,45 @@ export default function ProjectSettingsPage() {
   const p = q.data!;
   return (
     <div className="space-y-5">
-      <ProjectHeader title="Project settings" subtitle="Identity, ingest tokens, archive. There is no hard-delete." />
+      <ProjectHeader title="Project settings" subtitle="Identity, ingest tokens, archive. There is no hard-delete. Key is immutable." />
       <div className="space-y-5 px-2 lg:px-5">
+        <Panel title="Identity">
+          <CommandForm
+            pending={save.isPending}
+            error={save.isError ? save.error.message : null}
+            submitLabel="Save"
+            onSubmit={(e) => {
+              e.preventDefault();
+              save.mutate(formDataOf(e.currentTarget));
+            }}
+          >
+            <Field label="Name">
+              <input name="name" defaultValue={p.name} required className={fieldClass} />
+            </Field>
+            <Field label="Lifecycle">
+              <select name="lifecycleStage" defaultValue={p.lifecycleStage} className={fieldClass}>
+                {["IDEA", "BUILD", "LAUNCH", "GROW", "MAINTAIN", "SUNSET"].map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Currency">
+              <input name="currency" defaultValue={p.currency} className={fieldClass} />
+            </Field>
+            <Field label="Timezone">
+              <input name="timezone" defaultValue={p.timezone} className={fieldClass} />
+            </Field>
+            <Field label="Homepage">
+              <input name="homepageUrl" defaultValue={p.homepageUrl ?? ""} className={fieldClass} />
+            </Field>
+            <Field label="First-value event">
+              <input name="firstValueEvent" defaultValue={p.firstValueEvent ?? ""} className={fieldClass} />
+            </Field>
+            <Field label="Description" className="md:col-span-2">
+              <input name="description" defaultValue={p.description ?? ""} className={fieldClass} />
+            </Field>
+          </CommandForm>
+        </Panel>
         <section className="rounded-xl border border-card-border p-5">
           <h2 className="text-sm font-medium">Ingest</h2>
           <p className="mt-1 text-sm text-text-tertiary">

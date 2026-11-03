@@ -64,7 +64,7 @@ async function runCheck(check: {
 }
 
 async function persist(
-  check: { id: string; projectId: string; consecutiveFailures: number },
+  check: { id: string; projectId: string; consecutiveFailures: number; key?: string },
   startedAt: Date,
   finishedAt: Date,
   ok: boolean,
@@ -74,6 +74,7 @@ async function persist(
   responseHash?: string,
 ) {
   const consecutiveFailures = ok ? 0 : check.consecutiveFailures + 1;
+  const dedupe = `check:${check.id}`;
   await db.$transaction(async (tx: any) => {
     await tx.probeRun.create({
       data: {
@@ -93,6 +94,34 @@ async function persist(
       where: { id: check.id },
       data: { lastRunAt: startedAt, consecutiveFailures },
     });
+    if (!ok && consecutiveFailures >= 3) {
+      const existing = await tx.alert.findFirst({ where: { projectId: check.projectId, openDedupeKey: dedupe } });
+      if (existing) {
+        await tx.alert.update({
+          where: { id: existing.id },
+          data: { lastSeenAt: finishedAt, detail: errorClass ?? "fail" },
+        });
+      } else {
+        await tx.alert.create({
+          data: {
+            projectId: check.projectId,
+            checkId: check.id,
+            type: "probe.fail",
+            severity: consecutiveFailures >= 5 ? "P1" : "P2",
+            state: "OPEN",
+            dedupeKey: dedupe,
+            openDedupeKey: dedupe,
+            title: `${check.key ?? check.id} failing`,
+            detail: `${errorClass ?? "fail"} · HTTP ${statusCode ?? "n/a"}`,
+          },
+        });
+      }
+    } else if (ok) {
+      await tx.alert.updateMany({
+        where: { projectId: check.projectId, openDedupeKey: dedupe, state: { in: ["OPEN", "ACKED"] } },
+        data: { state: "RESOLVED", resolvedAt: finishedAt, openDedupeKey: null },
+      });
+    }
   });
 }
 

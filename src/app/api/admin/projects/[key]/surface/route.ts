@@ -3,10 +3,22 @@ import { NextResponse } from "next/server";
 import { opsDb as db } from "@/lib/db";
 import { requireOperator } from "@/lib/ops/guard";
 import { envelope, projectByKey, ScopeError } from "@/lib/ops/scope";
-import { availability, mrrAt, pesewasToMajor, collectedInWindow, metricView } from "@/lib/ops/metrics";
+import {
+  availability,
+  mrrAt,
+  pesewasToMajor,
+  collectedInWindow,
+  metricView,
+  arrFromMrr,
+  logoChurn,
+  mrrMovement,
+  nrr,
+  percentile,
+} from "@/lib/ops/metrics";
 import { parseRange, rangeWindow } from "@/lib/ops/range";
 import { jsonSafe } from "@/lib/ops/ensure";
 import { checkStatus } from "@/lib/ops/status";
+import { burnRate, DEFAULT_AVAILABILITY_SLO, errorBudgetRemaining } from "@/lib/ops/slo";
 
 export async function GET(req: Request, { params }: { params: Promise<{ key: string }> }) {
   const gate = await requireOperator(req);
@@ -53,6 +65,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
         }),
       }));
       const avail = availability(runs);
+      const budget = errorBudgetRemaining(avail);
+      const burn = burnRate(avail);
+      const latencies = runs.map((r) => r.latencyMs).filter((n) => typeof n === "number");
+      const p95 = percentile(latencies, 95);
       return NextResponse.json(
         jsonSafe(
           envelope(scope, {
@@ -60,6 +76,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
             runs: runs.slice(-50),
             alerts,
             series,
+            slo: { target: DEFAULT_AVAILABILITY_SLO, availability: avail, errorBudgetRemaining: budget.remaining, burnRate: burn },
             metrics: [
               metricView({
                 key: "availability",
@@ -73,6 +90,48 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
                 deltaPercent: null,
                 target: "99.9%",
                 formula: "successful probe runs / total probe runs in the window. No runs is No data, never 100%.",
+                decimals: 2,
+              }),
+              metricView({
+                key: "error_budget",
+                label: "Error budget remaining",
+                value: budget.remaining == null ? null : budget.remaining * 100,
+                unit: "% of 0.1% budget",
+                window: window.label,
+                source: "ProbeRun vs 99.9% SLO",
+                asOf: now.toISOString(),
+                quality: budget.quality,
+                deltaPercent: null,
+                target: "> 0%",
+                formula: "(availability − 0.999) / 0.001. Negative means the SLO is already spent.",
+                decimals: 1,
+              }),
+              metricView({
+                key: "p95_latency",
+                label: "Probe p95 latency",
+                value: p95,
+                unit: "ms",
+                window: window.label,
+                source: "ProbeRun.latencyMs",
+                asOf: now.toISOString(),
+                quality: latencies.length ? "OK" : "MISSING",
+                deltaPercent: null,
+                target: null,
+                formula: "95th percentile of probe latency in the window. Traffic RUM is a separate panel when ingested.",
+                decimals: 0,
+              }),
+              metricView({
+                key: "burn",
+                label: "Error-budget burn",
+                value: burn,
+                unit: "× SLO",
+                window: window.label,
+                source: "ProbeRun",
+                asOf: now.toISOString(),
+                quality: burn == null ? "MISSING" : "OK",
+                deltaPercent: null,
+                target: "< 1×",
+                formula: "(1 − availability) / (1 − 0.999). 1× means burning exactly the SLO.",
                 decimals: 2,
               }),
             ],
@@ -192,12 +251,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
         window.start,
         window.end,
       );
+      const factInputs = facts.map((f) => ({
+        tenantRef: f.tenantRef,
+        status: f.status,
+        mrrMinor: Number(f.mrrMinor),
+        periodStart: f.periodStart,
+        periodEnd: f.periodEnd,
+      }));
+      const movement = mrrMovement(factInputs, factInputs, window.start, now);
+      const churn = logoChurn(factInputs, factInputs, window.start, now);
+      const netRetention = nrr(movement);
+      const arr = arrFromMrr(mrr.valueMinor);
       return NextResponse.json(
         jsonSafe(
           envelope(scope, {
             facts,
             events,
             series: cashSeries,
+            movement,
             metrics: [
               metricView({
                 key: "mrr",
@@ -214,6 +285,20 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
                 decimals: 2,
               }),
               metricView({
+                key: "arr",
+                label: "ARR",
+                value: pesewasToMajor(arr),
+                unit: project.currency,
+                window: "MRR × 12",
+                source: "SubscriptionFact",
+                asOf: now.toISOString(),
+                quality: mrr.quality,
+                deltaPercent: null,
+                target: null,
+                formula: "Contracted MRR × 12. Labelled annualised, not collected cash.",
+                decimals: 2,
+              }),
+              metricView({
                 key: "cash",
                 label: "Cash collected",
                 value: pesewasToMajor(events.length ? collected : null),
@@ -226,6 +311,34 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
                 target: null,
                 formula: "Σ PAYMENT amountMinor in the window. Shown beside MRR, never blended.",
                 decimals: 2,
+              }),
+              metricView({
+                key: "nrr",
+                label: "Net revenue retention",
+                value: netRetention == null ? null : netRetention * 100,
+                unit: "%",
+                window: window.label,
+                source: "SubscriptionFact movement",
+                asOf: now.toISOString(),
+                quality: facts.length ? (netRetention == null ? "MISSING" : "OK") : "MISSING",
+                deltaPercent: null,
+                target: null,
+                formula: "(start + expansion − contraction − churn) / start on the same tenant set.",
+                decimals: 1,
+              }),
+              metricView({
+                key: "logo_churn",
+                label: "Logo churn",
+                value: churn == null ? null : churn * 100,
+                unit: "% of logos",
+                window: window.label,
+                source: "SubscriptionFact",
+                asOf: now.toISOString(),
+                quality: facts.length ? (churn == null ? "MISSING" : "OK") : "MISSING",
+                deltaPercent: null,
+                target: null,
+                formula: "Tenants with MRR at window start and none at as-of, divided by starting logos.",
+                decimals: 1,
               }),
             ],
           }),

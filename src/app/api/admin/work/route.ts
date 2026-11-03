@@ -32,6 +32,7 @@ export async function GET(req: Request) {
       state: { in: ["OPEN", "ACKED"] },
       ...(project ? { projectId: project.id } : {}),
     },
+    include: { project: { select: { key: true, name: true } } },
     orderBy: { lastSeenAt: "desc" },
     take: 100,
   });

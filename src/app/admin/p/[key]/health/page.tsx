@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { opsFetch } from "@/lib/ops/client-fetch";
 import { ProjectHeader } from "@/components/ops/ProjectHeader";
 import { OpsEmpty, OpsError, OpsSkeleton } from "@/components/ops/PageStates";
@@ -49,7 +49,33 @@ function Inner() {
       return res.data;
     },
   });
+  const qc = useQueryClient();
   const cmd = useOpsCommand([["ops-surface", key, "health"], ["ops-project", key], ["ops-work"]]);
+  const ack = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await opsFetch(`/api/admin/alerts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: "ACKED" }),
+      });
+      if (!res.ok) throw new Error(res.error ?? "Failed");
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["ops-surface", key, "health"] });
+      void qc.invalidateQueries({ queryKey: ["ops-work"] });
+    },
+  });
+  const taskFromAlert = useMutation({
+    mutationFn: async (a: Alert) => {
+      const res = await opsFetch("/api/admin/work", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: a.title, projectKey: key, alertId: a.id, priority: a.severity === "P1" ? "P1" : "P2" }),
+      });
+      if (!res.ok) throw new Error(res.error ?? "Failed");
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-work"] }),
+  });
 
   if (q.isLoading) return <OpsSkeleton />;
   if (q.isError) return <OpsError message={q.error.message} onRetry={() => q.refetch()} />;
@@ -62,7 +88,7 @@ function Inner() {
         subtitle="Probe success is availability. Traffic error rate is shown only when ingested. Disabled checks are Unknown, never Up."
         rangeDefault="24h"
       />
-      <div className="grid gap-5 px-2 md:grid-cols-2 lg:px-5">
+      <div className="grid gap-5 px-2 md:grid-cols-2 xl:grid-cols-4 lg:px-5">
         {d.metrics.map((m) => (
           <MetricCard key={m.key} metric={m} />
         ))}
@@ -170,8 +196,20 @@ function Inner() {
           <Panel title="Open alerts">
             <ul className="space-y-2">
               {d.alerts.map((a) => (
-                <li key={a.id} className="text-sm">
-                  {a.severity} · {a.state} · {a.title}
+                <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span>
+                    {a.severity} · {a.state} · {a.title}
+                  </span>
+                  <span className="flex gap-2">
+                    {a.state === "OPEN" && (
+                      <Button size="xs" appearance="outline" onPress={() => ack.mutate(a.id)}>
+                        Acknowledge
+                      </Button>
+                    )}
+                    <Button size="xs" onPress={() => taskFromAlert.mutate(a)}>
+                      Create task
+                    </Button>
+                  </span>
                 </li>
               ))}
             </ul>

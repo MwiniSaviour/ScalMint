@@ -54,6 +54,7 @@ export default function CustomersPage() {
                 status: f.status,
                 planKey: f.planKey || undefined,
                 region: f.region || undefined,
+                sourceUrl: f.sourceUrl || undefined,
               });
               e.currentTarget.reset();
             }}
@@ -76,6 +77,9 @@ export default function CustomersPage() {
             </Field>
             <Field label="Region">
               <input name="region" defaultValue="GH" className={fieldClass} />
+            </Field>
+            <Field label="Product source URL (optional, live fetch)">
+              <input name="sourceUrl" type="url" placeholder="https://product.example/api/ops/v1/tenants/…" className={fieldClass} />
             </Field>
           </CommandForm>
         </Panel>

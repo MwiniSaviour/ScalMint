@@ -44,7 +44,7 @@ function Inner() {
         subtitle="Contracted MRR and cash collected are shown side by side. School fee invoices never enter ScalMint revenue."
         rangeDefault="mtd"
       />
-      <div className="grid gap-5 px-2 md:grid-cols-2 lg:px-5">
+      <div className="grid gap-5 px-2 md:grid-cols-2 xl:grid-cols-3 lg:px-5">
         {d.metrics.map((m) => (
           <MetricCard key={m.key} metric={m} />
         ))}

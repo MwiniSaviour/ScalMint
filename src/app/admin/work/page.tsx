@@ -15,7 +15,7 @@ type Task = {
   cancelReason: string | null;
 };
 
-type Alert = { id: string; title: string; severity: string; state: string; projectId: string };
+type Alert = { id: string; title: string; severity: string; state: string; projectId: string; project?: { key: string; name: string } };
 
 export default function WorkPage() {
   const qc = useQueryClient();
@@ -49,6 +49,22 @@ export default function WorkPage() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-work"] }),
   });
+  const taskFromAlert = useMutation({
+    mutationFn: async (a: Alert) => {
+      const res = await opsFetch("/api/admin/work", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: a.title,
+          projectKey: a.project?.key,
+          alertId: a.id,
+          priority: a.severity === "P1" ? "P1" : "P2",
+        }),
+      });
+      if (!res.ok) throw new Error(res.error ?? "Failed");
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-work"] }),
+  });
 
   return (
     <div className="mt-6 space-y-5 px-2 lg:px-6">
@@ -74,11 +90,16 @@ export default function WorkPage() {
                       {a.severity} · {a.state}
                     </p>
                   </div>
-                  {a.state === "OPEN" && (
-                    <Button size="sm" appearance="outline" onPress={() => ack.mutate(a.id)}>
-                      Acknowledge
+                  <div className="flex flex-col gap-2">
+                    {a.state === "OPEN" && (
+                      <Button size="sm" appearance="outline" onPress={() => ack.mutate(a.id)}>
+                        Acknowledge
+                      </Button>
+                    )}
+                    <Button size="sm" onPress={() => taskFromAlert.mutate(a)}>
+                      Create task
                     </Button>
-                  )}
+                  </div>
                 </li>
               ))}
             </ul>

@@ -93,6 +93,7 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
         planKey: body.planKey ? String(body.planKey) : null,
         region: body.region ? String(body.region) : "GH",
         piiClass: "NONE",
+        sourceUrl: body.sourceUrl ? String(body.sourceUrl) : null,
         cachedSummary: {
           note: "Console-held summary until the product API is connected.",
         },
@@ -102,6 +103,7 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
         status: body.status ? String(body.status) : undefined,
         planKey: body.planKey !== undefined ? String(body.planKey) : undefined,
         region: body.region ? String(body.region) : undefined,
+        sourceUrl: body.sourceUrl !== undefined ? String(body.sourceUrl) : undefined,
       },
     });
     return { projectId: project.id, targetType: "TenantRef", targetId: tenant.id, tenant };

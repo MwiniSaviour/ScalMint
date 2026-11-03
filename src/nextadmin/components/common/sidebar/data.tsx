@@ -30,6 +30,7 @@ export const PORTFOLIO_NAV: NavSection[] = [
       { title: "Revenue", url: "/admin/revenue", icon: <TableIcon />, items: [] },
       { title: "Customers", url: "/admin/customers", icon: <UserIcon />, items: [] },
       { title: "Tasks", url: "/admin/task", icon: <TableIcon />, items: [] },
+      { title: "Calendar", url: "/admin/calendar", icon: <CalendarIcon />, items: [] },
       { title: "Work queue", url: "/admin/work", icon: <AlphabetIcon />, items: [] },
     ],
   },

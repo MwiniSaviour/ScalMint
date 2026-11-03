@@ -103,6 +103,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ key: s
           lifecycleStage: typeof body.lifecycleStage === "string" ? (body.lifecycleStage as never) : undefined,
           homepageUrl: typeof body.homepageUrl === "string" ? body.homepageUrl : undefined,
           firstValueEvent: typeof body.firstValueEvent === "string" ? body.firstValueEvent : undefined,
+          timezone: typeof body.timezone === "string" ? body.timezone : undefined,
+          currency: typeof body.currency === "string" ? body.currency : undefined,
+          supportUrl: typeof body.supportUrl === "string" ? body.supportUrl : undefined,
+          docsUrl: typeof body.docsUrl === "string" ? body.docsUrl : undefined,
         },
       });
       await writeAudit(tx, {
