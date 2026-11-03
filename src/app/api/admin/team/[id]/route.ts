@@ -2,22 +2,53 @@ import { NextResponse } from "next/server";
 import { opsDb as db } from "@/lib/db";
 import { requireOperator } from "@/lib/ops/guard";
 import { writeAudit } from "@/lib/ops/audit";
+import { hashToken, randomToken } from "@/lib/ops/crypto";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const gate = await requireOperator(req, { write: true, roles: ["OWNER"] });
   if (gate.error) return gate.error;
   const { id } = await params;
-  const body = (await req.json().catch(() => ({}))) as { role?: string; status?: "ACTIVE" | "DISABLED" };
+  const body = (await req.json().catch(() => ({}))) as { role?: string; status?: "ACTIVE" | "DISABLED"; reset?: boolean };
+  if (body.status != null && body.status !== "ACTIVE" && body.status !== "DISABLED") {
+    return NextResponse.json({ error: "status must be ACTIVE or DISABLED" }, { status: 400 });
+  }
   const target = await db.opsOperator.findUnique({ where: { id } });
   if (!target) return NextResponse.json({ error: "Operator not found" }, { status: 404 });
   if (target.role === "OWNER" && (body.status === "DISABLED" || (body.role && body.role !== "OWNER"))) {
     return NextResponse.json({ error: "OWNER cannot be removed or demoted by this action" }, { status: 403 });
   }
-  const operator = await db.$transaction(async (tx: any) => {
+  if (body.reset) {
+    const resetToken = randomToken(32);
+    await db.$transaction(async (tx) => {
+      await tx.passwordReset.create({
+        data: {
+          operatorId: id,
+          tokenHash: hashToken(resetToken),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      });
+      await tx.opsOperator.update({ where: { id }, data: { sessionVersion: { increment: 1 } } });
+      await writeAudit(tx, {
+        actorType: "OPERATOR",
+        actorId: gate.session.operatorId,
+        action: "operator.reset",
+        targetType: "OpsOperator",
+        targetId: id,
+        req,
+      });
+    });
+    return NextResponse.json({ resetToken, warning: "Single-use, 24 hours. Give it once." });
+  }
+  const allowedRoles = ["ADMIN", "ANALYST", "SUPPORT"];
+  if (body.role && target.role !== "OWNER" && !allowedRoles.includes(body.role)) {
+    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
+  const role = body.role && target.role !== "OWNER" ? (body.role as "ADMIN" | "ANALYST" | "SUPPORT") : undefined;
+  const operator = await db.$transaction(async (tx) => {
     const next = await tx.opsOperator.update({
       where: { id },
       data: {
-        role: body.role ? (body.role as never) : undefined,
+        role,
         status: body.status,
         sessionVersion: { increment: 1 },
       },

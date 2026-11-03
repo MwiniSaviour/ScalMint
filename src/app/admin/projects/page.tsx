@@ -29,6 +29,8 @@ function ProjectsInner() {
   const [open, setOpen] = useState(params.get("new") === "1");
   const [form, setForm] = useState({ key: "", name: "", kind: "SAAS", currency: "GHS", timezone: "Africa/Accra" });
   const [msg, setMsg] = useState("");
+  const [kind, setKind] = useState("");
+  const [qtext, setQtext] = useState("");
 
   const q = useQuery({
     queryKey: ["ops-projects"],
@@ -118,6 +120,22 @@ function ProjectsInner() {
         <OpsEmpty title="No projects" body="Create OPERASCH, Nova POS, or a client site to start monitoring." />
       )}
       {q.data && q.data.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <input
+            value={qtext}
+            onChange={(e) => setQtext(e.target.value)}
+            placeholder="Search name or key"
+            className="rounded-lg border border-card-border px-3 py-2 text-sm"
+          />
+          <select value={kind} onChange={(e) => setKind(e.target.value)} className="rounded-lg border border-card-border px-3 py-2 text-sm">
+            <option value="">All kinds</option>
+            {["SAAS", "POS", "WEBSITE", "WEBAPP", "INTERNAL", "SERVICE"].map((k) => (
+              <option key={k}>{k}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {q.data && q.data.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-card-border">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-background-gray-secondary_alt text-xs">
@@ -130,7 +148,9 @@ function ProjectsInner() {
               </tr>
             </thead>
             <tbody>
-              {q.data.map((p) => (
+              {q.data
+                .filter((p) => (!kind || p.kind === kind) && (!qtext || `${p.name} ${p.key}`.toLowerCase().includes(qtext.toLowerCase())))
+                .map((p) => (
                 <tr key={p.id} className="border-t border-card-border">
                   <td className="px-4 py-3">
                     <Link href={`/admin/p/${p.key}`} className="font-medium hover:underline">

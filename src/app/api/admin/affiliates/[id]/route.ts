@@ -1,8 +1,8 @@
-// @ts-nocheck
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireOperator } from "@/lib/ops/guard";
 import { writeAudit } from "@/lib/ops/audit";
+
 type AffiliateStatus = "PENDING" | "APPROVED" | "SUSPENDED" | "REJECTED";
 
 const STATUSES: AffiliateStatus[] = ["PENDING", "APPROVED", "SUSPENDED", "REJECTED"];
@@ -16,7 +16,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "Valid status required" }, { status: 400 });
   }
   try {
-    const updated = await db.$transaction(async (tx: { affiliate: { update: Function }; auditActivity: { create: Function } }) => {
+    const updated = await db.$transaction(async (tx) => {
       const row = await tx.affiliate.update({ where: { id }, data: { status: body.status as AffiliateStatus } });
       await writeAudit(tx, {
         actorType: "OPERATOR",
@@ -33,6 +33,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     delete affiliate.passwordHash;
     return NextResponse.json({ affiliate });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Update failed" }, { status: 400 });
+    const code = typeof err === "object" && err !== null && "code" in err ? (err as { code?: string }).code : undefined;
+    if (code === "P2025") return NextResponse.json({ error: "Affiliate not found" }, { status: 404 });
+    throw err;
   }
 }

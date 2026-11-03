@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from "next/server";
 import { opsDb as db } from "@/lib/db";
 import { requireOperator } from "@/lib/ops/guard";
@@ -36,19 +35,43 @@ export async function POST(req: Request) {
   const gate = await requireOperator(req, { write: true });
   if (gate.error) return gate.error;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const key = String(body.key ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "");
+  const key = String(body.key ?? "").trim().toLowerCase();
   const name = String(body.name ?? "").trim();
-  const kind = String(body.kind ?? "");
-  const currency = String(body.currency ?? "GHS").toUpperCase();
-  const timezone = String(body.timezone ?? "Africa/Accra");
-  if (!key || !name || !KINDS.includes(kind as (typeof KINDS)[number])) {
-    return NextResponse.json({ error: "key, name, kind, currency, and timezone are required" }, { status: 400 });
+  const kind = String(body.kind ?? "").trim().toUpperCase();
+  const currency = String(body.currency ?? "GHS").trim().toUpperCase();
+  const timezone = String(body.timezone ?? "Africa/Accra").trim();
+  if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(key)) {
+    return NextResponse.json(
+      { error: "key must be 2-41 chars of lowercase letters, digits or hyphens and start with a letter or digit" },
+      { status: 400 },
+    );
+  }
+  if (name.length < 2 || name.length > 80) {
+    return NextResponse.json({ error: "name must be 2-80 characters" }, { status: 400 });
+  }
+  if (!KINDS.includes(kind as (typeof KINDS)[number])) {
+    return NextResponse.json({ error: `kind must be one of ${KINDS.join(", ")}` }, { status: 400 });
+  }
+  if (!/^[A-Z]{3}$/.test(currency)) {
+    return NextResponse.json({ error: "currency must be a 3-letter ISO code" }, { status: 400 });
   }
   try {
-    const project = await db.$transaction(async (tx: any) => {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+  } catch {
+    return NextResponse.json({ error: `Unknown timezone ${timezone}` }, { status: 400 });
+  }
+  let homepageUrl: string | null = null;
+  if (body.homepageUrl != null && String(body.homepageUrl).trim() !== "") {
+    try {
+      const url = new URL(String(body.homepageUrl).trim());
+      if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("bad protocol");
+      homepageUrl = url.toString();
+    } catch {
+      return NextResponse.json({ error: "homepageUrl must be a valid http(s) URL" }, { status: 400 });
+    }
+  }
+  try {
+    const project = await db.$transaction(async (tx) => {
       const created = await tx.project.create({
         data: {
           key,
@@ -58,8 +81,11 @@ export async function POST(req: Request) {
           timezone,
           ownerOperatorId: gate.session.operatorId,
           description: body.description ? String(body.description) : null,
-          homepageUrl: body.homepageUrl ? String(body.homepageUrl) : null,
+          homepageUrl,
         },
+      });
+      await tx.projectComponent.create({
+        data: { projectId: created.id, key: "web", name: "Web", type: "WEB", criticality: "P2" },
       });
       await writeAudit(tx, {
         actorType: "OPERATOR",
@@ -74,7 +100,10 @@ export async function POST(req: Request) {
       return created;
     });
     return NextResponse.json({ project }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Project key already exists" }, { status: 409 });
+  } catch (err) {
+    if (typeof err === "object" && err !== null && "code" in err && (err as { code?: string }).code === "P2002") {
+      return NextResponse.json({ error: "Project key already exists" }, { status: 409 });
+    }
+    throw err;
   }
 }

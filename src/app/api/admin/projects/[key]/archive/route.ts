@@ -12,7 +12,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ key: st
   try {
     const project = await projectByKey(key);
     if (body.restore) {
-      const updated = await db.$transaction(async (tx: any) => {
+      const updated = await db.$transaction(async (tx) => {
         const next = await tx.project.update({
           where: { id: project.id },
           data: { status: "ACTIVE", archivedAt: null },
@@ -33,7 +33,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ key: st
     if (body.confirm !== project.key) {
       return NextResponse.json({ error: "Type the project key to archive" }, { status: 400 });
     }
-    const updated = await db.$transaction(async (tx: any) => {
+    const updated = await db.$transaction(async (tx) => {
       const next = await tx.project.update({
         where: { id: project.id },
         data: { status: "ARCHIVED", archivedAt: new Date() },

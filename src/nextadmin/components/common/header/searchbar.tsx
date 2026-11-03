@@ -10,6 +10,8 @@ import {
 import { Command } from 'cmdk';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { opsFetch } from '@/lib/ops/client-fetch';
 
 interface SearchItem {
     id: string;
@@ -38,6 +40,17 @@ export default function SearchBar() {
     }, []);
 
     // Parse NAV_DATA into searchable items grouped by section
+    const projects = useQuery({
+        queryKey: ['ops-projects', 'switcher'],
+        queryFn: async () => {
+            const res = await opsFetch<{ all: { key: string; name: string }[] }>(
+                '/api/admin/projects?view=switcher',
+            );
+            return res.data?.all ?? [];
+        },
+        enabled: open,
+    });
+
     const { itemsBySection } = useMemo(() => {
         const sectionsMap: Record<string, SearchItem[]> = {};
 
@@ -159,6 +172,25 @@ export default function SearchBar() {
                     <Command.Empty className='py-8 text-center text-sm text-text-tertiary'>
                         No pages found matching your search.
                     </Command.Empty>
+
+                    {projects.data && projects.data.length > 0 && (
+                        <Command.Group
+                            heading='Switch project'
+                            className='py-1.5 **:[[cmdk-group-heading]]:px-3 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-[11px] **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:tracking-wider **:[[cmdk-group-heading]]:text-text-tertiary **:[[cmdk-group-heading]]:uppercase'
+                        >
+                            {projects.data.map((p) => (
+                                <Command.Item
+                                    key={p.key}
+                                    value={`project ${p.name} ${p.key}`}
+                                    onSelect={() => handleSelect(`/admin/p/${p.key}`)}
+                                    className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm text-text-secondary transition-colors hover:bg-background-gray-primary data-[selected=true]:bg-background-gray-primary data-[selected=true]:text-text-primary'
+                                >
+                                    <span className='text-text-primary'>{p.name}</span>
+                                    <span className='font-mono text-xs text-text-tertiary'>{p.key}</span>
+                                </Command.Item>
+                            ))}
+                        </Command.Group>
+                    )}
 
                     {Object.entries(itemsBySection).map(
                         ([sectionLabel, sectionItems]) => {

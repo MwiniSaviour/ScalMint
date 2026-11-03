@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/nextadmin/components/tailgrids/core/table";
 import { Button } from "@/nextadmin/components/tailgrids/core/button";
+import { OpsError } from "@/components/ops/PageStates";
 
 type Conversion = {
   id: string;
@@ -32,7 +33,7 @@ async function load() {
 
 export default function ConversionsPage() {
   const qc = useQueryClient();
-  const { data = [] } = useQuery({ queryKey: ["ops-conversions"], queryFn: load });
+  const { data = [], isLoading, isError, error, refetch } = useQuery({ queryKey: ["ops-conversions"], queryFn: load });
   const patch = useMutation({
     mutationFn: async (body: { id: string; status: Conversion["status"] }) => {
       const { opsFetch } = await import("@/lib/ops/client-fetch");
@@ -52,6 +53,11 @@ export default function ConversionsPage() {
         <h1 className="mb-1 text-[28px] leading-8 font-medium text-text-primary">Conversions</h1>
         <p className="text-sm leading-5 text-text-tertiary">7-day window is automatic; override here when needed.</p>
       </div>
+      {patch.isError && (
+        <div className="px-2 lg:px-5">
+          <OpsError message={patch.error.message} />
+        </div>
+      )}
       <div className="px-2 lg:px-5">
         <Card className="overflow-hidden p-0">
           <CardContent className="p-0">
@@ -66,7 +72,19 @@ export default function ConversionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.length === 0 ? (
+                {isError ? (
+                  <TableRow>
+                    <TableCell className="px-6 py-8" colSpan={6}>
+                      <OpsError message={error.message} onRetry={() => refetch()} />
+                    </TableCell>
+                  </TableRow>
+                ) : isLoading ? (
+                  <TableRow>
+                    <TableCell className="px-6 py-8 text-sm text-text-tertiary" colSpan={6}>
+                      Loading…
+                    </TableCell>
+                  </TableRow>
+                ) : data.length === 0 ? (
                   <TableRow>
                     <TableCell className="px-6 py-8 text-sm text-text-tertiary" colSpan={6}>
                       No conversions yet.

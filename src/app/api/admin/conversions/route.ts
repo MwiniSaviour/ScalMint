@@ -24,21 +24,27 @@ export async function PATCH(req: Request) {
   if (!body.id || !body.status || !STATUSES.includes(body.status)) {
     return NextResponse.json({ error: "id and valid status required" }, { status: 400 });
   }
-  const result = await db.$transaction(async (tx: any) => {
-    const res = await tx.conversion.updateMany({
-      where: { id: { in: [body.id!] } },
-      data: { status: body.status },
+  try {
+    const updated = await db.$transaction(async (tx) => {
+      const row = await tx.conversion.update({
+        where: { id: body.id },
+        data: { status: body.status },
+      });
+      await writeAudit(tx, {
+        actorType: "OPERATOR",
+        actorId: gate.session.operatorId,
+        action: "conversion.status",
+        targetType: "Conversion",
+        targetId: body.id!,
+        meta: { status: body.status },
+        req,
+      });
+      return row;
     });
-    await writeAudit(tx, {
-      actorType: "OPERATOR",
-      actorId: gate.session.operatorId,
-      action: "conversion.status",
-      targetType: "Conversion",
-      targetId: body.id!,
-      meta: { status: body.status },
-      req,
-    });
-    return res;
-  });
-  return NextResponse.json({ ok: true, count: result.count });
+    return NextResponse.json({ ok: true, conversion: { id: updated.id, status: updated.status } });
+  } catch (err) {
+    const code = typeof err === "object" && err !== null && "code" in err ? (err as { code?: string }).code : undefined;
+    if (code === "P2025") return NextResponse.json({ error: "Conversion not found" }, { status: 404 });
+    throw err;
+  }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { COOKIE_NAME, COOKIE_MAX_AGE, normalizeRef } from "@/lib/affiliate/referral";
 import { OPS_COOKIE } from "@/lib/auth/ops-cookie";
+import { verifyOpsJwt } from "@/lib/auth/ops-jwt";
 
 function applyRefCookie(req: NextRequest, res: NextResponse) {
   const ref = normalizeRef(req.nextUrl.searchParams.get("ref"));
@@ -57,17 +58,23 @@ function hostPassthrough(path: string) {
   );
 }
 
-function requireOps(req: NextRequest, pathname: string) {
+async function requireOps(req: NextRequest, pathname: string) {
   const isAdminPage = pathname.startsWith("/admin") && !pathname.startsWith("/admin/login");
   if (!isAdminPage) return null;
-  if (req.cookies.get(OPS_COOKIE)?.value) return null;
+  const token = req.cookies.get(OPS_COOKIE)?.value;
+  if (token) {
+    const session = await verifyOpsJwt(token);
+    if (session) return null;
+  }
   const login = req.nextUrl.clone();
   login.pathname = "/admin/login";
   login.search = "";
-  return NextResponse.redirect(login);
+  const res = NextResponse.redirect(login);
+  if (token) res.cookies.delete(OPS_COOKIE);
+  return res;
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   const host = req.headers.get("host") ?? "";
   const isAffiliateHost = host.startsWith("affiliate.");
@@ -80,7 +87,7 @@ export function middleware(req: NextRequest) {
       url.pathname = path === "/" ? "/admin" : `/admin${path}`;
     }
     const dest = passthrough ? path : url.pathname;
-    const blocked = requireOps(req, dest);
+    const blocked = await requireOps(req, dest);
     if (blocked) return blocked;
     if (!passthrough) return NextResponse.rewrite(url);
     return NextResponse.next();
@@ -110,7 +117,7 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  const blocked = requireOps(req, path);
+  const blocked = await requireOps(req, path);
   if (blocked) return blocked;
 
   return applyRefCookie(req, NextResponse.next());

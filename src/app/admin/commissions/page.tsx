@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/nextadmin/components/tailgrids/core/table";
 import { Button } from "@/nextadmin/components/tailgrids/core/button";
+import { OpsError } from "@/components/ops/PageStates";
 import { useState } from "react";
 
 type Product = {
@@ -35,11 +36,15 @@ async function loadProducts() {
 
 export default function CommissionsPage() {
   const qc = useQueryClient();
-  const { data = [] } = useQuery({ queryKey: ["ops-products"], queryFn: loadProducts });
+  const { data = [], isLoading, isError, error, refetch } = useQuery({ queryKey: ["ops-products"], queryFn: loadProducts });
   const [draft, setDraft] = useState<Record<string, number>>({});
   const save = useMutation({
     mutationFn: async (p: Product) => {
       const rate = draft[p.id] ?? p.commissionRate;
+      if (!Number.isInteger(rate) || rate < 0) throw new Error("Rate must be a non-negative integer");
+      if (p.commissionType !== "FLAT_CPA" && rate > 10_000) {
+        throw new Error("Percent rate is basis points (max 10000 = 100%)");
+      }
       const { opsFetch } = await import("@/lib/ops/client-fetch");
       const res = await opsFetch("/api/admin/products", {
         method: "PATCH",
@@ -59,6 +64,11 @@ export default function CommissionsPage() {
           Rates are basis points for percent products (3000 = 30%) and pesewas for flat CPA.
         </p>
       </div>
+      {save.isError && (
+        <div className="px-2 lg:px-5">
+          <OpsError message={save.error.message} />
+        </div>
+      )}
       <div className="px-2 lg:px-5">
         <Card className="overflow-hidden p-0">
           <CardContent className="p-0">
@@ -73,7 +83,25 @@ export default function CommissionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((p) => (
+                {isError ? (
+                  <TableRow>
+                    <TableCell className="px-6 py-8" colSpan={6}>
+                      <OpsError message={error.message} onRetry={() => refetch()} />
+                    </TableCell>
+                  </TableRow>
+                ) : isLoading ? (
+                  <TableRow>
+                    <TableCell className="px-6 py-8 text-sm text-text-tertiary" colSpan={6}>
+                      Loading…
+                    </TableCell>
+                  </TableRow>
+                ) : data.length === 0 ? (
+                  <TableRow>
+                    <TableCell className="px-6 py-8 text-sm text-text-tertiary" colSpan={6}>
+                      No products configured.
+                    </TableCell>
+                  </TableRow>
+                ) : data.map((p) => (
                   <TableRow key={p.id} className="[&_td]:border-none">
                     <TableCell className="h-16 px-6 text-sm text-text-primary">
                       {p.name} <span className="text-text-tertiary">· {p.status}</span>
