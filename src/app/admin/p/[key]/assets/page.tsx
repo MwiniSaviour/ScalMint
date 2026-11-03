@@ -10,6 +10,14 @@ import { OpsTable } from "@/components/ops/OpsTable";
 
 type Asset = { id: string; name: string; kind: string; identifier: string | null; expiresAt: string | null };
 
+function countdown(iso: string | null) {
+  if (!iso) return "—";
+  const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+  if (days < 0) return `${Math.abs(days)}d overdue`;
+  if (days === 0) return "today";
+  return `${days}d`;
+}
+
 export default function AssetsPage() {
   const { key } = useParams<{ key: string }>();
   const q = useQuery({
@@ -77,6 +85,8 @@ export default function AssetsPage() {
               { key: "kind", label: "Kind" },
               { key: "id", label: "Identifier" },
               { key: "exp", label: "Expires" },
+              { key: "days", label: "Countdown" },
+              { key: "act", label: "" },
             ]}
             rows={q.data.map((a) => ({
               id: a.id,
@@ -85,6 +95,19 @@ export default function AssetsPage() {
                 kind: a.kind,
                 id: <span className="font-mono text-xs">{a.identifier ?? "—"}</span>,
                 exp: a.expiresAt ? a.expiresAt.slice(0, 10) : "—",
+                days: countdown(a.expiresAt),
+                act: (
+                  <button
+                    type="button"
+                    className="text-xs underline"
+                    onClick={() => {
+                      const next = window.prompt("New expiry (YYYY-MM-DD)");
+                      if (next) cmd.mutate({ type: "asset.renew", projectKey: key, id: a.id, expiresAt: next });
+                    }}
+                  >
+                    Renew
+                  </button>
+                ),
               },
             }))}
           />

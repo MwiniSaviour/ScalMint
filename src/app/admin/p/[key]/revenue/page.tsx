@@ -27,6 +27,7 @@ function Inner() {
         facts: Fact[];
         events: Event[];
         series: { day: string; amount: number }[];
+        movement?: { neu: number; expansion: number; contraction: number; churn: number; netNew: number };
       }>(`/api/admin/projects/${key}/surface?name=revenue&range=${range}`);
       if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
       return res.data;
@@ -49,6 +50,26 @@ function Inner() {
           <MetricCard key={m.key} metric={m} />
         ))}
       </div>
+      {d.movement && d.facts.length > 0 && (
+        <div className="px-2 lg:px-5">
+          <Panel title="MRR movement (minor units)">
+            <ul className="grid gap-2 text-sm md:grid-cols-5">
+              {[
+                ["New", d.movement.neu],
+                ["Expansion", d.movement.expansion],
+                ["Contraction", d.movement.contraction],
+                ["Churn", d.movement.churn],
+                ["Net new", d.movement.netNew],
+              ].map(([label, value]) => (
+                <li key={String(label)} className="rounded-lg border border-card-border p-3">
+                  <p className="text-xs text-text-tertiary">{label}</p>
+                  <p className="font-mono tabular-nums">{value}</p>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+      )}
       <div className="px-2 lg:px-5">
         <Panel title="Cash collected by day">
           <TrendChart

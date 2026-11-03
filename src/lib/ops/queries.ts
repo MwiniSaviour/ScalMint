@@ -6,6 +6,7 @@ import {
   collectedInWindow,
   metricView,
   mrrAt,
+  mrrMovement,
   mrrWeightedAvailability,
   pesewasToMajor,
 } from "@/lib/ops/metrics";
@@ -131,6 +132,16 @@ export async function portfolioOverview(range: RangeKey) {
     // without explicit trial end we cannot invent a date
     return false && t;
   });
+  const horizon = new Date(now.getTime() + 30 * 86400000);
+  const expiring = await db.asset.findMany({
+    where: { projectId: { in: ids }, expiresAt: { not: null, lte: horizon, gte: now } },
+  });
+  const activity = await db.auditActivity.findMany({
+    where: { createdAt: { gte: new Date(now.getTime() - 24 * 3600000) } },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    select: { id: true, action: true, actorType: true, targetType: true, createdAt: true, projectId: true },
+  });
 
   const metrics: MetricView[] = [
     metricView({
@@ -150,15 +161,25 @@ export async function portfolioOverview(range: RangeKey) {
     metricView({
       key: "cash_at_risk",
       label: "Cash at risk",
-      value: null,
+      value: pesewasToMajor(
+        facts.length
+          ? facts
+              .filter(
+                (f) =>
+                  f.status === "PAST_DUE" && f.periodStart <= now && now < f.periodEnd,
+              )
+              .reduce((n, f) => n + Number(f.mrrMinor), 0)
+          : null,
+      ),
       unit: "GHS",
-      window: "current",
+      window: "as of now",
       source: "SubscriptionFact PAST_DUE",
       asOf,
-      quality: "MISSING",
+      quality: facts.length ? "OK" : "MISSING",
       deltaPercent: null,
       target: null,
-      formula: "Σ MRR of PAST_DUE facts at as-of. Not connected until subscription facts exist.",
+      formula: "Σ mrrMinor of PAST_DUE facts covering as-of. No facts is No data, not GH₵ 0.",
+      decimals: 2,
     }),
     metricView({
       key: "mrr",
@@ -177,15 +198,37 @@ export async function portfolioOverview(range: RangeKey) {
     metricView({
       key: "net_new_mrr",
       label: "Net new MRR",
-      value: null,
+      value: pesewasToMajor(
+        facts.length
+          ? mrrMovement(
+              facts.map((f) => ({
+                tenantRef: f.tenantRef,
+                status: f.status,
+                mrrMinor: Number(f.mrrMinor),
+                periodStart: f.periodStart,
+                periodEnd: f.periodEnd,
+              })),
+              facts.map((f) => ({
+                tenantRef: f.tenantRef,
+                status: f.status,
+                mrrMinor: Number(f.mrrMinor),
+                periodStart: f.periodStart,
+                periodEnd: f.periodEnd,
+              })),
+              window.start,
+              now,
+            ).netNew
+          : null,
+      ),
       unit: "GHS",
       window: window.label,
       source: "SubscriptionFact movement",
       asOf,
-      quality: "MISSING",
+      quality: facts.length ? "OK" : "MISSING",
       deltaPercent: null,
       target: null,
       formula: "new + expansion − contraction − churn for the selected window.",
+      decimals: 2,
     }),
     metricView({
       key: "availability",
@@ -208,6 +251,7 @@ export async function portfolioOverview(range: RangeKey) {
     { key: "p2", label: "Open P2 alerts", count: p2.length, href: "/admin/work?status=OPEN&priority=P2" },
     { key: "overdue", label: "Overdue tasks", count: overdueTasks.length, href: "/admin/work?overdue=1" },
     { key: "trials", label: "Trials ending in 3 days", count: trialsEnding.length, href: "/admin/work?trials=1" },
+    { key: "expiry", label: "Assets expiring in 30 days", count: expiring.length, href: "/admin/calendar" },
   ];
 
   return {
@@ -216,6 +260,7 @@ export async function portfolioOverview(range: RangeKey) {
     window: window.label,
     projectCount: projects.length,
     attention,
+    activity,
     metrics,
     projects: rows.sort((a, b) => {
       const order = { DOWN: 0, DEGRADED: 1, UNKNOWN: 2, UP: 3 };

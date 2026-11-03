@@ -16,12 +16,14 @@ type Row = {
   targetId: string;
   createdAt: string;
   projectId: string | null;
+  meta?: unknown;
 };
 
 export default function AuditPage() {
   const [project, setProject] = useState("");
   const [action, setAction] = useState("");
   const [actor, setActor] = useState("");
+  const [open, setOpen] = useState<Row | null>(null);
   const q = useQuery({
     queryKey: ["ops-audit", project, action, actor],
     queryFn: async () => {
@@ -87,7 +89,7 @@ export default function AuditPage() {
           </thead>
           <tbody>
             {q.data.activities.map((r) => (
-              <tr key={r.id} className="border-t border-card-border">
+              <tr key={r.id} className="cursor-pointer border-t border-card-border" onClick={() => setOpen(r)}>
                 <td className="px-3 py-3 font-mono text-xs">{r.createdAt.slice(0, 19).replace("T", " ")}</td>
                 <td className="px-3 py-3">
                   {r.actorType}
@@ -102,6 +104,19 @@ export default function AuditPage() {
             ))}
           </tbody>
         </table>
+      )}
+      {open && (
+        <div className="rounded-xl border border-card-border p-5">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-medium">
+              {open.action} · {open.targetType}
+            </h2>
+            <button type="button" className="text-xs underline" onClick={() => setOpen(null)}>
+              Close
+            </button>
+          </div>
+          <pre className="overflow-auto text-xs">{JSON.stringify(open.meta ?? {}, null, 2)}</pre>
+        </div>
       )}
     </div>
   );

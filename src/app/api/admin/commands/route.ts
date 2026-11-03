@@ -5,6 +5,7 @@ import { requireOperator } from "@/lib/ops/guard";
 import { writeAudit } from "@/lib/ops/audit";
 import { assertPublicHttpUrl, ensureWebComponent, isCommandType, jsonSafe } from "@/lib/ops/ensure";
 import { hashToken } from "@/lib/ops/crypto";
+import { upsertExpiryAlert } from "@/lib/ops/expiry";
 
 export async function POST(req: Request) {
   const gate = await requireOperator(req, { write: true, roles: ["OWNER", "ADMIN", "SUPPORT"] });
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
 async function projectOrThrow(tx: any, key: string) {
   const project = await tx.project.findUnique({ where: { key } });
   if (!project) throw new Error("Project not found");
+  if (project.status === "ARCHIVED") throw new Error("Project is archived");
   return project;
 }
 
@@ -160,7 +162,45 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
         notes: body.notes ? String(body.notes) : null,
       },
     });
+    if (asset.expiresAt) {
+      await upsertExpiryAlert(tx, {
+        projectId: project.id,
+        assetId: asset.id,
+        name: asset.name,
+        expiresAt: asset.expiresAt,
+      });
+    }
     return { projectId: project.id, targetType: "Asset", targetId: asset.id, asset };
+  }
+
+  if (type === "asset.renew") {
+    const project = await projectOrThrow(tx, key);
+    const expiresAt = new Date(String(body.expiresAt ?? ""));
+    if (Number.isNaN(expiresAt.getTime())) throw new Error("expiresAt required");
+    const existing = await tx.asset.findFirst({ where: { id: String(body.id ?? ""), projectId: project.id } });
+    if (!existing) throw new Error("Asset not found");
+    const asset = await tx.asset.update({ where: { id: existing.id }, data: { expiresAt } });
+    await upsertExpiryAlert(tx, { projectId: project.id, assetId: asset.id, name: asset.name, expiresAt });
+    return { projectId: project.id, targetType: "Asset", targetId: asset.id, asset };
+  }
+
+  if (type === "check.toggle") {
+    const project = await projectOrThrow(tx, key);
+    const check = await tx.projectCheck.findFirst({ where: { id: String(body.checkId ?? ""), projectId: project.id } });
+    if (!check) throw new Error("Check not found");
+    const next = await tx.projectCheck.update({
+      where: { id: check.id },
+      data: { active: body.active === false || body.active === "false" ? false : true },
+    });
+    return { projectId: project.id, targetType: "ProjectCheck", targetId: next.id, check: next };
+  }
+
+  if (type === "tenant.archive") {
+    const project = await projectOrThrow(tx, key);
+    const tenant = await tx.tenantRef.findFirst({ where: { id: String(body.id ?? ""), projectId: project.id } });
+    if (!tenant) throw new Error("Tenant not found");
+    const next = await tx.tenantRef.update({ where: { id: tenant.id }, data: { status: "ARCHIVED" } });
+    return { projectId: project.id, targetType: "TenantRef", targetId: next.id, tenant: next };
   }
 
   if (type === "revenue.record") {
@@ -235,6 +275,47 @@ async function run(tx: any, type: string, body: Record<string, unknown>, operato
     return { projectId: project.id, targetType: "CampaignAttribution", targetId: row.id, row };
   }
 
+  if (type === "spend.record") {
+    const project = await projectOrThrow(tx, key);
+    const campaign = String(body.campaign ?? "").trim();
+    if (!campaign) throw new Error("campaign required");
+    const amountMajor = Number(body.amountMajor ?? NaN);
+    if (!Number.isFinite(amountMajor) || amountMajor < 0) throw new Error("amountMajor required");
+    const channel = String(body.channel ?? "other");
+    const now = new Date();
+    const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const periodEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+    const dimension = { campaign, channel };
+    const dimensionHash = hashToken(JSON.stringify(dimension));
+    const snap = await tx.metricSnapshot.upsert({
+      where: {
+        projectId_metricKey_periodStart_periodEnd_dimensionHash: {
+          projectId: project.id,
+          metricKey: "campaign.spend",
+          periodStart,
+          periodEnd,
+          dimensionHash,
+        },
+      },
+      create: {
+        projectId: project.id,
+        metricKey: "campaign.spend",
+        value: amountMajor,
+        unit: project.currency,
+        periodStart,
+        periodEnd,
+        granularity: "MONTH",
+        dimension,
+        dimensionHash,
+        provenance: "MANUAL",
+        observedAt: now,
+        quality: "OK",
+      },
+      update: { value: amountMajor, observedAt: now },
+    });
+    return { projectId: project.id, targetType: "MetricSnapshot", targetId: snap.id, snap };
+  }
+
   throw new Error(`Unknown command ${type}`);
 }
 
@@ -242,6 +323,7 @@ async function runCheckTest(body: Record<string, unknown>, operatorId: string, r
   const key = String(body.projectKey ?? "");
   const project = await db.project.findUnique({ where: { key } });
   if (!project) throw new Error("Project not found");
+  if (project.status === "ARCHIVED") throw new Error("Project is archived");
   const check = await db.projectCheck.findFirst({
     where: { id: String(body.checkId ?? ""), projectId: project.id },
   });

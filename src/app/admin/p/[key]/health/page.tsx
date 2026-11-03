@@ -176,15 +176,25 @@ function Inner() {
                 interval: <span className="font-mono">{c.intervalSec}s</span>,
                 last: c.lastRunAt ? c.lastRunAt.slice(0, 16).replace("T", " ") : "Never",
                 fail: <span className="font-mono">{c.consecutiveFailures}</span>,
-                run: (
-                  <Button
-                    size="xs"
-                    appearance="outline"
-                    isDisabled={cmd.isPending}
-                    onPress={() => cmd.mutate({ type: "check.test", projectKey: key, checkId: c.id })}
-                  >
-                    Run now
-                  </Button>
+                    run: (
+                  <span className="flex gap-1">
+                    <Button
+                      size="xs"
+                      appearance="outline"
+                      isDisabled={cmd.isPending}
+                      onPress={() => cmd.mutate({ type: "check.test", projectKey: key, checkId: c.id })}
+                    >
+                      Run now
+                    </Button>
+                    <Button
+                      size="xs"
+                      appearance="outline"
+                      isDisabled={cmd.isPending}
+                      onPress={() => cmd.mutate({ type: "check.toggle", projectKey: key, checkId: c.id, active: !c.active })}
+                    >
+                      {c.active ? "Disable" : "Enable"}
+                    </Button>
+                  </span>
                 ),
               },
             }))}

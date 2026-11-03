@@ -365,7 +365,50 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
         where: { projectId: project.id, occurredAt: { gte: window.start, lt: window.end } },
         orderBy: { occurredAt: "desc" },
       });
-      return NextResponse.json(jsonSafe(envelope(scope, { attributions: rows, window: window.label })));
+      const spend = await db.metricSnapshot.findMany({
+        where: { projectId: project.id, metricKey: "campaign.spend", periodStart: { gte: window.start } },
+      });
+      const spendTotal = spend.reduce((n, s) => n + Number(s.value), 0);
+      const attributed = rows.reduce((n, r) => n + Number(r.amountMinor) / 100, 0);
+      return NextResponse.json(
+        jsonSafe(
+          envelope(scope, {
+            attributions: rows,
+            spend,
+            window: window.label,
+            metrics: [
+              metricView({
+                key: "spend",
+                label: "Recorded spend",
+                value: spend.length ? spendTotal : null,
+                unit: project.currency,
+                window: window.label,
+                source: "MetricSnapshot campaign.spend",
+                asOf: now.toISOString(),
+                quality: spend.length ? "OK" : "MISSING",
+                deltaPercent: null,
+                target: null,
+                formula: "Manual or ingested campaign spend in the window.",
+                decimals: 2,
+              }),
+              metricView({
+                key: "roas",
+                label: "ROAS (last-touch)",
+                value: spend.length && attributed > 0 ? attributed / spendTotal : null,
+                unit: "×",
+                window: window.label,
+                source: "CampaignAttribution / spend",
+                asOf: now.toISOString(),
+                quality: !spend.length ? "MISSING" : attributed > 0 ? "OK" : "UNKNOWN",
+                deltaPercent: null,
+                target: null,
+                formula: "Attributed revenue / spend. No attributed conversions is Not connected, never 0× ROAS.",
+                decimals: 2,
+              }),
+            ],
+          }),
+        ),
+      );
     }
 
     if (surface === "tasks") {

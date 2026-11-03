@@ -27,6 +27,27 @@ export default function ProjectSettingsPage() {
   const qc = useQueryClient();
   const [secret, setSecret] = useState<string | null>(null);
   const [confirm, setConfirm] = useState("");
+  const tokens = useQuery({
+    queryKey: ["ops-tokens", key],
+    queryFn: async () => {
+      const res = await opsFetch<{ tokens: { id: string; name: string; tokenPrefix: string; scopes: string[]; lastUsedAt: string | null; revokedAt: string | null }[] }>(
+        `/api/admin/projects/${key}/tokens`,
+      );
+      if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
+      return res.data.tokens;
+    },
+  });
+  const revoke = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await opsFetch(`/api/admin/projects/${key}/tokens`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error(res.error ?? "Failed");
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ops-tokens", key] }),
+  });
   const q = useQuery({
     queryKey: ["ops-project", key],
     queryFn: async () => {
@@ -55,7 +76,10 @@ export default function ProjectSettingsPage() {
       if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
       return res.data;
     },
-    onSuccess: (d) => setSecret(d.token.secret),
+    onSuccess: (d) => {
+      setSecret(d.token.secret);
+      void qc.invalidateQueries({ queryKey: ["ops-tokens", key] });
+    },
   });
   const archive = useMutation({
     mutationFn: async (restore: boolean) => {
@@ -125,6 +149,23 @@ export default function ProjectSettingsPage() {
               {secret}
               <span className="mt-1 block text-text-tertiary">Copy now. The console will not show this again.</span>
             </p>
+          )}
+          {tokens.data && tokens.data.length > 0 && (
+            <ul className="mt-4 space-y-2 text-sm">
+              {tokens.data.map((t) => (
+                <li key={t.id} className="flex items-center justify-between gap-2">
+                  <span>
+                    {t.name} <span className="font-mono text-xs">{t.tokenPrefix}…</span>{" "}
+                    {t.revokedAt ? <span className="text-text-tertiary">revoked</span> : t.scopes.join(", ")}
+                  </span>
+                  {!t.revokedAt && (
+                    <Button size="xs" appearance="outline" onPress={() => revoke.mutate(t.id)}>
+                      Revoke
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
         </section>
         <section className="rounded-xl border border-card-border p-5">

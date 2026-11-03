@@ -30,6 +30,7 @@ type Portfolio = {
     openP1: number;
     lastIngestAt: string | null;
   }[];
+  activity?: { id: string; action: string; actorType: string; targetType: string; createdAt: string }[];
 };
 
 export default function PortfolioHomePage() {
@@ -143,6 +144,22 @@ function PortfolioHome() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {data.activity && data.activity.length > 0 && (
+            <div>
+              <h2 className="mb-3 text-sm font-medium">Last 24 hours</h2>
+              <ul className="space-y-1 text-sm">
+                {data.activity.map((a) => (
+                  <li key={a.id} className="text-text-secondary">
+                    <span className="font-mono text-xs">{a.createdAt.slice(0, 16).replace("T", " ")}</span>
+                    <span className="ml-2">{a.actorType}</span>
+                    <span className="ml-2">{a.action}</span>
+                    <span className="ml-2 text-text-tertiary">{a.targetType}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

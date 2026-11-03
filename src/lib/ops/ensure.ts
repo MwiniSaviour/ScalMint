@@ -56,13 +56,17 @@ export function assertPublicHttpUrl(raw: string): string {
 export const COMMAND_TYPES = [
   "check.create",
   "check.test",
+  "check.toggle",
   "tenant.upsert",
+  "tenant.archive",
   "lead.create",
   "lead.move",
   "asset.create",
+  "asset.renew",
   "revenue.record",
   "subscription.record",
   "campaign.record",
+  "spend.record",
 ] as const;
 
 export type CommandType = (typeof COMMAND_TYPES)[number];

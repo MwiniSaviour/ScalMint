@@ -100,6 +100,7 @@ export default function CustomersPage() {
               { key: "plan", label: "Plan" },
               { key: "status", label: "Status" },
               { key: "seen", label: "Last seen" },
+              { key: "act", label: "" },
             ]}
             rows={q.data.map((t) => ({
               id: t.id,
@@ -113,6 +114,18 @@ export default function CustomersPage() {
                 plan: t.planKey ?? "—",
                 status: t.status,
                 seen: t.lastSeenAt ? t.lastSeenAt.slice(0, 10) : "—",
+                act:
+                  t.status === "ARCHIVED" ? (
+                    "—"
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-xs underline"
+                      onClick={() => cmd.mutate({ type: "tenant.archive", projectKey: key, id: t.id })}
+                    >
+                      Archive
+                    </button>
+                  ),
               },
             }))}
           />
