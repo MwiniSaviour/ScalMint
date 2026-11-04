@@ -8,6 +8,12 @@ import {
   Widget4Icon,
   WindowIcon,
   CalendarIcon,
+  LayoutGridIcon,
+  UsersIcon,
+  ListTodoIcon,
+  MessageSquareIcon,
+  MailIcon,
+  FileTextIcon,
 } from "./icon";
 
 export type NavChild = { title: string; url?: string };
@@ -21,34 +27,39 @@ export type NavSection = { label: string; items: NavItem[] };
 
 export const PORTFOLIO_NAV: NavSection[] = [
   {
-    label: "PORTFOLIO",
+    label: "MAIN MENU",
     items: [
-      { title: "Overview", url: "/admin", icon: <HomeIcon />, items: [] },
-      { title: "Projects", url: "/admin/projects", icon: <WindowIcon />, items: [] },
-      { title: "Health", url: "/admin/health", icon: <Widget4Icon />, items: [] },
-      { title: "Analytics", url: "/admin/analytics", icon: <PieChartIcon />, items: [] },
-      { title: "Revenue", url: "/admin/revenue", icon: <TableIcon />, items: [] },
-      { title: "Customers", url: "/admin/customers", icon: <UserIcon />, items: [] },
-      { title: "Tasks", url: "/admin/task", icon: <TableIcon />, items: [] },
+      {
+        title: "Dashboard",
+        icon: <LayoutGridIcon />,
+        items: [
+          { title: "E-commerce", url: "/admin" },
+          { title: "Analytics", url: "/admin/analytics" },
+          { title: "Marketing", url: "/admin/marketing" },
+          { title: "CRM", url: "/admin/customers" },
+          { title: "Stocks", url: "/admin/stocks" },
+          { title: "AI", url: "/admin/ai" },
+          { title: "SaaS", url: "/admin/saas" },
+        ],
+      },
       { title: "Calendar", url: "/admin/calendar", icon: <CalendarIcon />, items: [] },
-      { title: "Work queue", url: "/admin/work", icon: <AlphabetIcon />, items: [] },
+      { title: "Manage Team", url: "/admin/team", icon: <UsersIcon />, items: [] },
+      { title: "Task", url: "/admin/task", icon: <ListTodoIcon />, items: [] },
     ],
   },
   {
-    label: "PROGRAMME",
+    label: "SUPPORT",
     items: [
-      { title: "Affiliates", url: "/admin/affiliates", icon: <UserIcon />, items: [] },
-      { title: "Commissions", url: "/admin/commissions", icon: <PieChartIcon />, items: [] },
-      { title: "Conversions", url: "/admin/conversions", icon: <TableIcon />, items: [] },
-      { title: "Products", url: "/admin/programme/products", icon: <Widget4Icon />, items: [] },
-    ],
-  },
-  {
-    label: "ORGANISATION",
-    items: [
-      { title: "Team and access", url: "/admin/team", icon: <UserIcon />, items: [] },
-      { title: "Audit log", url: "/admin/audit", icon: <AlphabetIcon />, items: [] },
-      { title: "Settings", url: "/admin/settings", icon: <WindowIcon />, items: [] },
+      { title: "Chats", url: "/admin/chats", icon: <MessageSquareIcon />, items: [] },
+      { title: "Email", url: "/admin/email", icon: <MailIcon />, items: [] },
+      {
+        title: "Invoice",
+        icon: <FileTextIcon />,
+        items: [
+          { title: "Payment", url: "/admin/invoice/payment" },
+          { title: "Business", url: "/admin/invoice/business" },
+        ],
+      },
     ],
   },
 ];
