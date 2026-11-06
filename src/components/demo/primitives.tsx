@@ -110,8 +110,8 @@ export function CardHead({ title, action }: { title: string; action?: ReactNode 
 
 export function CardMenuButton({ label }: { label?: string }) {
   return (
-    <button type="button" aria-label={label} className="outline-none flex size-7 items-center justify-center rounded-lg duration-300 hover:bg-button-primary-outline-hover-background">
-      <svg className="size-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <button type="button" aria-label={label} className="outline-none flex size-7 items-center justify-center rounded-lg duration-300 hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2">
+      <svg className="size-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
         <path
           d="M5.83333 10.0002C5.83333 10.9206 5.08714 11.6668 4.16667 11.6668C3.24619 11.6668 2.5 10.9206 2.5 10.0002C2.5 9.07969 3.24619 8.3335 4.16667 8.3335C5.08714 8.3335 5.83333 9.07969 5.83333 10.0002Z"
           fill="currentColor"
@@ -126,6 +126,27 @@ export function CardMenuButton({ label }: { label?: string }) {
         />
       </svg>
     </button>
+  );
+}
+
+export function CardMenuDots() {
+  return (
+    <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-lg">
+      <svg className="size-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+        <path
+          d="M5.83333 10.0002C5.83333 10.9206 5.08714 11.6668 4.16667 11.6668C3.24619 11.6668 2.5 10.9206 2.5 10.0002C2.5 9.07969 3.24619 8.3335 4.16667 8.3335C5.08714 8.3335 5.83333 9.07969 5.83333 10.0002Z"
+          fill="currentColor"
+        />
+        <path
+          d="M11.6667 10.0002C11.6667 10.9206 10.9205 11.6668 10 11.6668C9.07953 11.6668 8.33333 10.9206 8.33333 10.0002C8.33333 9.07969 9.07953 8.3335 10 8.3335C10.9205 8.3335 11.6667 9.07969 11.6667 10.0002Z"
+          fill="currentColor"
+        />
+        <path
+          d="M17.5 10.0002C17.5 10.9206 16.7538 11.6668 15.8333 11.6668C14.9129 11.6668 14.1667 10.9206 14.1667 10.0002C14.1667 9.07969 14.9129 8.3335 15.8333 8.3335C16.7538 8.3335 17.5 9.07969 17.5 10.0002Z"
+          fill="currentColor"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -203,7 +224,7 @@ export function LegendItem({ color, label, value }: { color: string; label: stri
   return (
     <p className="flex items-center justify-between last-of-type:pb-0">
       <span className="flex items-center gap-2">
-        <span className="size-3 rounded-full" style={{ backgroundColor: color }} />
+        <span className="size-3 rounded-full ring-1 ring-inset ring-black/10" style={{ backgroundColor: color }} aria-hidden="true" />
         <span className="text-sm leading-5 font-medium text-text-secondary capitalize">{label}</span>
       </span>
       <span className="text-sm leading-0 font-medium tracking-[-0.15px] text-text-primary">{value}</span>
@@ -213,7 +234,7 @@ export function LegendItem({ color, label, value }: { color: string; label: stri
 
 export function DeltaUpIcon() {
   return (
-    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
       <path d="M8 13.3332L8 2.6665M4 6.6665L8 2.6665L12 6.6665" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -221,7 +242,7 @@ export function DeltaUpIcon() {
 
 export function DeltaDownIcon() {
   return (
-    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
       <path d="M8 2.6665L8 13.3332M4 9.33317L8 13.3332L12 9.33317" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -229,7 +250,7 @@ export function DeltaDownIcon() {
 
 export function AgentSmileyIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
       <rect x="1.1" y="1.1" width="15.8" height="15.8" rx="4.4" fill="#3B82F6" fillOpacity="0.15" />
       <rect x="1.1" y="1.1" width="15.8" height="15.8" rx="4.4" stroke="#3B82F6" strokeWidth="1.2" />
       <path
