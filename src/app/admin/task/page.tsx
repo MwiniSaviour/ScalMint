@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import {
-  DemoCard,
   DemoPage,
   DemoPageBody,
   PageHeader,

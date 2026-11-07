@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   CardHead,
   DemoCard,
@@ -31,9 +32,9 @@ export default function EmailPage() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-4">
               <path d="M9.62 18.25L15.87 12L9.62 5.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
             </svg>
-            <a className="flex items-center gap-1 text-sm font-medium [&>svg]:size-4 text-text-primary" href="/admin/email">
+            <Link href="/admin/email" className="flex items-center gap-1 text-sm font-medium [&>svg]:size-4 text-text-primary">
               Email
-            </a>
+            </Link>
           </li>
         </ol>
       </div>

@@ -43,15 +43,6 @@ function avatarInitials(name: string): string {
   return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
 }
 
-function SaasEmpty({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="flex h-[200px] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-card-border">
-      <p className="text-sm font-medium text-text-primary">{title}</p>
-      <p className="max-w-72 text-center text-xs leading-4 text-text-tertiary">{body}</p>
-    </div>
-  );
-}
-
 function ChartEmpty({ title, body }: { title: string; body: string }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-card-border">

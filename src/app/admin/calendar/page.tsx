@@ -40,14 +40,6 @@ function PrimaryButton({ children, className }: { children: ReactNode; className
   );
 }
 
-function OutlineButton({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <button type="button" className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background text-button-primary-outline-text hover:text-button-primary-outline-hover-text hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 py-1.5 h-9", className].filter(Boolean).join(" ")}>
-      {children}
-    </button>
-  );
-}
-
 export default function Page() {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return (
