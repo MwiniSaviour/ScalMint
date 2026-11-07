@@ -1,156 +1,105 @@
-"use client";
+import type { ReactNode } from "react";
+import {
+  DemoCard,
+  DemoPage,
+  DemoPageBody,
+  PageHeader,
+} from "@/components/demo/primitives";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { opsFetch } from "@/lib/ops/client-fetch";
-import { OpsError, OpsSkeleton } from "@/components/ops/PageStates";
-import { Button } from "@/nextadmin/components/tailgrids/core/button";
+export const dynamic = "force-dynamic";
 
-type Operator = {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  status: string;
-  lastLoginAt: string | null;
-  sessionVersion: number;
-};
-
-export default function TeamPage() {
-  const qc = useQueryClient();
-  const [invite, setInvite] = useState({ email: "", name: "", role: "SUPPORT" });
-  const [token, setToken] = useState<string | null>(null);
-  const q = useQuery({
-    queryKey: ["ops-team"],
-    queryFn: async () => {
-      const res = await opsFetch<{ operators: Operator[] }>("/api/admin/team");
-      if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
-      return res.data.operators;
-    },
-  });
-  const create = useMutation({
-    mutationFn: async () => {
-      const res = await opsFetch<{ resetToken: string }>("/api/admin/team", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(invite),
-      });
-      if (!res.ok || !res.data) throw new Error(res.error ?? "Failed");
-      return res.data;
-    },
-    onSuccess: (d) => {
-      setToken(d.resetToken);
-      void qc.invalidateQueries({ queryKey: ["ops-team"] });
-    },
-  });
-  const patch = useMutation({
-    mutationFn: async (body: { id: string; status?: string; role?: string; reset?: boolean }) => {
-      const res = await opsFetch<{ resetToken?: string }>(`/api/admin/team/${body.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(res.error ?? "Failed");
-      return res.data;
-    },
-    onSuccess: (d) => {
-      if (d?.resetToken) setToken(d.resetToken);
-      void qc.invalidateQueries({ queryKey: ["ops-team"] });
-    },
-  });
+function SearchIcon() {
   return (
-    <div className="mt-6 space-y-5 px-2 lg:px-6">
-      <div>
-        <h1 className="text-[28px] font-medium">Team and access</h1>
-        <p className="text-sm text-text-tertiary">OWNER cannot be removed by ADMIN. Disabling increments sessionVersion immediately.</p>
-      </div>
-      {q.isLoading && <OpsSkeleton />}
-      {q.isError && <OpsError message={q.error.message} onRetry={() => q.refetch()} />}
-      {q.data && (
-        <table className="min-w-full text-left text-sm">
-          <thead className="text-xs">
-            <tr>
-              {["Name", "Email", "Role", "Status", "Last login", ""].map((h) => (
-                <th key={h} className="px-3 py-2">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {q.data.map((o) => (
-              <tr key={o.id} className="border-t border-card-border">
-                <td className="px-3 py-3">{o.name}</td>
-                <td className="px-3 py-3">{o.email}</td>
-                <td className="px-3 py-3">
-                  {o.role === "OWNER" ? (
-                    o.role
-                  ) : (
-                    <select
-                      className="rounded border border-card-border px-1 py-0.5 text-xs"
-                      value={o.role}
-                      onChange={(e) => patch.mutate({ id: o.id, role: e.target.value })}
-                    >
-                      {["ADMIN", "ANALYST", "SUPPORT"].map((r) => (
-                        <option key={r}>{r}</option>
-                      ))}
-                    </select>
-                  )}
-                </td>
-                <td className="px-3 py-3">{o.status}</td>
-                <td className="px-3 py-3 text-xs">{o.lastLoginAt ? o.lastLoginAt.slice(0, 16).replace("T", " ") : "Never"}</td>
-                <td className="px-3 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    <Button size="xs" appearance="outline" onPress={() => patch.mutate({ id: o.id, reset: true })}>
-                      Reset
-                    </Button>
-                    {o.role !== "OWNER" && o.status === "ACTIVE" && (
-                      <Button size="xs" appearance="outline" onPress={() => patch.mutate({ id: o.id, status: "DISABLED" })}>
-                        Disable
-                      </Button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <form
-        className="grid gap-3 rounded-xl border border-card-border p-5 md:grid-cols-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          create.mutate();
-        }}
-      >
-        <input required placeholder="Name" value={invite.name} onChange={(e) => setInvite((s) => ({ ...s, name: e.target.value }))} className="rounded-lg border border-card-border px-3 py-2 text-sm" />
-        <input required type="email" placeholder="Email" value={invite.email} onChange={(e) => setInvite((s) => ({ ...s, email: e.target.value }))} className="rounded-lg border border-card-border px-3 py-2 text-sm" />
-        <select value={invite.role} onChange={(e) => setInvite((s) => ({ ...s, role: e.target.value }))} className="rounded-lg border border-card-border px-3 py-2 text-sm">
-          <option>ADMIN</option>
-          <option>ANALYST</option>
-          <option>SUPPORT</option>
-        </select>
-        <Button type="submit" size="sm" isDisabled={create.isPending}>
-          Invite
-        </Button>
-        {token && <p className="font-mono text-xs md:col-span-4">Reset token (once): {token}</p>}
-        {create.isError && <p className="text-sm text-error-500 md:col-span-4">{create.error.message}</p>}
-        {patch.isError && <p className="text-sm text-error-500 md:col-span-4">{patch.error.message}</p>}
-      </form>
-      {q.data && (
-        <section className="rounded-xl border border-card-border p-5 text-sm">
-          <h2 className="font-medium">Access review</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-text-secondary">
-            <li>
-              Active operators: {q.data.filter((o) => o.status === "ACTIVE").length}. OWNER count:{" "}
-              {q.data.filter((o) => o.role === "OWNER" && o.status === "ACTIVE").length} (must stay ≥ 1).
-            </li>
-            <li>
-              Dormant (no login in 30 days or never):{" "}
-              {q.data.filter((o) => !o.lastLoginAt || Date.now() - new Date(o.lastLoginAt).getTime() > 30 * 86400000).length}.
-            </li>
-            <li>Role changes and disables are OWNER-only and increment sessionVersion immediately.</li>
-          </ul>
-        </section>
-      )}
-    </div>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M11.3253 2.92485C15.9645 2.92485 19.7256 6.68564 19.7257 11.3243C19.7256 13.374 18.9897 15.2511 17.7697 16.709L20.8556 19.795C21.1483 20.0878 21.1481 20.5626 20.8556 20.8555C20.5627 21.1484 20.0879 21.1484 19.795 20.8555L16.7091 17.7696C15.2511 18.9882 13.3743 19.7227 11.3253 19.7227C6.68631 19.7225 2.92518 15.9627 2.92493 11.3243C2.92507 6.68575 6.68624 2.92503 11.3253 2.92485ZM11.3253 4.42485C7.51438 4.42503 4.42507 7.51446 4.42493 11.3243C4.42518 15.134 7.51445 18.2225 11.3253 18.2227C15.1363 18.2227 18.2255 15.1341 18.2257 11.3243C18.2256 7.51435 15.1364 4.42485 11.3253 4.42485Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M3 6H21M6.27273 11.5L17.7273 11.5M10.6364 17H13.3636" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M6 12.0002H18.0007M12.0002 6V18.0007" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PrimaryButton({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <button type="button" className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 bg-button-primary-background text-button-primary-text hover:bg-button-primary-hover-background focus-visible:ring-2 focus-visible:ring-button-primary-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 py-1.5 h-9", className].filter(Boolean).join(" ")}>
+      {children}
+    </button>
+  );
+}
+
+function OutlineButton({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <button type="button" className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background text-button-primary-outline-text hover:text-button-primary-outline-hover-text hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 py-1.5 h-9", className].filter(Boolean).join(" ")}>
+      {children}
+    </button>
+  );
+}
+
+export default function Page() {
+  const columns = ["ID", "Name", "Email", "Email Verified", "Role", "Joined At", "Action"];
+  return (
+    <DemoPage>
+      <PageHeader title="Manage Team" subtitle="Manage team members, roles, and access across the organization." />
+      <DemoPageBody>
+        <DemoCard className="p-0">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border-primary px-5 py-4">
+            <div className="group flex w-full items-center rounded-lg border border-card-border bg-input-background h-9 max-w-70.5">
+              <div className="flex shrink-0 items-center justify-center px-3 text-sm order-first pr-0 text-icon-tertiary">
+                <SearchIcon />
+              </div>
+              <input
+                type="text"
+                className="peer max-w-full border py-2.5 text-title-50 outline-none placeholder:text-input-placeholder-text disabled:cursor-not-allowed disabled:border-base-100 disabled:text-input-disabled-text disabled:placeholder:text-input-disabled-text border-card-border focus:border-input-primary-focus-border focus:ring-input-primary-focus-border/20 w-full min-w-0 flex-1 rounded-none border-none bg-transparent px-0 shadow-none pl-2 text-sm"
+                placeholder="Search by id, name, or email..."
+              />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <OutlineButton>
+                <FilterIcon />
+                <span>Filter</span>
+              </OutlineButton>
+              <PrimaryButton>
+                <PlusIcon />
+                <span>Add Member</span>
+              </PrimaryButton>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-separate border-spacing-0 overflow-clip border-border-primary text-left border w-full rounded-none border-none">
+              <thead className="text-title-50 [&_th]:border-b [&_th]:border-border-primary [&_th]:text-xs">
+                <tr className="not-last:*:border-border-primary not-last:[&_>td]:border-b not-last:[_>th]:border-b bg-transparent [_th]:border-t">
+                  {columns.map((col) => (
+                    <th key={col} className={["px-6 py-4 text-sm font-medium whitespace-nowrap text-text-tertiary select-none", col === "Action" ? "w-[92px]" : ""].filter(Boolean).join(" ")}>
+                      <span className="inline-flex items-center gap-2 text-sm">{col}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <p className="text-sm font-medium text-text-secondary">No members</p>
+                    <p className="mt-1 text-sm text-text-tertiary">No team members have been added yet. Invite team members to appear here.</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </DemoCard>
+      </DemoPageBody>
+    </DemoPage>
   );
 }
