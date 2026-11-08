@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { ServiceWorkerCleanup } from "@/components/ServiceWorkerCleanup";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scalmint.com"),
@@ -72,6 +73,7 @@ export default function RootLayout({
     <html lang="en" className="light" suppressHydrationWarning>
       <body className="bg-page font-sans antialiased text-body">
         <GoogleAnalytics />
+        <ServiceWorkerCleanup />
         {children}
       </body>
     </html>
