@@ -104,10 +104,10 @@ export default function ConversionsPage() {
                         <div className="flex gap-2">
                           {c.status === "PENDING" && (
                             <>
-                              <Button size="sm" onClick={() => patch.mutate({ id: c.id, status: "APPROVED" })}>
+                              <Button size="sm" onPress={() => patch.mutate({ id: c.id, status: "APPROVED" })}>
                                 Approve
                               </Button>
-                              <Button size="sm" appearance="outline" onClick={() => patch.mutate({ id: c.id, status: "REJECTED" })}>
+                              <Button size="sm" appearance="outline" onPress={() => patch.mutate({ id: c.id, status: "REJECTED" })}>
                                 Reject
                               </Button>
                             </>

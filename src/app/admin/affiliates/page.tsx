@@ -106,17 +106,17 @@ export default function AffiliatesPage() {
                       <TableCell className="h-16 px-6">
                         <div className="flex flex-wrap gap-2">
                           {a.status !== "APPROVED" && (
-                            <Button size="sm" onClick={() => patch.mutate({ id: a.id, status: "APPROVED" })}>
+                            <Button size="sm" onPress={() => patch.mutate({ id: a.id, status: "APPROVED" })}>
                               Approve
                             </Button>
                           )}
                           {a.status !== "SUSPENDED" && (
-                            <Button size="sm" appearance="outline" onClick={() => patch.mutate({ id: a.id, status: "SUSPENDED" })}>
+                            <Button size="sm" appearance="outline" onPress={() => patch.mutate({ id: a.id, status: "SUSPENDED" })}>
                               Suspend
                             </Button>
                           )}
                           {a.status !== "REJECTED" && (
-                            <Button size="sm" appearance="outline" onClick={() => patch.mutate({ id: a.id, status: "REJECTED" })}>
+                            <Button size="sm" appearance="outline" onPress={() => patch.mutate({ id: a.id, status: "REJECTED" })}>
                               Reject
                             </Button>
                           )}

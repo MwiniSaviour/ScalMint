@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { opsFetch } from "@/lib/ops/client-fetch";
@@ -33,9 +34,26 @@ export default function ProjectSwitcher({ compact = false }: { compact?: boolean
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
-  const labelId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const listId = useId();
-  const abortRef = useRef<AbortController | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
+
+  const updateCoords = useCallback(() => {
+    const btn = triggerRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const width = Math.max(320, Math.min(480, rect.width * 2));
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+    const below = window.innerHeight - rect.bottom - 8;
+    const above = rect.top - 8;
+    const panelHeight = panelRef.current?.offsetHeight ?? 0;
+    const cap = window.innerHeight * 0.6;
+    const openAbove = panelHeight > 0 ? below < Math.min(panelHeight, cap) && above > below : false;
+    const maxHeight = Math.min(cap, openAbove ? above : below);
+    const top = openAbove ? Math.max(8, rect.top - panelHeight - 8) : rect.bottom + 8;
+    setCoords({ top, left, width, maxHeight });
+  }, []);
 
   const query = useQuery({
     queryKey: ["ops-projects", "switcher"],
@@ -68,16 +86,48 @@ export default function ProjectSwitcher({ compact = false }: { compact?: boolean
   }, [q, query.data, all]);
 
   useEffect(() => {
-    if (open) {
-      setQ("");
-      setActive(0);
-      requestAnimationFrame(() => searchRef.current?.focus());
+    if (!open) {
+      setCoords(null);
+      return;
     }
-  }, [open]);
+    setQ("");
+    setActive(0);
+    updateCoords();
+    // Focus the search input and re-measure once the panel is in the DOM.
+    requestAnimationFrame(() => {
+      updateCoords();
+      searchRef.current?.focus();
+    });
+  }, [open, updateCoords]);
+
+  // Keep the panel anchored to the trigger while it is open; close on outside interaction or Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onReposition = () => updateCoords();
+    const onPointerDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (!panelRef.current?.contains(t) && !triggerRef.current?.contains(t)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, { capture: true, passive: true });
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, { capture: true });
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, updateCoords]);
 
   function go(target: Row | "portfolio") {
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
     setOpen(false);
     if (target === "portfolio") {
       router.push("/admin");
@@ -98,13 +148,11 @@ export default function ProjectSwitcher({ compact = false }: { compact?: boolean
       e.preventDefault();
       const row = filtered[active];
       if (row) go(row.row);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      setOpen(false);
     }
   }
 
   const triggerName = current ? current.name : "All projects";
+  const loadState = query.isLoading ? "loading" : query.isError ? "error" : null;
 
   return (
     <div className="relative">
@@ -112,7 +160,9 @@ export default function ProjectSwitcher({ compact = false }: { compact?: boolean
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-controls={open ? listId : undefined}
         aria-label={`Project scope: ${triggerName}`}
+        ref={triggerRef}
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "flex w-full items-center gap-2 rounded-lg border border-card-border bg-card-background px-2 text-left text-sm text-text-primary hover:bg-background-gray-primary",
@@ -125,86 +175,117 @@ export default function ProjectSwitcher({ compact = false }: { compact?: boolean
         {!compact && (
           <>
             <span className="min-w-0 flex-1 truncate">{triggerName}</span>
-            <span className="text-text-tertiary">▾</span>
+            <span className="text-text-tertiary" aria-hidden>
+              ▾
+            </span>
           </>
         )}
       </button>
-      {open && (
-        <div
-          role="dialog"
-          aria-labelledby={labelId}
-          className="absolute z-50 mt-2 w-[min(100%,480px)] min-w-[320px] max-h-[60vh] overflow-hidden rounded-xl border border-card-border bg-card-background shadow-xs"
-          onKeyDown={onKey}
-        >
-          <p id={labelId} className="sr-only">
-            Find project
-          </p>
-          <input
-            ref={searchRef}
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setActive(0);
-            }}
-            placeholder="Find project…"
-            className="w-full border-b border-card-border bg-transparent px-3 py-2.5 text-sm outline-none"
-            aria-controls={listId}
-            aria-activedescendant={`${listId}-${active}`}
-          />
-          <ul id={listId} role="listbox" className="max-h-[45vh] overflow-y-auto p-1">
-            {filtered.length === 0 && (
-              <li className="px-3 py-6 text-center text-sm text-text-tertiary">
-                No projects yet. Create one from Manage projects.
-              </li>
-            )}
-            {filtered.map((item, i) => {
-              const selected = item.row !== "portfolio" && item.row.key === key;
-              const isPortfolio = item.row === "portfolio" && !key;
-              const label = item.row === "portfolio" ? "All projects" : item.row.name;
-              return (
-                <li key={`${item.group}-${item.row === "portfolio" ? "all" : item.row.id}-${i}`} role="none">
-                  <button
-                    id={`${listId}-${i}`}
-                    type="button"
-                    role="option"
-                    aria-selected={selected || isPortfolio}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm",
-                      i === active ? "bg-background-gray-primary" : "",
-                    )}
-                    onMouseEnter={() => setActive(i)}
-                    onClick={() => go(item.row)}
-                  >
-                    <span className="flex size-5 items-center justify-center rounded bg-background-gray-secondary text-[10px] font-semibold">
-                      {item.row === "portfolio" ? "All" : item.row.name.slice(0, 2).toUpperCase()}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{label}</span>
-                    {item.row !== "portfolio" && (
-                      <>
-                        <span className="text-[10px] uppercase text-text-tertiary">{item.row.kind}</span>
-                        <StatusBadge status={item.row.status} />
-                      </>
-                    )}
-                    {(selected || isPortfolio) && <span className="text-xs">✓</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="flex justify-between border-t border-card-border px-3 py-2 text-xs">
-            <button type="button" className="text-text-secondary hover:text-text-primary" onClick={() => router.push("/admin/projects")}>
-              Manage projects
-            </button>
-            <button
-              type="button"
-              className="text-text-secondary hover:text-text-primary"
-              onClick={() => router.push("/admin/projects?new=1")}
+      {open && coords
+        ? createPortal(
+            <div
+              ref={panelRef}
+              role="dialog"
+              aria-label="Switch project"
+              className="fixed z-50 flex flex-col overflow-hidden rounded-xl border border-card-border bg-card-background shadow-xs outline-none"
+              style={{ top: coords.top, left: coords.left, width: coords.width, maxHeight: coords.maxHeight }}
+              onKeyDown={onKey}
             >
-              Create project
-            </button>
-          </div>
-        </div>
-      )}
+              <input
+                ref={searchRef}
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setActive(0);
+                }}
+                placeholder="Find project…"
+                aria-label="Search projects"
+                className="shrink-0 border-b border-card-border bg-transparent px-3 py-2.5 text-sm outline-none"
+                aria-controls={listId}
+                aria-activedescendant={`${listId}-${active}`}
+              />
+              <ul id={listId} role="listbox" aria-label="Projects" className="min-h-0 flex-1 overflow-y-auto p-1">
+                {loadState === "loading" && (
+                  <li className="px-3 py-6 text-center text-sm text-text-tertiary">Loading projects…</li>
+                )}
+                {loadState === "error" && (
+                  <li className="px-3 py-6 text-center text-sm">
+                    <p className="text-text-tertiary">Failed to load projects.</p>
+                    <button
+                      type="button"
+                      className="mt-2 rounded-md border border-card-border px-3 py-1.5 text-xs text-text-primary hover:bg-background-gray-primary"
+                      onClick={() => void query.refetch()}
+                    >
+                      Retry
+                    </button>
+                  </li>
+                )}
+                {!loadState && query.data && filtered.length <= 1 && q.trim() && (
+                  <li className="px-3 py-6 text-center text-sm text-text-tertiary">
+                    No projects match “{q.trim()}”.
+                  </li>
+                )}
+                {!loadState &&
+                  filtered.map((item, i) => {
+                    const selected = item.row !== "portfolio" && item.row.key === key;
+                    const isPortfolio = item.row === "portfolio" && !key;
+                    const label = item.row === "portfolio" ? "All projects" : item.row.name;
+                    return (
+                      <li key={`${item.group}-${item.row === "portfolio" ? "all" : item.row.id}-${i}`} role="none">
+                        <button
+                          id={`${listId}-${i}`}
+                          type="button"
+                          role="option"
+                          aria-selected={selected || isPortfolio}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm",
+                            i === active ? "bg-background-gray-primary" : "",
+                          )}
+                          onMouseEnter={() => setActive(i)}
+                          onClick={() => go(item.row)}
+                        >
+                          <span className="flex size-5 items-center justify-center rounded bg-background-gray-secondary text-[10px] font-semibold">
+                            {item.row === "portfolio" ? "All" : item.row.name.slice(0, 2).toUpperCase()}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate">{label}</span>
+                          {item.row !== "portfolio" && (
+                            <>
+                              <span className="text-[10px] uppercase text-text-tertiary">{item.row.kind}</span>
+                              <StatusBadge status={item.row.status} />
+                            </>
+                          )}
+                          {(selected || isPortfolio) && <span className="text-xs">✓</span>}
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+              <div className="flex shrink-0 justify-between border-t border-card-border px-3 py-2 text-xs">
+                <button
+                  type="button"
+                  className="text-text-secondary hover:text-text-primary"
+                  onClick={() => {
+                    setOpen(false);
+                    router.push("/admin/projects");
+                  }}
+                >
+                  Manage projects
+                </button>
+                <button
+                  type="button"
+                  className="text-text-secondary hover:text-text-primary"
+                  onClick={() => {
+                    setOpen(false);
+                    router.push("/admin/projects?new=1");
+                  }}
+                >
+                  Create project
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

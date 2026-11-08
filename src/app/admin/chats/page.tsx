@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   DemoPage,
   DemoPageBody,
@@ -6,11 +10,12 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function MoreButton({ children, ariaLabel }: { children: React.ReactNode; ariaLabel: string }) {
+function MoreButton({ children, ariaLabel, onClick }: { children: React.ReactNode; ariaLabel: string; onClick: () => void }) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
+      onClick={onClick}
       className="inline-flex items-center justify-center size-7 rounded-lg border border-card-border bg-card-background text-text-secondary transition-colors hover:text-text-primary hover:bg-background-gray-secondary_alt focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2"
     >
       {children}
@@ -51,10 +56,12 @@ function ConversationEmpty() {
   );
 }
 
-function FilterButton({ label, active }: { label: string; active: boolean }) {
+function FilterButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
+      onClick={onClick}
+      aria-pressed={active}
       className={`flex items-center justify-center font-medium transition outline-none data-[focused=true]:ring-4 [&>svg]:text-current! [&>svg]:size-5 disabled:border disabled:border-button-disabled-border disabled:bg-button-disabled-background disabled:text-button-disabled-text hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 h-8 gap-1.5 rounded-lg px-5 py-1.5 text-sm text-text-primary hover:text-text-primary ${active ? "bg-background-gray-secondary_alt" : ""}`}
     >
       {label}
@@ -62,7 +69,11 @@ function FilterButton({ label, active }: { label: string; active: boolean }) {
   );
 }
 
+const CHAT_TABS = ["All", "Unread", "Group", "Archive"] as const;
+
 export default function ChatsPage() {
+  const [activeTab, setActiveTab] = useState<(typeof CHAT_TABS)[number]>("All");
+  const [search, setSearch] = useState("");
   return (
     <DemoPage>
       <div className="flex flex-col-reverse items-start justify-between gap-3 px-2 sm:flex-row sm:items-center lg:px-6">
@@ -93,8 +104,18 @@ export default function ChatsPage() {
                     <h2 className="text-xl font-bold text-text-primary">Chats</h2>
                   </div>
                   <div className="flex items-center gap-1">
-                    <MoreButton ariaLabel="More Options">{kebabIcon()}</MoreButton>
-                    <MoreButton ariaLabel="Delete conversation">{trashIcon()}</MoreButton>
+                    <MoreButton
+                      ariaLabel="Conversation options"
+                      onClick={() => toast.info("No conversations yet — inbox actions will apply once chats exist")}
+                    >
+                      {kebabIcon()}
+                    </MoreButton>
+                    <MoreButton
+                      ariaLabel="Delete conversation"
+                      onClick={() => toast.info("No conversation selected — nothing to delete")}
+                    >
+                      {trashIcon()}
+                    </MoreButton>
                   </div>
                 </div>
                 <div className="px-4">
@@ -109,16 +130,17 @@ export default function ChatsPage() {
                     <input
                       className="peer max-w-full border py-2.5 text-title-50 duration-300 outline-none placeholder:text-text-tertiary disabled:cursor-not-allowed disabled:border-base-100 disabled:text-input-disabled-text disabled:placeholder:text-input-disabled-text border-card-border focus:border-brand-500 focus:ring-brand-500/20 w-full min-w-0 flex-1 rounded-none border-none bg-transparent px-0 shadow-none focus:border-none focus:ring-0"
                       data-slot="input-group-control"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search..."
                       name="chat-search"
                     />
                   </div>
                 </div>
                 <div className="scrollbar-none flex items-center justify-start gap-1.5 overflow-x-auto p-4 pb-0">
-                  <FilterButton label="All" active={true} />
-                  <FilterButton label="Unread" active={false} />
-                  <FilterButton label="Group" active={false} />
-                  <FilterButton label="Archive" active={false} />
+                  {CHAT_TABS.map((tab) => (
+                    <FilterButton key={tab} label={tab} active={activeTab === tab} onClick={() => setActiveTab(tab)} />
+                  ))}
                 </div>
                 <div className="mt-8 scrollbar-thin flex-1 space-y-2 overflow-y-auto">
                   <ConversationEmpty />

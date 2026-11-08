@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { DemoBadge } from "@/components/demo/primitives";
 import type { DemoBadgeTone } from "@/components/demo/primitives";
 import type { TransactionRow, TransactionStatus } from "./dashboard-data";
@@ -20,19 +21,52 @@ const STATUS_LABEL: Record<TransactionStatus, string> = {
   REJECTED: "Rejected",
 };
 
+const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "PAID", "REJECTED"] as const;
+
 export function TransactionsTable({ rows }: { rows: TransactionRow[] }) {
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]>("ALL");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((row) =>
-      [row.orderRef, row.createdAtLabel, row.customerLabel, row.amountLabel, STATUS_LABEL[row.status]]
-        .join(" ")
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [rows, query]);
+    return rows.filter((row) => {
+      const okStatus = statusFilter === "ALL" || row.status === statusFilter;
+      const okQuery =
+        !q ||
+        [row.orderRef, row.createdAtLabel, row.customerLabel, row.amountLabel, STATUS_LABEL[row.status]]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      return okStatus && okQuery;
+    });
+  }, [rows, query, statusFilter]);
+
+  function exportCsv() {
+    if (rows.length === 0) {
+      toast.warning("No transactions to export yet");
+      return;
+    }
+    if (filtered.length === 0) {
+      toast.warning("No transactions match the current filter — nothing to export");
+      return;
+    }
+    const csv = ["order,date,customer,amount,status"]
+      .concat(
+        filtered.map((r) =>
+          [r.orderRef, r.createdAtLabel, r.customerLabel, r.amountLabel, STATUS_LABEL[r.status]]
+            .map((v) => `"${v.replace(/"/g, '""')}"`)
+            .join(","),
+        ),
+      )
+      .join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "transactions.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filtered.length} row${filtered.length === 1 ? "" : "s"}`);
+  }
 
   return (
     <>
@@ -58,25 +92,23 @@ export function TransactionsTable({ rows }: { rows: TransactionRow[] }) {
               placeholder="Search"
             />
           </div>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Filtering is not available yet"
-            aria-label="Filter transactions (not available yet)"
-            className="flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-lg border border-button-primary-outline-stroke bg-button-primary-outline-background p-1.5 text-icon-tertiary opacity-60"
+          <select
+            aria-label="Filter by status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as (typeof STATUS_OPTIONS)[number])}
+            className="flex h-8 min-w-24 cursor-pointer items-center rounded-lg border border-button-primary-outline-stroke bg-button-primary-outline-background px-2 text-xs font-medium text-icon-secondary outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
-              <path d="M2 4.5H14M4 8H12M6.25 11.5H9.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s === "ALL" ? "All statuses" : STATUS_LABEL[s]}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
-            disabled
-            aria-disabled="true"
-            title="Export is not available yet"
-            aria-label="Export transactions (not available yet)"
-            className="flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-lg border border-button-primary-outline-stroke bg-button-primary-outline-background p-1.5 text-icon-tertiary opacity-60"
+            onClick={exportCsv}
+            aria-label="Export transactions as CSV"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-button-primary-outline-stroke bg-button-primary-outline-background p-1.5 text-icon-tertiary transition hover:text-text-primary focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
               <path d="M2 10C2 11.8856 2 12.8284 2.58579 13.4142C3.17157 14 4.11438 14 6 14H10C11.8856 14 12.8284 14 13.4142 13.4142C14 12.8284 14 11.8856 14 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -105,12 +137,12 @@ export function TransactionsTable({ rows }: { rows: TransactionRow[] }) {
               <tr>
                 <td colSpan={6} className="px-6 py-10 text-center">
                   <p className="text-sm font-medium text-text-primary">
-                    {rows.length === 0 ? "No transactions yet" : "No transactions match your search"}
+                    {rows.length === 0 ? "No transactions yet" : "No transactions match your filter or search"}
                   </p>
                   <p className="mt-1 text-xs leading-4 text-text-tertiary">
                     {rows.length === 0
                       ? "Verified affiliate conversions will appear here."
-                      : "Try a different order, customer or status."}
+                      : "Try a different status, order, customer or search term."}
                   </p>
                 </td>
               </tr>

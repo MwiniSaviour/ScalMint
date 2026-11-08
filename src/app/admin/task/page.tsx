@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   DemoPage,
   DemoPageBody,
   PageHeader,
 } from "@/components/demo/primitives";
-
-export const dynamic = "force-dynamic";
 
 function ChevronDown() {
   return (
@@ -39,25 +40,25 @@ function PlusIcon() {
   );
 }
 
-function PrimaryButton({ children, className }: { children: ReactNode; className?: string }) {
+function PrimaryButton({ children, className, onClick, ariaLabel }: { children: React.ReactNode; className?: string; onClick: () => void; ariaLabel?: string }) {
   return (
-    <button type="button" className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 bg-button-primary-background text-button-primary-text hover:bg-button-primary-hover-background focus-visible:ring-2 focus-visible:ring-button-primary-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 py-1.5 h-8", className].filter(Boolean).join(" ")}>
+    <button type="button" aria-label={ariaLabel} onClick={onClick} className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 bg-button-primary-background text-button-primary-text hover:bg-button-primary-hover-background focus-visible:ring-2 focus-visible:ring-button-primary-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 py-1.5 h-8", className].filter(Boolean).join(" ")}>
       {children}
     </button>
   );
 }
 
-function OutlineButton({ children, className }: { children: ReactNode; className?: string }) {
+function OutlineButton({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick: () => void }) {
   return (
-    <button type="button" className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background text-button-primary-outline-text hover:text-button-primary-outline-hover-text hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 py-1.5 h-8", className].filter(Boolean).join(" ")}>
+    <button type="button" onClick={onClick} className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background text-button-primary-outline-text hover:text-button-primary-outline-hover-text hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 py-1.5 h-8", className].filter(Boolean).join(" ")}>
       {children}
     </button>
   );
 }
 
-function IconOutlineButton({ children, className }: { children: ReactNode; className?: string }) {
+function IconOutlineButton({ children, className, ariaLabel, onClick }: { children: React.ReactNode; className?: string; ariaLabel: string; onClick: () => void }) {
   return (
-    <button type="button" className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 [&>svg]:text-current! [&>svg]:size-5 size-8.5", className].filter(Boolean).join(" ")}>
+    <button type="button" aria-label={ariaLabel} onClick={onClick} className={["flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 [&>svg]:text-current! [&>svg]:size-5 size-8.5", className].filter(Boolean).join(" ")}>
       {children}
     </button>
   );
@@ -66,45 +67,79 @@ function IconOutlineButton({ children, className }: { children: ReactNode; class
 const STATUSES = ["To Do", "In Progress", "Review", "Complete"] as const;
 
 export default function Page() {
+  const [selected, setSelected] = useState<(typeof STATUSES)[number]>("To Do");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const toggleCollapse = (status: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  };
+
+  const addTaskDisabledMessage = "Task storage is not connected yet — tasks you add can’t be saved.";
+
   return (
     <DemoPage>
       <PageHeader title="Task List" subtitle="Create, assign, and track tasks across your team." />
       <DemoPageBody>
         <div className="flex items-center justify-between">
-          <div className="w-40 lg:hidden">
-            <button type="button" className="flex items-center rounded-lg font-medium transition outline-none focus:ring-4 border border-border-secondary-alt bg-background-gray-secondary_alt px-4 py-3 shadow-none size-9.5">
-              <span>All Task</span>
-              <span className="shrink-0 transition-transform ml-3 text-text-secondary [&>svg]:size-5">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-4" aria-hidden="true">
-                  <path d="M5.75 8.875L12 15.125L18.25 8.875" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </button>
-          </div>
+          <select
+            aria-label="Task status filter (mobile)"
+            value={selected}
+            onChange={(e) => setSelected(e.target.value as (typeof STATUSES)[number])}
+            className="w-40 flex items-center rounded-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring border border-border-secondary-alt bg-background-gray-secondary_alt px-4 py-3 shadow-none lg:hidden"
+          >
+            {STATUSES.map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
           <div role="tablist" aria-label="Task status filter" className="hidden flex-wrap items-center gap-1.5 rounded-lg bg-background-gray-secondary_alt p-1 lg:flex">
             {STATUSES.map((status) => (
-              <button key={status} role="tab" aria-selected={status === "To Do"} type="button" className={`rounded-md px-3 py-1 text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 ${status === "To Do" ? "bg-card-background text-text-primary shadow-xs" : "text-text-secondary hover:text-text-primary"}`}>
+              <button
+                key={status}
+                role="tab"
+                aria-selected={status === selected}
+                type="button"
+                onClick={() => setSelected(status)}
+                className={`rounded-md px-3 py-1 text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 ${status === selected ? "bg-card-background text-text-primary shadow-xs" : "text-text-secondary hover:text-text-primary"}`}
+              >
                 {status}
               </button>
             ))}
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3 border-border-secondary-alt md:border-r-2 md:pr-3">
-              <IconOutlineButton aria-label="Search tasks">
+              <IconOutlineButton
+                ariaLabel="Search tasks"
+                className="text-text-primary"
+                onClick={() => toast.info("No tasks stored yet — search will be available once task data is connected.")}
+              >
                 <SearchIcon />
               </IconOutlineButton>
             </div>
-            <IconOutlineButton aria-label="Filter tasks" className="text-text-primary md:hidden">
+            <IconOutlineButton
+              ariaLabel="Filter tasks"
+              className="text-text-primary md:hidden"
+              onClick={() => setSelected(STATUSES[0])}
+            >
               <FilterIcon />
             </IconOutlineButton>
-            <button type="button" className="items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 h-8.5 hidden py-2 text-text-primary md:flex" aria-label="Filter tasks">
+            <button
+              type="button"
+              onClick={() => setSelected(STATUSES[0])}
+              aria-label="Filter tasks"
+              className="items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 border border-button-primary-outline-stroke bg-button-primary-outline-background hover:bg-button-primary-outline-hover-background focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 gap-1.5 px-3 h-8.5 hidden py-2 text-text-primary md:flex"
+            >
               <FilterIcon />
               <span>Filter</span>
             </button>
-            <IconOutlineButton aria-label="Add Task" className="md:hidden">
+            <IconOutlineButton ariaLabel="Add Task" className="md:hidden" onClick={() => toast.info(addTaskDisabledMessage)}>
               <PlusIcon />
             </IconOutlineButton>
-            <PrimaryButton className="hidden md:flex" aria-label="Add Task">
+            <PrimaryButton className="hidden md:flex" ariaLabel="Add Task" onClick={() => toast.info(addTaskDisabledMessage)}>
               <PlusIcon />
               <span>Add Task</span>
             </PrimaryButton>
@@ -112,21 +147,34 @@ export default function Page() {
         </div>
         <section className="mt-5 p-0">
           <div className="flex flex-col gap-6">
-            {STATUSES.map((status) => (
+            {STATUSES.filter((status) => status === selected).map((status) => (
               <div key={status} className="rounded-2xl border border-border-secondary-alt bg-card-surface-area p-5 transition-colors duration-200">
                 <div className="flex items-center justify-between">
-                  <button type="button" className="flex items-center gap-2.5 text-left font-semibold text-text-primary hover:opacity-85 outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2">
+                  <button
+                    type="button"
+                    aria-expanded={!collapsed.has(status)}
+                    onClick={() => toggleCollapse(status)}
+                    className="flex items-center gap-2.5 text-left font-semibold text-text-primary hover:opacity-85 outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2"
+                  >
                     <ChevronDown />
                     <span className="inline-block h-2.5 w-2.5 rounded-full bg-gray-400" aria-hidden="true"></span>
                     <span className="text-base font-bold">{status}</span>
                   </button>
                 </div>
-                <div className="mt-5 flex flex-col gap-3">
-                  <button type="button" className="flex items-center gap-2 rounded-xl border border-dashed border-border-secondary-alt p-4 text-left text-sm font-semibold text-text-tertiary transition-all duration-200 hover:border-border-secondary hover:bg-card-background hover:text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2">
-                    <PlusIcon />
-                    <span>Add Task</span>
-                  </button>
-                </div>
+                {collapsed.has(status) ? (
+                  <p className="mt-4 text-sm text-text-tertiary">Section collapsed</p>
+                ) : (
+                  <div className="mt-5 flex flex-col gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toast.info(addTaskDisabledMessage)}
+                      className="flex items-center gap-2 rounded-xl border border-dashed border-border-secondary-alt p-4 text-left text-sm font-semibold text-text-tertiary transition-all duration-200 hover:border-border-secondary hover:bg-card-background hover:text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2"
+                    >
+                      <PlusIcon />
+                      <span>Add Task</span>
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

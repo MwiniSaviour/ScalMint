@@ -7,6 +7,7 @@ import {
   DemoPageBody,
   PageHeader,
 } from "@/components/demo/primitives";
+import { ToastAction } from "@/components/demo/interactive";
 import { LineSparkline } from "./line-sparkline";
 
 export const dynamic = "force-dynamic";
@@ -49,15 +50,15 @@ function RangeSelect() {
 
 function MoreOptions() {
   return (
-    <button
-      type="button"
-      aria-label="More options"
+    <ToastAction
+      ariaLabel="More options"
+      message="No actions configured for recent sign ups yet."
       className="flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 disabled:pointer-events-none data-[focused=true]:ring-4 [&>svg]:text-current! [&>svg]:size-5 disabled:border disabled:border-button-disabled-border disabled:bg-button-disabled-background disabled:text-button-disabled-text hover:text-button-primary-outline-hover-text focus:ring-button-outline-focus-ring data-[focused=true]:ring-button-outline-focus-ring size-8"
     >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M6.00011 12.005L6.00011 11.995M18.0001 12.005V11.995M12.0001 12.005V11.995" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-    </button>
+    </ToastAction>
   );
 }
 

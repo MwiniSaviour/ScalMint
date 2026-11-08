@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import {
   CardHead,
   CardMenuDots,
@@ -9,6 +10,7 @@ import {
   KpiGrid,
   PageHeader,
 } from "@/components/demo/primitives";
+import { KitTabs, ToastAction } from "@/components/demo/interactive";
 
 export const dynamic = "force-dynamic";
 
@@ -28,23 +30,6 @@ function TableEmptyState(): ReactNode {
         No data yet
       </td>
     </tr>
-  );
-}
-
-function TabButton({ label, active }: { label: string; active: boolean }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      className={`rounded-md px-3 py-1 text-sm font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 ${
-        active
-          ? "bg-tab-active-background text-text-primary shadow-xs"
-          : "text-text-tertiary hover:text-text-primary"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 
@@ -101,13 +86,7 @@ export default function Page() {
             <CardHead title="Portfolio Performance" />
             <div className="text-text-primary p-0">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <div role="tablist" aria-label="Portfolio time range" className="flex items-center gap-1 rounded-lg border-none bg-tab-background p-1">
-                  <TabButton label="1 W" active={false} />
-                  <TabButton label="1 M" active={true} />
-                  <TabButton label="3 M" active={false} />
-                  <TabButton label="1 Y" active={false} />
-                  <TabButton label="All" active={false} />
-                </div>
+                <KitTabs ariaLabel="Portfolio time range" labels={["1 W", "1 M", "3 M", "1 Y", "All"]} defaultValue="1 M" />
               </div>
               <div className="h-67.5 w-full px-6">
                 <EmptyState body="Portfolio performance will chart here once a market data source is connected." />
@@ -118,24 +97,25 @@ export default function Page() {
           <DemoCard className="min-w-0">
             <div className="relative flex w-full flex-wrap items-center justify-between gap-3 mb-6">
               <h3 className="leading-6 font-semibold tracking-[-0.2px] text-text-primary">My Watchlist</h3>
-              <button
-                type="button"
-                aria-label="Settings"
-                className="rounded-lg bg-button-primary-outline-background p-1.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 hover:bg-button-primary-outline-hover-background"
+              <ToastAction
+                ariaLabel="Watchlist settings"
+                message="Watchlist settings become available once a market data source is connected."
+                className="rounded-lg bg-button-primary-outline-background p-1.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 hover:bg-button-primary-outline-hover-background [&>svg]:size-5 [&>svg]:text-current!"
               >
                 <CardMenuDots />
-              </button>
+              </ToastAction>
             </div>
             <div className="text-text-primary p-0">
               <WatchlistEmpty />
             </div>
             <div className="mt-6 p-0">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-lg border border-card-border bg-card-background px-4 py-2 text-sm font-medium text-text-primary hover:bg-background-gray-secondary_alt w-full outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2"
+              <ToastAction
+                ariaLabel="Add to watchlist"
+                message="Can’t add instruments yet — connect a market data source first."
+                className="inline-flex min-h-9 items-center justify-center rounded-lg border border-card-border bg-card-background px-4 py-2 text-sm font-medium text-text-primary hover:bg-background-gray-secondary_alt w-full outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2"
               >
                 Add Watchlist
-              </button>
+              </ToastAction>
             </div>
           </DemoCard>
         </div>
@@ -144,38 +124,42 @@ export default function Page() {
           <DemoCard className="min-w-0">
             <div className="relative flex w-full flex-wrap items-center justify-between gap-3 mb-6">
               <h3 className="leading-6 font-semibold tracking-[-0.2px] text-text-primary">Exchange stock</h3>
-              <button
-                type="button"
-                aria-label="Settings"
-                className="rounded-lg bg-button-primary-outline-background p-1.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 hover:bg-button-primary-outline-hover-background"
+              <ToastAction
+                ariaLabel="Exchange settings"
+                message="Exchange settings become available once a market data source is connected."
+                className="rounded-lg bg-button-primary-outline-background p-1.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2 hover:bg-button-primary-outline-hover-background [&>svg]:size-5 [&>svg]:text-current!"
               >
                 <CardMenuDots />
-              </button>
+              </ToastAction>
             </div>
             <div className="text-text-primary p-0">
-              <div className="flex items-center gap-1 rounded-lg border-none bg-tab-background p-1 mb-6">
-                <div role="tablist" aria-label="Exchange stock view" className="flex items-center gap-1">
-                  <TabButton label="Trading" active={true} />
-                  <TabButton label="Gainer" active={false} />
-                  <TabButton label="Loser" active={false} />
-                </div>
+              <div className="mb-6 flex items-center gap-1 rounded-lg border-none bg-tab-background p-1">
+                <KitTabs
+                  ariaLabel="Exchange stock view"
+                  labels={["Trading", "Gainer", "Loser"]}
+                  defaultValue="Trading"
+                />
               </div>
               <div className="mt-6 space-y-5">
                 <ExchangeStockEmpty />
               </div>
               <div className="mt-3 flex gap-3 w-full">
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-lg border border-card-border bg-card-background px-3 py-1 text-sm font-medium text-text-primary hover:bg-background-gray-secondary_alt flex-1 outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2"
+                <ToastAction
+                  disabled
+                  disabledTitle="Trading is disabled until a market data source is connected"
+                  message="Not applicable"
+                  className="flex items-center justify-center rounded-lg border border-card-border bg-card-background px-3 py-1 text-sm font-medium text-text-primary cursor-not-allowed flex-1 outline-none disabled:opacity-60 disabled:text-text-tertiary"
                 >
                   Short
-                </button>
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-lg border border-card-border bg-card-background px-3 py-1 text-sm font-medium text-text-primary hover:bg-background-gray-secondary_alt flex-1 outline-none focus-visible:ring-2 focus-visible:ring-button-outline-focus-ring focus-visible:ring-offset-2"
+                </ToastAction>
+                <ToastAction
+                  disabled
+                  disabledTitle="Trading is disabled until a market data source is connected"
+                  message="Not applicable"
+                  className="flex items-center justify-center rounded-lg border border-card-border bg-card-background px-3 py-1 text-sm font-medium text-text-primary cursor-not-allowed flex-1 outline-none disabled:opacity-60 disabled:text-text-tertiary"
                 >
                   Buy
-                </button>
+                </ToastAction>
               </div>
             </div>
           </DemoCard>
@@ -183,7 +167,11 @@ export default function Page() {
           <DemoCard className="min-w-0">
             <div className="relative flex w-full flex-wrap items-center justify-between gap-3 mb-6">
               <h3 className="leading-6 font-semibold tracking-[-0.2px] text-text-primary">Market Overview</h3>
-              <a href="#" className="flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 [&>svg]:text-current! [&>svg]:size-5 border border-card-border px-3.5 py-2 h-9.5 hover:text-text-primary">
+              <ToastAction
+                ariaLabel="View all market overview symbols"
+                message="No market data source is connected yet — the full market overview will open once it is."
+                className="flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 [&>svg]:text-current! [&>svg]:size-5 border border-card-border px-3.5 py-2 h-9.5 hover:text-text-primary min-h-9"
+              >
                 View All
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -196,7 +184,7 @@ export default function Page() {
                 >
                   <path d="M5 15L15 5M15 12.5V5H7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </a>
+              </ToastAction>
             </div>
             <div className="text-text-primary p-0">
               <div className="overflow-x-auto">
@@ -225,7 +213,11 @@ export default function Page() {
           <DemoCard className="min-w-0">
             <div className="relative flex w-full flex-wrap items-center justify-between gap-3 mb-6">
               <h3 className="leading-6 font-semibold tracking-[-0.2px] text-text-primary">Last Transaction</h3>
-              <a href="#" className="flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 [&>svg]:text-current! [&>svg]:size-5 border border-card-border px-3.5 py-2 h-9.5 hover:text-text-primary">
+              <Link
+                href="/admin/conversions"
+                aria-label="View all transactions in conversions"
+                className="flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 [&>svg]:text-current! [&>svg]:size-5 border border-card-border px-3.5 py-2 h-9.5 hover:text-text-primary min-h-9"
+              >
                 View All
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -238,7 +230,7 @@ export default function Page() {
                 >
                   <path d="M5 15L15 5M15 12.5V5H7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </a>
+              </Link>
             </div>
             <div className="text-text-primary p-0">
               <div className="overflow-x-auto">
@@ -265,7 +257,11 @@ export default function Page() {
           <DemoCard className="min-w-0">
             <div className="relative flex w-full flex-wrap items-center justify-between gap-3 mb-6">
               <h3 className="leading-6 font-semibold tracking-[-0.2px] text-text-primary">Market New</h3>
-              <a href="#" className="flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 [&>svg]:text-current! [&>svg]:size-5 border border-card-border px-3.5 py-2 h-9.5 hover:text-text-primary">
+              <ToastAction
+                ariaLabel="View all market news"
+                message="No news source is connected yet — market news will open once it is."
+                className="flex items-center justify-center rounded-lg text-sm font-medium transition outline-none focus:ring-4 [&>svg]:text-current! [&>svg]:size-5 border border-card-border px-3.5 py-2 h-9.5 hover:text-text-primary min-h-9"
+              >
                 View All
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -278,7 +274,7 @@ export default function Page() {
                 >
                   <path d="M5 15L15 5M15 12.5V5H7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </a>
+              </ToastAction>
             </div>
             <div className="text-text-primary p-0">
               <NewsEmpty />

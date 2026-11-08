@@ -120,7 +120,7 @@ export default function CommissionsPage() {
                     </TableCell>
                     <TableCell className="h-16 px-6 text-sm text-text-primary">{p.cookieDays}d</TableCell>
                     <TableCell className="h-16 px-6">
-                      <Button size="sm" onClick={() => save.mutate(p)} isDisabled={save.isPending}>
+                      <Button size="sm" onPress={() => save.mutate(p)} isDisabled={save.isPending}>
                         Save
                       </Button>
                     </TableCell>

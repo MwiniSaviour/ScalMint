@@ -65,7 +65,7 @@ function ProjectsInner() {
           <h1 className="text-[28px] leading-8 font-medium text-text-primary">Projects</h1>
           <p className="text-sm text-text-tertiary">Registry and lifecycle. Keys are immutable. Archive never deletes facts.</p>
         </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
+        <Button size="sm" onPress={() => setOpen(true)}>
           Create project
         </Button>
       </div>
@@ -106,7 +106,7 @@ function ProjectsInner() {
             <Button type="submit" size="sm" isDisabled={create.isPending}>
               Save
             </Button>
-            <Button type="button" size="sm" appearance="outline" onClick={() => setOpen(false)}>
+            <Button type="button" size="sm" appearance="outline" onPress={() => setOpen(false)}>
               Cancel
             </Button>
           </div>

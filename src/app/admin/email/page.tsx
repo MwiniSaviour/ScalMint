@@ -24,9 +24,9 @@ export default function EmailPage() {
         <h1 className="mb-1 text-[28px] leading-8 font-medium text-text-primary">Email</h1>
         <ol className="flex items-center gap-2">
           <li className="contents text-text-tertiary [&_svg]:text-current!">
-            <a className="flex items-center gap-1 text-sm font-medium [&>svg]:size-4" href="#">
+            <span className="flex items-center gap-1 text-sm font-medium [&>svg]:size-4">
               Support
-            </a>
+            </span>
           </li>
           <li className="contents text-text-tertiary [&_svg]:text-current!">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-4">
