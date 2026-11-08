@@ -52,10 +52,14 @@ function hostPassthrough(path: string) {
     path === "/robots.txt" ||
     path === "/llms.txt" ||
     path.startsWith("/.well-known") ||
-    path.startsWith("/brand") ||
-    path.startsWith("/google") ||
-    path.startsWith("/images")
-  );
+        path.startsWith("/brand") ||
+        path.startsWith("/google") ||
+        path.startsWith("/images") ||
+        // The service-worker kill-switch must be reachable on every host: the
+        // browser fetches it directly (it is never intercepted by a worker) to
+        // retire a stale registration left by an older deploy.
+        path === "/sw.js"
+    );
 }
 
 async function requireOps(req: NextRequest, pathname: string) {

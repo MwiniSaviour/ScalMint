@@ -134,6 +134,29 @@ describe("admin host routing", async () => {
   });
 });
 
+describe("service worker kill-switch is reachable on every host", async () => {
+  it("serves /sw.js untouched on the admin host without an ops session", async () => {
+    const res = await middleware(makeRequest("/sw.js", "admin.scalmint.com"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
+  });
+
+  it("serves /sw.js untouched on the affiliate host", async () => {
+    const res = await middleware(makeRequest("/sw.js", "affiliate.scalmint.com"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
+  });
+
+  it("does not redirect /sw.js away from the public host in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const res = await middleware(makeRequest("/sw.js", "scalmint.com"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+  });
+});
+
 describe("ops ingest is reachable on product hosts", async () => {
   it("does not 404 ingest on the public host", async () => {
     vi.stubEnv("NODE_ENV", "production");
