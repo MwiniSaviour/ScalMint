@@ -1,0 +1,70 @@
+name: Deploy dashboard to VPS
+
+# The admin dashboard (admin.scalmint.com) runs on the VPS from /opt/scalmint
+# under pm2, not on Vercel. Every push to main deploys here: the remote script
+# fast-forwards the VPS clone to the pushed commit, applies committed Prisma
+# migrations, rebuilds and restarts pm2, then smokes the admin login page.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   VPS_HOST     VPS address, e.g. 72.62.158.102
+#   VPS_USER     SSH user, e.g. root
+#   VPS_SSH_KEY  private key authorised in that user's authorized_keys
+#
+# The remote script is versioned at ops/remote/deploy-dashboard.sh so the
+# deploy logic ships (and is reviewed) with the code it deploys.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch to deploy"
+        required: false
+        default: "main"
+
+concurrency:
+  group: scalmint-dashboard-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy admin dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify deploy secrets are configured
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          missing=""
+          if [ -z "$VPS_HOST" ]; then missing="$missing VPS_HOST"; fi
+          if [ -z "$VPS_USER" ]; then missing="$missing VPS_USER"; fi
+          if [ -z "$VPS_SSH_KEY" ]; then missing="$missing VPS_SSH_KEY"; fi
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing. Add them under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 25m
+          # The remote script sets `set -euo pipefail` itself. Do NOT turn
+          # script_stop on: it rewrites the script line by line and its injected
+          # checks kill valid `if` blocks (the same landmine documented in the
+          # sibling repo's ops/remote scripts).
+          script_stop: false
+          envs: DEPLOY_REF
+          script_path: ops/remote/deploy-dashboard.sh
+        env:
+          DEPLOY_REF: ${{ github.event.inputs.ref || 'main' }}
