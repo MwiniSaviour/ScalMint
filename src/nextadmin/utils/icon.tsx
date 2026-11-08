@@ -73,7 +73,7 @@ export const Logo = (props: IconProps) => {
 
 export const LogoWordmark = ({ dark = false }: { dark?: boolean }) => (
     <span className='flex items-center gap-2.5'>
-        <Logo className='size-8' />
+        <img src='/brand/mark.png' alt='' aria-hidden className='size-8 shrink-0 object-contain' />
         <span
             className={
                 dark
