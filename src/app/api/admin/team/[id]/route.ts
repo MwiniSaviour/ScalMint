@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { opsDb as db } from "@/lib/db";
 import { requireOperator } from "@/lib/ops/guard";
 import { writeAudit } from "@/lib/ops/audit";
-import { hashToken, randomToken } from "@/lib/ops/crypto";
+import { createPasswordReset, supersedePendingResets } from "@/lib/ops/password-reset";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const gate = await requireOperator(req, { write: true, roles: ["OWNER"] });
@@ -18,15 +18,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "OWNER cannot be removed or demoted by this action" }, { status: 403 });
   }
   if (body.reset) {
-    const resetToken = randomToken(32);
-    await db.$transaction(async (tx) => {
-      await tx.passwordReset.create({
-        data: {
-          operatorId: id,
-          tokenHash: hashToken(resetToken),
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        },
-      });
+    const resetToken = await db.$transaction(async (tx) => {
+      await supersedePendingResets(tx, id);
+      const { token } = await createPasswordReset(tx, id);
       await tx.opsOperator.update({ where: { id }, data: { sessionVersion: { increment: 1 } } });
       await writeAudit(tx, {
         actorType: "OPERATOR",
@@ -36,6 +30,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         targetId: id,
         req,
       });
+      return token;
     });
     return NextResponse.json({ resetToken, warning: "Single-use, 24 hours. Give it once." });
   }

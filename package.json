@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
     "ops:bootstrap": "npx tsx scripts/ops-bootstrap.ts",
+    "ops:reset": "npx tsx scripts/ops-reset.ts",
     "ops:probe": "npx tsx scripts/probe-runner.ts",
     "test": "vitest run"
   },
