@@ -48,15 +48,36 @@ export async function opsFetch<T>(
     }
     return { ok: true, status: res.status, data: json as T, error: null, unauthorized: false };
   } catch (err) {
-    const aborted = err instanceof Error && err.name === "AbortError";
     return {
       ok: false,
       status: 0,
       data: null,
-      error: aborted ? "Request timed out" : err instanceof Error ? err.message : "Network error",
+      error: describeNetworkFailure(err),
       unauthorized: false,
     };
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Map a fetch rejection to a user-facing message. Raw Error.message can be
+ * browser jargon or, worse, an empty string — both render as a dead toast in
+ * the UI. Known failure shapes get a friendly line; everything else falls back
+ * to a generic network error. Never throws.
+ */
+function describeNetworkFailure(err: unknown): string {
+  if (err instanceof Error) {
+    if (err.name === "AbortError") return "Request timed out";
+    const msg = err.message || "";
+    if (
+      msg.includes("Failed to fetch") ||
+      msg.includes("NetworkError") ||
+      msg.includes("Load failed") ||
+      msg.includes("fetch failed")
+    ) {
+      return "Network error — check your connection and try again";
+    }
+  }
+  return "Network error — check your connection and try again";
 }

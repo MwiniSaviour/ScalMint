@@ -6,7 +6,14 @@ import { rateLimit } from "@/lib/ops/rate-limit";
 import { writeAudit } from "@/lib/ops/audit";
 import { assertCsrf } from "@/lib/ops/csrf";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
+  const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  if (process.env.NODE_ENV === "production" && forwardedProto !== "https") {
+    return NextResponse.json({ error: "HTTPS required" }, { status: 403 });
+  }
+
   const csrf = assertCsrf(req);
   if (csrf) return NextResponse.json({ error: "CSRF check failed" }, { status: 403 });
 
