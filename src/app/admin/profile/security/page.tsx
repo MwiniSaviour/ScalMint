@@ -18,10 +18,12 @@ import {
 import { Label } from "@/nextadmin/components/tailgrids/core/label";
 import { Backdrop, OverlayWrapper } from "@/nextadmin/components/tailgrids/core/overlay";
 import { TextField } from "@/nextadmin/components/tailgrids/core/text-field";
+import { opsFetch } from "@/lib/ops/client-fetch";
 import { cn } from "@/nextadmin/utils/cn";
 import { Eye, EyeDisabled } from "@tailgrids/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FieldError, Form } from "react-aria-components";
+import { toast } from "sonner";
 import { securityItems } from "./data";
 
 export default function SecurityTabContent() {
@@ -29,6 +31,55 @@ export default function SecurityTabContent() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Reset the form so reopening the dialog never shows the previous
+  // attempt's secrets or error.
+  useEffect(() => {
+    if (!openPasswordDialog) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setFormError(null);
+    }
+  }, [openPasswordDialog]);
+
+  const submitPasswordChange = async (values: {
+    currentPassword: string;
+    newPassword: string;
+  }) => {
+    setSubmitting(true);
+    const res = await opsFetch<{ ok: boolean }>("/api/admin/update-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    });
+    setSubmitting(false);
+    if (res.ok) {
+      setOpenPasswordDialog(false);
+      toast.success(
+        "Password updated. Other signed-in devices have been signed out.",
+      );
+      return;
+    }
+    if (res.status === 0) {
+      setFormError(
+        "Network error — the change may not have completed. Check your connection and try again.",
+      );
+      return;
+    }
+    if (res.status === 429) {
+      setFormError(
+        "Too many attempts. Please wait a few minutes before trying again.",
+      );
+      return;
+    }
+    setFormError(res.error ?? "Failed to update password. Try again.");
+  };
 
   return (
     <div>
@@ -70,17 +121,31 @@ export default function SecurityTabContent() {
             <Form
               onSubmit={(event) => {
                 event.preventDefault();
-                setOpenPasswordDialog(false);
+                if (newPassword !== confirmPassword) {
+                  setFormError(
+                    "Passwords do not match — the confirmation must match the new password.",
+                  );
+                  return;
+                }
+                void submitPasswordChange({ currentPassword, newPassword });
               }}
             >
               <DialogHeader className="gap-1 border-b border-card-border py-4 pr-14 pl-5">
                 <DialogTitle className="text-xl leading-7">Update Password</DialogTitle>
                 <DialogDescription className="text-text-tertiary">
-                  Create a secure password to keep your account safe
+                  Choose a new password of at least 12 characters to keep your account safe
                 </DialogDescription>
               </DialogHeader>
 
               <DialogBody className="space-y-4 px-5 py-4">
+                {formError ? (
+                  <p
+                    role="alert"
+                    className="text-sm leading-5 font-normal text-input-error"
+                  >
+                    {formError}
+                  </p>
+                ) : null}
                 <TextField className="gap-1.5">
                   <Label htmlFor="current-password">Current Password</Label>
                   <InputGroup>
@@ -89,6 +154,8 @@ export default function SecurityTabContent() {
                       type={showCurrentPassword ? "text" : "password"}
                       placeholder="Enter your current password"
                       autoComplete="current-password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.currentTarget.value)}
                       required
                     />
                     <InputGroupButton
@@ -113,8 +180,10 @@ export default function SecurityTabContent() {
                       id="new-password"
                       type={showNewPassword ? "text" : "password"}
                       placeholder="Choose a new password"
-                      minLength={8}
+                      minLength={12}
                       autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.currentTarget.value)}
                       required
                     />
                     <InputGroupButton
@@ -130,7 +199,7 @@ export default function SecurityTabContent() {
                       )}
                     </InputGroupButton>
                   </InputGroup>
-                  <FieldError />
+                  <FieldError className="text-sm font-normal text-input-error" />
                 </TextField>
 
                 <TextField className="gap-1.5">
@@ -140,8 +209,10 @@ export default function SecurityTabContent() {
                       id="confirm-password"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Re-enter your new password"
-                      minLength={8}
+                      minLength={12}
                       autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.currentTarget.value)}
                       required
                     />
                     <InputGroupButton
@@ -157,7 +228,7 @@ export default function SecurityTabContent() {
                       )}
                     </InputGroupButton>
                   </InputGroup>
-                  <FieldError />
+                  <FieldError className="text-sm font-normal text-input-error" />
                 </TextField>
               </DialogBody>
 
@@ -169,12 +240,18 @@ export default function SecurityTabContent() {
                       size: "lg",
                       className: "px-3.5 text-sm",
                     }),
+                    submitting && "pointer-events-none opacity-50",
                   )}
                 >
                   Cancel
                 </DialogClose>
-                <Button type="submit" size="lg" className="px-3.5 text-sm">
-                  Apply Changes
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="px-3.5 text-sm"
+                  isDisabled={submitting}
+                >
+                  {submitting ? "Updating…" : "Apply Changes"}
                 </Button>
               </DialogFooter>
             </Form>
